@@ -1,5 +1,5 @@
 import { UPGRADES } from "../data/upgrades.js";
-import { compareBigNum, isBigNum, subtractBigNum, toBigNum } from "../utils/bigNum.js";
+import { compareBigNum, subtractBigNum, toBigNum } from "../utils/bigNum.js";
 
 export function getUpgradeLevel(state, upgradeId, stateKey = "upgrades") {
   return state[stateKey]?.[upgradeId] ?? 0;
@@ -17,8 +17,8 @@ export function hasAnyUpgrade(state, upgradeIds, stateKey = "upgrades") {
   return upgradeIds.some((id) => hasUpgrade(state, id, stateKey));
 }
 
-export function getUpgradeDefinition(upgradeId, definitions = UPGRADES) {
-  return definitions.find((item) => item.id === upgradeId) ?? null;
+export function getUpgradeDefinition(upgradeId, source = UPGRADES) {
+  return source.find((item) => item.id === upgradeId) ?? null;
 }
 
 export function getUpgradeCost(state, upgrade) {
@@ -26,44 +26,50 @@ export function getUpgradeCost(state, upgrade) {
   const costDef = upgrade.cost;
 
   if (typeof costDef === "function") {
-    return costDef(currentLevel, state);
+    return normalizeCostObject(costDef(currentLevel, state));
   }
 
   if (Array.isArray(costDef)) {
-    return costDef[currentLevel] ?? null;
+    return normalizeCostObject(costDef[currentLevel] ?? null);
   }
 
-  return costDef;
+  return normalizeCostObject(costDef);
+}
+
+export function normalizeCostObject(cost) {
+  if (!cost) return null;
+
+  const normalized = {};
+  for (const [currency, amount] of Object.entries(cost)) {
+    normalized[currency] = toBigNum(amount);
+  }
+  return normalized;
 }
 
 export function canAffordCost(state, cost) {
   if (!cost) return false;
 
   return Object.entries(cost).every(([currency, amount]) => {
-    const balance = state.currencies[currency] ?? 0;
-
-    if (isBigNum(balance) || isBigNum(amount)) {
-      return compareBigNum(toBigNum(balance), toBigNum(amount)) >= 0;
-    }
-
-    return balance >= amount;
+    return compareBigNum(state.currencies[currency] ?? 0, amount) >= 0;
   });
 }
 
 export function payCost(state, cost) {
   for (const [currency, amount] of Object.entries(cost)) {
-    const balance = state.currencies[currency] ?? 0;
-
-    if (isBigNum(balance) || isBigNum(amount)) {
-      state.currencies[currency] = subtractBigNum(toBigNum(balance), toBigNum(amount));
-    } else {
-      state.currencies[currency] -= amount;
-    }
+    state.currencies[currency] = subtractBigNum(
+      state.currencies[currency] ?? 0,
+      amount
+    );
   }
 }
 
-export function buyUpgrade(state, upgradeId, definitions = UPGRADES, stateKey = "upgrades") {
-  const upgrade = getUpgradeDefinition(upgradeId, definitions);
+export function buyUpgrade(
+  state,
+  upgradeId,
+  source = UPGRADES,
+  stateKey = "upgrades"
+) {
+  const upgrade = getUpgradeDefinition(upgradeId, source);
   if (!upgrade) return false;
 
   const currentLevel = getUpgradeLevel(state, upgradeId, stateKey);
@@ -73,12 +79,13 @@ export function buyUpgrade(state, upgradeId, definitions = UPGRADES, stateKey = 
   if (!upgrade.visibleWhen(state)) return false;
   if (!upgrade.canBuyWhen(state)) return false;
 
-  const cost = getUpgradeCost(state, { ...upgrade, stateKey });
+  const cost = getUpgradeCost(state, upgrade);
   if (!cost) return false;
   if (!canAffordCost(state, cost)) return false;
 
   payCost(state, cost);
-  state[stateKey] ??= {};
+
+  if (!state[stateKey]) state[stateKey] = {};
   state[stateKey][upgradeId] = currentLevel + 1;
 
   if (typeof upgrade.onBuy === "function") {
@@ -87,4 +94,3 @@ export function buyUpgrade(state, upgradeId, definitions = UPGRADES, stateKey = 
 
   return true;
 }
-

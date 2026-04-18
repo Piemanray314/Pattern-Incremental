@@ -1,7 +1,7 @@
-import { compareBigNum, cloneBigNum } from "../utils/bigNum.js";
+import { compareBigNum, toBigNum } from "../utils/bigNum.js";
 
 export function pushRollHistory(state, rollResult) {
-  state.stats.previousRolls.unshift(makeStoredRollEntry(rollResult));
+  state.stats.previousRolls.unshift(makeRollSnapshot(rollResult));
 
   if (state.stats.previousRolls.length > 10) {
     state.stats.previousRolls.length = 10;
@@ -9,39 +9,65 @@ export function pushRollHistory(state, rollResult) {
 }
 
 export function pushBestRoll(state, rollResult) {
-  const entry = makeStoredRollEntry(rollResult);
-  const list = state.stats.bestRolls;
+  const snapshot = makeRollSnapshot(rollResult);
 
-  list.push(entry);
-  list.sort((a, b) => compareBigNum(b.gain, a.gain));
+  state.stats.bestRolls.push(snapshot);
+  state.stats.bestRolls.sort((a, b) =>
+    -compareBigNum(toBigNum(a.totalGain), toBigNum(b.totalGain))
+  );
 
-  let entered = false;
-  const matchingIndex = list.findIndex((item) => item.timestamp === entry.timestamp);
-  if (matchingIndex !== -1 && matchingIndex < 20) {
-    entered = true;
+  if (state.stats.bestRolls.length > 20) {
+    state.stats.bestRolls.length = 20;
   }
 
-  if (list.length > 20) {
-    list.length = 20;
+  if (state.stats.selectedBestRollIndex >= state.stats.bestRolls.length) {
+    state.stats.selectedBestRollIndex = 0;
   }
 
-  return entered;
+  return state.stats.bestRolls.some((entry) =>
+    entry.raw === snapshot.raw &&
+    compareBigNum(toBigNum(entry.totalGain), toBigNum(snapshot.totalGain)) === 0 &&
+    compareBigNum(
+      toBigNum(entry.totalMultiplier),
+      toBigNum(snapshot.totalMultiplier)
+    ) === 0
+  );
 }
 
-function makeStoredRollEntry(rollResult) {
+function makeRollSnapshot(rollResult) {
   return {
     raw: rollResult.raw,
-    source: rollResult.source,
+    source: rollResult.source ?? "manual",
+
     value: rollResult.value,
+    baseRollValue: rollResult.baseRollValue,
+    preMultiplierFlatBonus: rollResult.preMultiplierFlatBonus,
     modifiedBaseValue: rollResult.modifiedBaseValue,
-    gain: cloneBigNum(rollResult.totalGain),
-    multipliedGain: cloneBigNum(rollResult.multipliedGain),
-    multiplier: rollResult.totalMultiplier,
+
     patternMultiplier: rollResult.patternMultiplier,
     globalMultiplier: rollResult.globalMultiplier,
-    preMultiplierFlatBonus: rollResult.preMultiplierFlatBonus,
+    totalMultiplier: rollResult.totalMultiplier,
+
     postMultiplierFlatBonus: rollResult.postMultiplierFlatBonus,
-    patternCurrencyGain: rollResult.totalPatternCurrencyGain,
-    timestamp: Date.now() + Math.random()
+    multipliedGain: rollResult.multipliedGain,
+    totalGain: rollResult.totalGain,
+    totalPatternCurrencyGain: rollResult.totalPatternCurrencyGain,
+
+    matches: (rollResult.matches ?? []).map((match) => ({
+      patternId: match.patternId,
+      patternName: match.patternName,
+      description: match.description,
+      highlightedIndices: Array.isArray(match.highlightedIndices)
+        ? [...match.highlightedIndices]
+        : [],
+      baseMultiplier: match.baseMultiplier,
+      currentMultiplier: match.currentMultiplier,
+      basePatternCurrencyReward: match.basePatternCurrencyReward,
+      currentPatternCurrencyReward: match.currentPatternCurrencyReward
+    })),
+
+    // Backward compatability
+    gain: rollResult.totalGain,
+    multiplier: rollResult.totalMultiplier
   };
 }

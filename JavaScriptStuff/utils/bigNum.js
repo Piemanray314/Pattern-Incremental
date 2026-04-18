@@ -144,6 +144,7 @@ export function compareBigNum(a, b) {
   const right = toBigNum(b);
 
   if (left.mantissa === 0 && right.mantissa === 0) return 0;
+
   if (left.exponent !== right.exponent) {
     return left.exponent > right.exponent ? 1 : -1;
   }
@@ -154,15 +155,6 @@ export function compareBigNum(a, b) {
 
 export function maxBigNum(a, b) {
   return compareBigNum(a, b) >= 0 ? cloneBigNum(a) : cloneBigNum(b);
-}
-
-export function floorBigNumToNumber(value) {
-  const normalized = toBigNum(value);
-
-  if (normalized.mantissa === 0) return 0;
-  if (normalized.exponent > 15) return Number.MAX_SAFE_INTEGER;
-
-  return Math.floor(normalized.mantissa * Math.pow(10, normalized.exponent));
 }
 
 export function bigNumToScientificString(value, digits = 2) {

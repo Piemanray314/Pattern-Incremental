@@ -4,8 +4,8 @@ export function createInitialState() {
   return {
     currencies: {
       points: zeroBigNum(),
-      patterns: 0,
-      pies: 0
+      patterns: zeroBigNum(),
+      pies: zeroBigNum()
     },
 
     progression: {
@@ -16,34 +16,36 @@ export function createInitialState() {
       DIG01: 1
     },
 
-    automationUpgrades: {},
-
     currentRoll: null,
     latestRoll: null,
-
-    automation: {
-      enabled: true,
-      intervalMs: 10000,
-      accumulatorMs: 0,
-      pauseRemainingMs: 0,
-      displayMode: "big_only"
-    },
 
     stats: {
       totalRolls: 0,
       totalTimeStartedAt: Date.now(),
       lifetimePointsGained: zeroBigNum(),
-      lifetimePatternCurrency: 0,
+      lifetimePatternCurrency: zeroBigNum(),
       bestRollValue: 0,
       bestGain: zeroBigNum(),
       previousRolls: [],
-      bestRolls: []
+      bestRolls: [],
+      selectedBestRollIndex: 0
     },
 
     timers: {
       uiRefreshAccumulatorMs: 0,
       autoRollAccumulatorMs: 0
     },
+
+    automation: {
+      enabled: true,
+      intervalMs: 10000,
+      accumulatorMs: 0,
+      pauseRemainingMs: 0,
+      pauseAutomationOnManualRoll: true,
+      displayMode: "big_only"
+    },
+
+    automationUpgrades: {},
 
     ui: {
       activeTab: "roll",
@@ -52,20 +54,11 @@ export function createInitialState() {
       upgradeTreeView: {
         scrollLeft: 0,
         scrollTop: 0
-      },
-      automationTreeView: {
-        scrollLeft: 0,
-        scrollTop: 0
       }
     },
 
     settings: {
-      numberFormatMode: "standard"
+      numberFormat: "standard"
     },
-
-    meta: {
-      version: 2,
-      lastSavedAt: Date.now()
-    }
   };
 }

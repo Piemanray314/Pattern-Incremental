@@ -7,6 +7,7 @@ export const PATTERNS = [
     name: "Digit Count",
     description: "Matches every roll. Multiplier equals the digit count.",
     baseMultiplier: (rollString) => rollString.length,
+    patternCurrencyReward: () => 1,
     visibleWhen: () => true,
     unlockedWhen: () => true,
     evaluate(rollString) {
@@ -22,6 +23,7 @@ export const PATTERNS = [
     name: "Even",
     description: "Roll is even.",
     baseMultiplier: () => 1.5,
+    patternCurrencyReward: () => 1,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -42,6 +44,7 @@ export const PATTERNS = [
     name: "Divisible by 5",
     description: "Roll is divisible by 5",
     baseMultiplier: () => 2,
+    patternCurrencyReward: () => 2,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -62,6 +65,7 @@ export const PATTERNS = [
     name: "Repeated Digits",
     description: "Any digit appears at least twice.",
     baseMultiplier: () => 2.5,
+    patternCurrencyReward: () => 1,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -141,6 +145,7 @@ export const PATTERNS = [
     id: "PAT030202",
     name: "Lucky 7s",
     description: "Roll contains 777",
+    previewRollString: "777",
     baseMultiplier: () => 7,
     patternCurrencyReward: () => 77,
     visibleWhen: () => true,
@@ -150,7 +155,7 @@ export const PATTERNS = [
         return null;
       }
 
-      const level = getUpgradeLevel(state, "MULT030102");
+      const level = getUpgradeLevel(state, "MULT030302");
       const baseMultiplier = this.baseMultiplier();
       const currentMultiplier = baseMultiplier + 7 * level;
 
@@ -371,11 +376,11 @@ export const PATTERNS = [
     name: "Lowball",
     description: "Sum of digits is less than or equal unlocked digits + 5",
     baseMultiplier: () => 2,
-    patternCurrencyReward: () => 2,
+    patternCurrencyReward: () => 3,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits <= state.progression.maxDigitsUnlocked + 5) return null;
+      if(sumDigits(rollString) > state.progression.maxDigitsUnlocked + 5) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -389,11 +394,11 @@ export const PATTERNS = [
     name: "Lowerball",
     description: "Sum of digits is less than or equal unlocked digits + 3",
     baseMultiplier: () => 4,
-    patternCurrencyReward: () => 4,
+    patternCurrencyReward: () => 5,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits <= state.progression.maxDigitsUnlocked + 3) return null;
+      if(sumDigits(rollString) > state.progression.maxDigitsUnlocked + 3) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -411,7 +416,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits <= state.progression.maxDigitsUnlocked + 1) return null;
+      if(sumDigits(rollString) > state.progression.maxDigitsUnlocked + 1) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -425,11 +430,11 @@ export const PATTERNS = [
     name: "Highball",
     description: "Sum of digits is greater than or equal 9 times unlocked digits - 5",
     baseMultiplier: () => 2,
-    patternCurrencyReward: () => 2,
+    patternCurrencyReward: () => 3,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits >= 9 * state.progression.maxDigitsUnlocked - 5) return null;
+      if(sumDigits(rollString) < 9 * state.progression.maxDigitsUnlocked - 5) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -443,11 +448,11 @@ export const PATTERNS = [
     name: "Highball",
     description: "Sum of digits is greater than or equal 9 times unlocked digits - 3",
     baseMultiplier: () => 4,
-    patternCurrencyReward: () => 4,
+    patternCurrencyReward: () => 5,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits >= 9 * state.progression.maxDigitsUnlocked - 3) return null;
+      if(sumDigits(rollString) < 9 * state.progression.maxDigitsUnlocked - 3) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -465,7 +470,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits >= 9 * state.progression.maxDigitsUnlocked - 5) return null;
+      if(sumDigits(rollString) < 9 * state.progression.maxDigitsUnlocked - 5) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),

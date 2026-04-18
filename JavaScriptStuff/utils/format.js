@@ -30,7 +30,7 @@ export function formatNumber(value, mode = currentNumberFormatMode) {
 }
 
 export function formatMultiplier(value, mode = currentNumberFormatMode) {
-  return `${trimTrailingZeros(value)}x`;
+  return `${formatNumber(value, mode)}x`;
 }
 
 export function trimTrailingZeros(value) {

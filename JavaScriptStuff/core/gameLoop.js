@@ -42,7 +42,7 @@ export function updateGame(state, deltaMs) {
   }
 
   if (
-    (state.ui.activeTab === "stats" || state.ui.activeTab === "settings") &&
+    (state.ui.activeTab === "stats") &&
     state.timers.uiRefreshAccumulatorMs >= 250
   ) {
     state.timers.uiRefreshAccumulatorMs = 0;

@@ -233,7 +233,7 @@ function renderPreviewMatchRow(rollString, match) {
   const digitRow = createElement("div", { className: "digit-row" });
 
   [...rollString].forEach((digit, index) => {
-    const highlighted = match.highlightedIndices.includes(index);
+    const highlighted = (match.highlightedIndices ?? []).includes(index);
     digitRow.append(
       createElement("div", {
         className: `digit-box${highlighted ? " highlight" : ""}`,

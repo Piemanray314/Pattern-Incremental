@@ -2,7 +2,7 @@ import { PATTERNS } from "../data/patterns.js";
 import { numberStringToValue } from "./patternHelpers.js";
 import { pushBestRoll, pushRollHistory } from "./statsHelpers.js";
 import { getUpgradeLevel } from "./upgradeHelpers.js";
-import { addBigNum, compareBigNum, fromNumber, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, toBigNum, zeroBigNum } from "../utils/bigNum.js";
+import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum } from "../utils/bigNum.js";
 import { getAutomationConfig, shouldDisplayAutoRoll } from "./automationHelpers.js";
 
 export function performRoll(state, { source = "manual" } = {}) {
@@ -45,15 +45,22 @@ export function evaluateRollString(
 
     const basePatternCurrencyReward =
       typeof pattern.patternCurrencyReward === "function"
-        ? pattern.patternCurrencyReward(raw, state)
-        : 1;
+        ? toBigNum(pattern.patternCurrencyReward(raw, state))
+        : oneBigNum();
 
-    let currentMultiplier = result.currentMultiplier ?? result.baseMultiplier;
-    let currentPatternCurrencyReward = result.currentPatternCurrencyReward ?? basePatternCurrencyReward;
+    let currentMultiplier = toBigNum(result.currentMultiplier ?? result.baseMultiplier);
+    let currentPatternCurrencyReward =
+      toBigNum(result.currentPatternCurrencyReward ?? basePatternCurrencyReward);
 
     if (source === "auto") {
-      currentMultiplier = scaleAutomationMultiplier(currentMultiplier, automationConfig.patternMultiplierFactor);
-      currentPatternCurrencyReward = Math.floor(currentPatternCurrencyReward * automationConfig.patternCurrencyFactor);
+      currentMultiplier = scaleAutomationMultiplier(
+        currentMultiplier,
+        automationConfig.patternMultiplierFactor
+      );
+      currentPatternCurrencyReward = multiplyBigNumByNumber(
+        currentPatternCurrencyReward,
+        automationConfig.patternCurrencyFactor
+      );
     }
 
     matches.push({
@@ -61,21 +68,23 @@ export function evaluateRollString(
       patternName: pattern.name,
       description: pattern.description,
       highlightedIndices: result.highlightedIndices,
-      baseMultiplier: result.baseMultiplier,
+      baseMultiplier: toBigNum(result.baseMultiplier),
       currentMultiplier,
       basePatternCurrencyReward,
       currentPatternCurrencyReward
     });
   }
 
-  const baseRollValue = value;
-  const preMultiplierFlatBonus = getPreMultiplierFlatBonus(state, { raw, value, digitCount, matches, source });
-  const modifiedBaseValue = baseRollValue + preMultiplierFlatBonus;
+  const baseRollValue = toBigNum(value);
+  const preMultiplierFlatBonus = toBigNum(
+    getPreMultiplierFlatBonus(state, { raw, value, digitCount, matches, source })
+  );
 
+  const modifiedBaseValue = addBigNum(baseRollValue, preMultiplierFlatBonus);
   const patternMultiplier = getPatternMultiplier(matches);
 
   let globalMultiplier = includeGlobal
-    ? getGlobalMultiplier(state, {
+    ? toBigNum(getGlobalMultiplier(state, {
         raw,
         value,
         digitCount,
@@ -84,15 +93,18 @@ export function evaluateRollString(
         preMultiplierFlatBonus,
         modifiedBaseValue,
         source
-      })
-    : 1;
+      }))
+    : oneBigNum();
 
   if (source === "auto") {
-    globalMultiplier = scaleAutomationMultiplier(globalMultiplier, automationConfig.globalMultiplierFactor);
+    globalMultiplier = scaleAutomationMultiplier(
+      globalMultiplier,
+      automationConfig.globalMultiplierFactor
+    );
   }
 
   const postMultiplierFlatBonus = includePostMultiplierFlatBonus
-    ? getPostMultiplierFlatBonus(state, {
+    ? toBigNum(getPostMultiplierFlatBonus(state, {
         raw,
         value,
         digitCount,
@@ -103,17 +115,16 @@ export function evaluateRollString(
         patternMultiplier,
         globalMultiplier,
         source
-      })
-    : 0;
+      }))
+    : zeroBigNum();
 
-  const totalMultiplier = patternMultiplier * globalMultiplier;
-  const multipliedGain = multiplyBigNum(fromNumber(modifiedBaseValue), fromNumber(totalMultiplier));
-  const totalGain = addBigNum(multipliedGain, fromNumber(postMultiplierFlatBonus));
-  //const totalGain = { mantissa: 1, exponent: 10 }
+  const totalMultiplier = multiplyBigNum(patternMultiplier, globalMultiplier);
+  const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
+  const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
 
   const totalPatternCurrencyGain = includePatternCurrency
     ? getTotalPatternCurrencyGain(matches)
-    : 0;
+    : zeroBigNum();
 
   return {
     raw,
@@ -142,11 +153,17 @@ export function evaluateRollString(
 function applyRollResult(state, rollResult, { source }) {
   state.latestRoll = rollResult;
   state.currencies.points = addBigNum(state.currencies.points, rollResult.totalGain);
-  state.currencies.patterns += rollResult.totalPatternCurrencyGain;
+  state.currencies.patterns = addBigNum(state.currencies.patterns, rollResult.totalPatternCurrencyGain);
 
   state.stats.totalRolls += 1;
-  state.stats.lifetimePointsGained = addBigNum(state.stats.lifetimePointsGained, rollResult.totalGain);
-  state.stats.lifetimePatternCurrency += rollResult.totalPatternCurrencyGain;
+  state.stats.lifetimePointsGained = addBigNum(
+    state.stats.lifetimePointsGained,
+    rollResult.totalGain
+  );
+  state.stats.lifetimePatternCurrency = addBigNum(
+    state.stats.lifetimePatternCurrency,
+    rollResult.totalPatternCurrencyGain
+  );
   state.stats.bestRollValue = Math.max(state.stats.bestRollValue, rollResult.value);
   state.stats.bestGain = maxBigNum(state.stats.bestGain, rollResult.totalGain);
 
@@ -156,8 +173,10 @@ function applyRollResult(state, rollResult, { source }) {
 
   if (source === "manual") {
     state.currentRoll = rollResult;
-    state.automation.pauseRemainingMs = 5000;
-    state.automation.accumulatorMs = 0;
+    if (state.automation.pauseAutomationOnManualRoll) {
+      state.automation.pauseRemainingMs = 5000;
+      state.automation.accumulatorMs = 0;
+    }
     return;
   }
 
@@ -176,47 +195,52 @@ function getRollDigitCount(state, source) {
 }
 
 function getPatternMultiplier(matches) {
-  let product = 1;
+  let product = oneBigNum();
 
   for (const match of matches) {
-    product *= match.currentMultiplier;
+    product = multiplyBigNum(product, match.currentMultiplier);
   }
 
   return product;
 }
 
 function getTotalPatternCurrencyGain(matches) {
-  let total = 0;
+  let total = zeroBigNum();
 
   for (const match of matches) {
-    total += match.currentPatternCurrencyReward ?? 0;
+    total = addBigNum(total, match.currentPatternCurrencyReward ?? zeroBigNum());
   }
 
   return total;
 }
 
 function scaleAutomationMultiplier(multiplier, factor) {
-  return 1 + (multiplier - 1) * factor;
+  const bigMultiplier = toBigNum(multiplier);
+  const delta = subtractBigNum(bigMultiplier, oneBigNum());
+  const scaledDelta = multiplyBigNumByNumber(delta, factor);
+  return addBigNum(oneBigNum(), scaledDelta);
 }
 
 function getPreMultiplierFlatBonus(state, rollData) {
-  let bonus = 0;
-  bonus += 250 * getUpgradeLevel(state, "MULT030401");
-  bonus += 1250 * getUpgradeLevel(state, "MULT030402");
+  let bonus = zeroBigNum();
+  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 250 * getUpgradeLevel(state, "MULT030401")));
+  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 1250 * getUpgradeLevel(state, "MULT030402")));
   return bonus;
 }
 
 function getGlobalMultiplier(state, rollData) {
-  let multiplier = 1;
-  multiplier += 0.2 * getUpgradeLevel(state, "MULT030301");
-
+  let multiplier = oneBigNum();
+  multiplier = addBigNum(
+    multiplier,
+    multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT030301"))
+  );
   return multiplier;
 }
 
 function getPostMultiplierFlatBonus(state, rollData) {
-  let bonus = 0;
-  bonus += 10000 * getUpgradeLevel(state, "MULT030403");
-  bonus += 50000 * getUpgradeLevel(state, "MULT030404");
+  let bonus = zeroBigNum();
+  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 10000 * getUpgradeLevel(state, "MULT030403")));
+  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 50000 * getUpgradeLevel(state, "MULT030404")));
   return bonus;
 }
 

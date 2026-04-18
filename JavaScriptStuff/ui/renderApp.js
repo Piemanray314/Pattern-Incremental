@@ -82,7 +82,7 @@ export function renderContentInto(state, setState) {
       shell.content.append(renderStatsTab(state));
       break;
     case "bestRolls":
-      shell.content.append(renderBestRollsTab(state));
+      shell.content.append(renderBestRollsTab(state, setState));
       break;
     case "settings":
       shell.content.append(renderSettingsTab(state, setState));

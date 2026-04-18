@@ -3,7 +3,7 @@ export function numberStringToValue(rollString) {
 }
 
 export function sumDigits(rollString) {
-  return [...rollString].reduce((sum, digit) => sum + Number(Digit), 0);
+  return [...rollString].reduce((sum, digit) => sum + Number(digit), 0);
 }
 
 export function isNthPower(rollString, n) {

@@ -3,6 +3,8 @@ import { deleteSave } from "../state/save.js";
 import { createInitialState } from "../state/initialState.js";
 import { getAutomationConfig } from "../core/automationHelpers.js";
 
+// Render the screen again with effective interval after inputing number
+
 export function renderSettingsTab(state, setState) {
   const fragment = document.createDocumentFragment();
 
@@ -88,13 +90,12 @@ function renderAutomationSettingsPanel(state, setState) {
   intervalInput.value = String(state.automation.intervalMs);
   styleInput(intervalInput);
 
-  intervalInput.addEventListener("change", (event) => {
-    const parsed = Number.parseInt(event.target.value, 10);
-    const safeValue = Number.isFinite(parsed) ? Math.max(250, parsed) : 10000;
+  intervalInput.addEventListener("input", (event) => {
+    const parsed = Number(event.target.value);
 
     setState((draft) => {
-      draft.automation.intervalMs = safeValue;
-    }, { topbar: false, content: true, sidebar: false });
+      draft.automation.intervalMs = Number.isFinite(parsed) ? parsed : 0;
+    }, { topbar: false, content: false, sidebar: false });
   });
 
   controls.append(enabledButton, displayModeButton, intervalInput);
