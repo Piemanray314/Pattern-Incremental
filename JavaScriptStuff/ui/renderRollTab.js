@@ -1,9 +1,12 @@
 import { createElement } from "../utils/dom.js";
 import { formatMultiplier, formatNumber } from "../utils/format.js";
 import { performRoll } from "../core/rollEngine.js";
+import { getAutomationConfig } from "../core/automationHelpers.js";
 
 export function renderRollTab(state, setState) {
   const container = document.createDocumentFragment();
+  const displayedRoll = state.currentRoll;
+  const automationConfig = getAutomationConfig(state);
 
   const actionsPanel = createElement("section", { className: "panel" });
   actionsPanel.append(
@@ -16,34 +19,27 @@ export function renderRollTab(state, setState) {
     text: "Roll",
     onClick: () => {
       setState((draft) => {
-        performRoll(draft);
+        performRoll(draft, { source: "manual" });
       }, { topbar: true, content: true, sidebar: false });
     }
   });
 
-  const multiRollButton = createElement("button", {
-    text: "Multi-Roll",
-    onClick: () => {
-      alert("Not implemented yet.");
-    }
-  });
-
-  const restrictedRollButton = createElement("button", {
-    text: "Range-Restricted Roll",
-    onClick: () => {
-      alert("Not implemented yet.");
-    }
-  });
-
-  actions.append(rollButton, multiRollButton, restrictedRollButton);
+  actions.append(rollButton);
   actionsPanel.append(actions);
+
+  const statusText = createElement("div", {
+    className: "muted",
+    text: buildAutomationStatusText(state, automationConfig)
+  });
+  statusText.style.marginTop = "12px";
+  actionsPanel.append(statusText);
 
   const currentRollPanel = createElement("section", { className: "panel" });
   currentRollPanel.append(
-    createElement("h2", { className: "panel-title", text: "Current Roll" })
+    createElement("h2", { className: "panel-title", text: "Displayed Roll" })
   );
 
-  if (!state.currentRoll) {
+  if (!displayedRoll) {
     currentRollPanel.append(
       createElement("div", { className: "muted", text: "No roll yet." })
     );
@@ -51,15 +47,17 @@ export function renderRollTab(state, setState) {
     currentRollPanel.append(
       createElement("div", {
         className: "current-roll-big",
-        text: state.currentRoll.raw
+        text: displayedRoll.raw
       })
     );
 
     const summary = createElement("div", { className: "roll-summary" });
     summary.append(
-      summaryPill(`Value: ${formatNumber(state.currentRoll.modifiedBaseValue)}`),
-      summaryPill(`Multiplier: ${formatMultiplier(state.currentRoll.totalMultiplier)}`),
-      summaryPill(`Gain: ${formatNumber(state.currentRoll.totalGain)}`)
+      summaryPill(`Base: ${formatNumber(displayedRoll.baseRollValue)}`),
+      summaryPill(`Value: ${formatNumber(displayedRoll.modifiedBaseValue)}`),
+      summaryPill(`Multiplier: ${formatMultiplier(displayedRoll.totalMultiplier)}`),
+      summaryPill(`Gain: ${formatNumber(displayedRoll.totalGain)}`),
+      summaryPill(`Source: ${displayedRoll.source === "auto" ? "Auto" : "Manual"}`)
     );
 
     currentRollPanel.append(createElement("div", { className: "section-spacer" }));
@@ -73,13 +71,13 @@ export function renderRollTab(state, setState) {
 
   const matchList = createElement("div", { className: "match-list" });
 
-  if (!state.currentRoll) {
+  if (!displayedRoll) {
     matchList.append(
       createElement("div", { className: "muted", text: "Roll to see pattern matches." })
     );
   } else {
-    for (const match of state.currentRoll.matches) {
-      matchList.append(renderMatchRow(state.currentRoll.raw, match));
+    for (const match of displayedRoll.matches) {
+      matchList.append(renderMatchRow(displayedRoll.raw, match));
     }
   }
 
@@ -91,7 +89,6 @@ export function renderRollTab(state, setState) {
 
 function renderMatchRow(rollString, match) {
   const row = createElement("div", { className: "match-row" });
-
   const digitRow = createElement("div", { className: "digit-row" });
 
   [...rollString].forEach((digit, index) => {
@@ -109,21 +106,30 @@ function renderMatchRow(rollString, match) {
   });
 
   const nameCell = createElement("div");
-
-  const nameText = createElement("span", {
-    text: match.patternName
-  });
-
+  const nameText = createElement("span", { text: match.patternName });
   const rewardText = createElement("span", {
     text: `(+${formatNumber(match.currentPatternCurrencyReward)} patterns)`
   });
-
   rewardText.style.marginLeft = "20px";
 
   nameCell.append(nameText, rewardText);
-
   row.append(digitRow, multiplierCell, nameCell);
   return row;
+}
+
+function buildAutomationStatusText(state, automationConfig) {
+  if (!automationConfig.unlocked) {
+    return "Automation is locked.";
+  }
+
+  const enabledText = state.automation.enabled ? "ON" : "OFF";
+  const pauseSeconds = (state.automation.pauseRemainingMs / 1000).toFixed(1);
+
+  if (state.automation.pauseRemainingMs > 0) {
+    return `Automation ${enabledText} | Effective interval ${automationConfig.effectiveIntervalMs} ms | Paused for ${pauseSeconds}s after manual roll`;
+  }
+
+  return `Automation ${enabledText} | Effective interval ${automationConfig.effectiveIntervalMs} ms | Display mode: ${state.automation.displayMode}`;
 }
 
 function summaryPill(text) {

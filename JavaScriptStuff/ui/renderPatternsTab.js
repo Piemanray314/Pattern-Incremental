@@ -13,7 +13,7 @@ export function renderPatternsTab(state, setState) {
 
   const previewDescription = createElement("div", {
     className: "muted",
-    text: `Enter a ${state.progression.maxDigitsUnlocked}-digit number to preview its value using unlocked patterns.`
+    text: `Enter a number up to ${state.progression.maxDigitsUnlocked} digits to preview its value using unlocked patterns.`
   });
 
   const previewControls = createElement("div", { className: "roll-actions" });
@@ -21,7 +21,7 @@ export function renderPatternsTab(state, setState) {
   const input = document.createElement("input");
   input.type = "text";
   input.value = state.ui.patternPreviewInput ?? "";
-  input.placeholder = `${state.progression.maxDigitsUnlocked}-digit number`;
+  input.placeholder = `Number`;
   input.style.font = "inherit";
   input.style.padding = "10px 12px";
   input.style.borderRadius = "8px";
@@ -173,10 +173,10 @@ function evaluatePatternPreview(state, input, includeGlobal) {
 
   const expectedDigits = state.progression.maxDigitsUnlocked;
 
-  if (raw.length !== expectedDigits) {
+  if (raw.length > expectedDigits) {
     return {
       isValid: false,
-      message: `Preview number must be exactly ${expectedDigits} digits.`
+      message: `Preview number must be at most ${expectedDigits} digits.`
     };
   }
 

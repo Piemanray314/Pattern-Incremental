@@ -1,7 +1,9 @@
+import { zeroBigNum } from "../utils/bigNum.js";
+
 export function createInitialState() {
   return {
     currencies: {
-      points: 0,
+      points: zeroBigNum(),
       patterns: 0,
       pies: 0
     },
@@ -14,16 +16,28 @@ export function createInitialState() {
       DIG01: 1
     },
 
+    automationUpgrades: {},
+
     currentRoll: null,
+    latestRoll: null,
+
+    automation: {
+      enabled: true,
+      intervalMs: 10000,
+      accumulatorMs: 0,
+      pauseRemainingMs: 0,
+      displayMode: "big_only"
+    },
 
     stats: {
       totalRolls: 0,
       totalTimeStartedAt: Date.now(),
-      lifetimePointsGained: 0,
+      lifetimePointsGained: zeroBigNum(),
       lifetimePatternCurrency: 0,
       bestRollValue: 0,
-      bestGain: 0,
-      previousRolls: []
+      bestGain: zeroBigNum(),
+      previousRolls: [],
+      bestRolls: []
     },
 
     timers: {
@@ -38,11 +52,19 @@ export function createInitialState() {
       upgradeTreeView: {
         scrollLeft: 0,
         scrollTop: 0
+      },
+      automationTreeView: {
+        scrollLeft: 0,
+        scrollTop: 0
       }
     },
 
+    settings: {
+      numberFormatMode: "standard"
+    },
+
     meta: {
-      version: 1,
+      version: 2,
       lastSavedAt: Date.now()
     }
   };

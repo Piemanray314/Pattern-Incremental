@@ -3,14 +3,12 @@ import { formatMultiplier, formatNumber } from "../utils/format.js";
 
 export function renderStatsTab(state) {
   const fragment = document.createDocumentFragment();
+  const focusRoll = state.latestRoll ?? state.currentRoll;
 
   const generalPanel = createElement("section", { className: "panel" });
-  generalPanel.append(
-    createElement("h2", { className: "panel-title", text: "Statistics" })
-  );
+  generalPanel.append(createElement("h2", { className: "panel-title", text: "Statistics" }));
 
   const statsList = createElement("div", { className: "stats-list" });
-
   const elapsedMs = Date.now() - state.stats.totalTimeStartedAt;
   const elapsedSeconds = Math.floor(elapsedMs / 1000);
 
@@ -26,58 +24,39 @@ export function renderStatsTab(state) {
   generalPanel.append(statsList);
 
   const breakdownPanel = createElement("section", { className: "panel" });
-  breakdownPanel.append(
-    createElement("h2", { className: "panel-title", text: "Current Roll Breakdown" })
-  );
+  breakdownPanel.append(createElement("h2", { className: "panel-title", text: "Latest Roll Breakdown" }));
 
-  if (!state.currentRoll) {
-    breakdownPanel.append(
-      createElement("div", { className: "muted", text: "No roll yet." })
-    );
+  if (!focusRoll) {
+    breakdownPanel.append(createElement("div", { className: "muted", text: "No roll yet." }));
   } else {
     const breakdownList = createElement("div", { className: "stats-list" });
-
     breakdownList.append(
-      statRow("Roll", state.currentRoll.raw),
-      statRow("Base Roll Value", formatNumber(state.currentRoll.baseRollValue)),
-      statRow("Pre-Multiplier Flat Bonus", formatNumber(state.currentRoll.preMultiplierFlatBonus)),
-      statRow("Modified Base Value", formatNumber(state.currentRoll.modifiedBaseValue)),
-      statRow("Pattern Multiplier", formatMultiplier(state.currentRoll.patternMultiplier)),
-      statRow("Global Multiplier", formatMultiplier(state.currentRoll.globalMultiplier)),
-      statRow("Total Multiplier", formatMultiplier(state.currentRoll.totalMultiplier)),
-      statRow("Multiplied Gain", formatNumber(state.currentRoll.multipliedGain)),
-      statRow("Post-Multiplier Flat Bonus", formatNumber(state.currentRoll.postMultiplierFlatBonus)),
-      statRow("Pattern Currency Gain", formatNumber(state.currentRoll.totalPatternCurrencyGain)),
-      statRow("Final Gain", formatNumber(state.currentRoll.totalGain))
+      statRow("Roll", focusRoll.raw),
+      statRow("Source", focusRoll.source === "auto" ? "Auto" : "Manual"),
+      statRow("Base Roll Value", formatNumber(focusRoll.baseRollValue)),
+      statRow("Pre-Multiplier Flat Bonus", formatNumber(focusRoll.preMultiplierFlatBonus)),
+      statRow("Modified Base Value", formatNumber(focusRoll.modifiedBaseValue)),
+      statRow("Pattern Multiplier", formatMultiplier(focusRoll.patternMultiplier)),
+      statRow("Global Multiplier", formatMultiplier(focusRoll.globalMultiplier)),
+      statRow("Total Multiplier", formatMultiplier(focusRoll.totalMultiplier)),
+      statRow("Multiplied Gain", formatNumber(focusRoll.multipliedGain)),
+      statRow("Post-Multiplier Flat Bonus", formatNumber(focusRoll.postMultiplierFlatBonus)),
+      statRow("Pattern Currency Gain", formatNumber(focusRoll.totalPatternCurrencyGain)),
+      statRow("Final Gain", formatNumber(focusRoll.totalGain))
     );
-
     breakdownPanel.append(breakdownList);
   }
 
   const historyPanel = createElement("section", { className: "panel" });
-  historyPanel.append(
-    createElement("h2", { className: "panel-title", text: "Previous 10 Rolls" })
-  );
+  historyPanel.append(createElement("h2", { className: "panel-title", text: "Previous 10 Rolls" }));
 
   const historyList = createElement("div", { className: "history-list" });
 
   if (state.stats.previousRolls.length === 0) {
-    historyList.append(
-      createElement("div", { className: "muted", text: "No history yet." })
-    );
+    historyList.append(createElement("div", { className: "muted", text: "No history yet." }));
   } else {
     for (const roll of state.stats.previousRolls) {
-      historyList.append(
-        createElement("div", {
-          className: "history-item",
-          text:
-            `${roll.raw} | ` +
-            `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
-            `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
-            `Total ${formatMultiplier(roll.multiplier)} | ` +
-            `+${formatNumber(roll.gain)} points`
-        })
-      );
+      historyList.append(renderStoredRollSummary(roll));
     }
   }
 
@@ -85,6 +64,20 @@ export function renderStatsTab(state) {
 
   fragment.append(generalPanel, breakdownPanel, historyPanel);
   return fragment;
+}
+
+function renderStoredRollSummary(roll) {
+  return createElement("div", {
+    className: "history-item",
+    text:
+      `${roll.raw} | ` +
+      `${roll.source === "auto" ? "Auto" : "Manual"} | ` +
+      `Base ${formatNumber(roll.modifiedBaseValue)} | ` +
+      `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
+      `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+      `Total ${formatMultiplier(roll.multiplier)} | ` +
+      `+${formatNumber(roll.gain)} points`
+  });
 }
 
 function statRow(label, value) {

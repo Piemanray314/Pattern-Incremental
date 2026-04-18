@@ -2,8 +2,10 @@ import { TAB_IDS } from "./tabs.js";
 import { renderTopbar } from "./renderTopbar.js";
 import { renderRollTab } from "./renderRollTab.js";
 import { renderUpgradesTab } from "./renderUpgradesTab.js";
+import { renderAutomationTab } from "./renderAutomationTab.js";
 import { renderPatternsTab } from "./renderPatternsTab.js";
 import { renderStatsTab } from "./renderStatsTab.js";
+import { renderBestRollsTab } from "./renderBestRollsTab.js";
 import { renderSettingsTab } from "./renderSettingsTab.js";
 import { createElement } from "../utils/dom.js";
 
@@ -55,26 +57,39 @@ export function initializeAppShell(state, setState) {
 
 export function renderTopbarInto(state, setState) {
   ensureShellExists();
-
   shell.topbarHost.innerHTML = "";
   shell.topbarHost.append(renderTopbar(state, setState));
 }
 
 export function renderContentInto(state, setState) {
   ensureShellExists();
-
   shell.content.innerHTML = "";
 
-  if (state.ui.activeTab === "roll") {
-    shell.content.append(renderRollTab(state, setState));
-  } else if (state.ui.activeTab === "upgrades") {
-    shell.content.append(renderUpgradesTab(state, setState));
-  } else if (state.ui.activeTab === "patterns") {
-    shell.content.append(renderPatternsTab(state, setState));
-  } else if (state.ui.activeTab === "stats") {
-    shell.content.append(renderStatsTab(state));
-  } else if (state.ui.activeTab === "settings") {
-    shell.content.append(renderSettingsTab(state, setState));
+  switch (state.ui.activeTab) {
+    case "roll":
+      shell.content.append(renderRollTab(state, setState));
+      break;
+    case "upgrades":
+      shell.content.append(renderUpgradesTab(state, setState));
+      break;
+    case "automation":
+      shell.content.append(renderAutomationTab(state, setState));
+      break;
+    case "patterns":
+      shell.content.append(renderPatternsTab(state, setState));
+      break;
+    case "stats":
+      shell.content.append(renderStatsTab(state));
+      break;
+    case "bestRolls":
+      shell.content.append(renderBestRollsTab(state));
+      break;
+    case "settings":
+      shell.content.append(renderSettingsTab(state, setState));
+      break;
+    default:
+      shell.content.append(renderRollTab(state, setState));
+      break;
   }
 }
 

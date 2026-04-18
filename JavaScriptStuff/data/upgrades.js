@@ -1,4 +1,9 @@
 import { makeUpgradeDefinition } from "./definitionHelpers.js";
+import { compareBigNum, fromNumber, toBigNum } from "../utils/bigNum.js";
+
+export function hasAtLeastPointsEarned(state, amount) {
+  return compareBigNum(toBigNum(state.stats.lifetimePointsGained), fromNumber(amount)) >= 0;
+}
 
 export const UPGRADES = [
   {
@@ -50,8 +55,9 @@ export const UPGRADES = [
     y: 2,
     parents: ["DIG02"],
     visibleWhen: (state) =>
-      hasUpgrade(state, "DIG01") &&
-      state.stats.lifetimePointsGained >= 5000,
+      hasUpgrade(state, "DIG02") &&
+      // compareBigNum(toBigNum(state.stats.lifetimePointsGained), fromNumber(5000)) >= 0,
+      hasAtLeastPointsEarned(state, 5000),
     canBuyWhen: (state) => hasUpgrade(state, "DIG02"),
     onBuy(state) {
       state.progression.maxDigitsUnlocked = Math.max(
@@ -97,7 +103,7 @@ export const UPGRADES = [
   makeUpgradeDefinition("PAT", 2, 1, 4, {
     title: "Pattern: All Identical Digits",
     description: "Unlocks the All Identical Digits pattern.",
-    cost: { points: 4000 },
+    cost: { points: 100000 },
     maxLevel: 1,
     parents: ["PAT020103"],
     visibleWhen: (state) =>
@@ -137,7 +143,7 @@ export const UPGRADES = [
     parents: ["PAT030202"],
     visibleWhen: (state) => 
       hasUpgrade(state, "DIG03") &&
-      state.stats.lifetimePointsGained >= 2000000,
+      compareBigNum(toBigNum(state.stats.lifetimePointsGained), fromNumber(2000000)) >= 0,
     canBuyWhen: (state) => hasUpgrade(state, "PAT030201"),
     onBuy() {}
   }),
@@ -150,7 +156,7 @@ export const UPGRADES = [
     parents: ["PAT030203"],
     visibleWhen: (state) => 
       hasUpgrade(state, "DIG03") &&
-      state.stats.lifetimePointsGained >= 2000000,
+      compareBigNum(toBigNum(state.stats.lifetimePointsGained), fromNumber(2000000)) >= 0,
     canBuyWhen: (state) => hasUpgrade(state, "PAT030201"),
     onBuy() {}
   }),
@@ -237,16 +243,181 @@ export const UPGRADES = [
     onBuy() {}
   }),
 
+  makeUpgradeDefinition("UNL", 3, 0, 5, {
+    title: "Pattern Pack",
+    description: "Unlocks the first pattern pack",
+    cost: { points: { mantissa: 1, exponent: 6 } },
+    maxLevel: 1,
+    x: 5, // Writing explicitly cause it's in a weird spot without parents + I can find this comment >:)
+    y: 0,
+    parents: [],
+    visibleWhen: (state) => hasUpgrade(state, "DIG03"),
+    canBuyWhen: (state) => hasUpgrade(state, "DIG03"),
+    onBuy() {}
+  }),
+
   makeUpgradeDefinition("PAT", 3, 1, 5, {
     title: "Square",
     description: "Unlocks the Square pattern",
-    cost: { points: 10000000 },
+    cost: { points: { mantissa: 1, exponent: 7 } },
     maxLevel: 1,
-    x: 5, // Writing explicitly cause it's in a weird spot without parents + I can find this comment >:)
-    y: 1,
-    parents: [],
-    visibleWhen: (state) => hasUpgrade(state, "MULT030401"),
-    canBuyWhen: (state) => hasUpgrade(state, "MULT030401"),
+    parents: ["UNL030005"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "UNL030005"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 6, {
+    title: "Cubic",
+    description: "Unlocks the Cubic pattern",
+    cost: { points: { mantissa: 1, exponent: 7 } },
+    maxLevel: 1,
+    parents: ["PAT030105"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 7, {
+    title: "Quartic",
+    description: "Unlocks the Quartic pattern",
+    cost: { points: { mantissa: 2, exponent: 7 } },
+    maxLevel: 1,
+    parents: ["PAT030106"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 8, {
+    title: "Quintic",
+    description: "Unlocks the Quintic pattern",
+    cost: { points: { mantissa: 4, exponent: 7 } },
+    maxLevel: 1,
+    parents: ["PAT030107"],
+    visibleWhen: (state) => hasUpgrade(state, "PAT030105"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 9, {
+    title: "Sextic",
+    description: "Unlocks the Sextic pattern",
+    cost: { points: { mantissa: 8, exponent: 7 } },
+    maxLevel: 1,
+    parents: ["PAT030108"],
+    visibleWhen: (state) => hasUpgrade(state, "PAT030105"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 10, {
+    title: "Septic",
+    description: "Unlocks the Septic pattern",
+    cost: { points: { mantissa: 1.6, exponent: 8 } },
+    maxLevel: 1,
+    parents: ["PAT030109"],
+    visibleWhen: (state) => hasUpgrade(state, "PAT030105"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 11, {
+    title: "Octic",
+    description: "Unlocks the Octic pattern",
+    cost: { points: { mantissa: 3.2, exponent: 8 } },
+    maxLevel: 1,
+    parents: ["PAT030110"],
+    visibleWhen: (state) => hasUpgrade(state, "PAT030105"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 12, {
+    title: "Nonic",
+    description: "Unlocks the Nonic pattern",
+    cost: { points: { mantissa: 6.4, exponent: 8 } },
+    maxLevel: 1,
+    parents: ["PAT030111"],
+    visibleWhen: (state) => hasUpgrade(state, "PAT030105"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 1, 13, {
+    title: "Decic",
+    description: "Unlocks the Decic pattern",
+    cost: { points: { mantissa: 1.28, exponent: 9 } },
+    maxLevel: 1,
+    parents: ["PAT030112"],
+    visibleWhen: (state) => hasUpgrade(state, "PAT030105"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030105"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 2, 5, {
+    title: "Lowball",
+    description: "Unlocks the Lowball pattern",
+    cost: { points: { mantissa: 1, exponent: 6 } },
+    maxLevel: 1,
+    parents: ["PAT030105"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "UNL030005"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 2, 6, {
+    title: "Lowerball",
+    description: "Unlocks the Lowballer pattern",
+    cost: { points: { mantissa: 1, exponent: 7 } },
+    maxLevel: 1,
+    parents: ["PAT030205"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030205"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 2, 7, {
+    title: "Lowestball",
+    description: "Unlocks the Lowestball pattern",
+    cost: { points: { mantissa: 1, exponent: 8 } },
+    maxLevel: 1,
+    parents: ["PAT030205"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030205"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 3, 5, {
+    title: "Highball",
+    description: "Unlocks the Highball pattern",
+    cost: { points: { mantissa: 1, exponent: 6 } },
+    maxLevel: 1,
+    parents: ["PAT030205"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "UNL030005"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 3, 6, {
+    title: "Higherball",
+    description: "Unlocks the Higherball pattern",
+    cost: { points: { mantissa: 1, exponent: 7 } },
+    maxLevel: 1,
+    parents: ["PAT030305"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030305"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("PAT", 3, 3, 7, {
+    title: "Highestball",
+    description: "Unlocks the Highestball pattern",
+    cost: { points: { mantissa: 1, exponent: 8 } },
+    maxLevel: 1,
+    parents: ["PAT030305"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL030005"),
+    canBuyWhen: (state) => hasUpgrade(state, "PAT030305"),
     onBuy() {}
   })
 ];

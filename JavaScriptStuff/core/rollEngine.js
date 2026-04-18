@@ -1,19 +1,22 @@
 import { PATTERNS } from "../data/patterns.js";
 import { numberStringToValue } from "./patternHelpers.js";
-import { pushRollHistory } from "./statsHelpers.js";
-import { getUpgradeLevel, hasUpgrade } from "./upgradeHelpers.js";
+import { pushBestRoll, pushRollHistory } from "./statsHelpers.js";
+import { getUpgradeLevel } from "./upgradeHelpers.js";
+import { addBigNum, compareBigNum, fromNumber, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, toBigNum, zeroBigNum } from "../utils/bigNum.js";
+import { getAutomationConfig, shouldDisplayAutoRoll } from "./automationHelpers.js";
 
-export function performRoll(state) {
-  const digitCount = state.progression.maxDigitsUnlocked;
+export function performRoll(state, { source = "manual" } = {}) {
+  const digitCount = getRollDigitCount(state, source);
   const raw = generateRollString(digitCount);
 
   const rollResult = evaluateRollString(state, raw, {
+    source,
     includeGlobal: true,
     includePostMultiplierFlatBonus: true,
     includePatternCurrency: true
   });
 
-  applyRollResult(state, rollResult);
+  applyRollResult(state, rollResult, { source });
   return rollResult;
 }
 
@@ -21,6 +24,7 @@ export function evaluateRollString(
   state,
   raw,
   {
+    source = "manual",
     includeGlobal = true,
     includePostMultiplierFlatBonus = true,
     includePatternCurrency = true
@@ -28,6 +32,7 @@ export function evaluateRollString(
 ) {
   const digitCount = raw.length;
   const value = numberStringToValue(raw);
+  const automationConfig = getAutomationConfig(state);
 
   const matches = [];
 
@@ -43,8 +48,13 @@ export function evaluateRollString(
         ? pattern.patternCurrencyReward(raw, state)
         : 1;
 
-    const currentPatternCurrencyReward =
-      result.currentPatternCurrencyReward ?? basePatternCurrencyReward;
+    let currentMultiplier = result.currentMultiplier ?? result.baseMultiplier;
+    let currentPatternCurrencyReward = result.currentPatternCurrencyReward ?? basePatternCurrencyReward;
+
+    if (source === "auto") {
+      currentMultiplier = scaleAutomationMultiplier(currentMultiplier, automationConfig.patternMultiplierFactor);
+      currentPatternCurrencyReward = Math.floor(currentPatternCurrencyReward * automationConfig.patternCurrencyFactor);
+    }
 
     matches.push({
       patternId: pattern.id,
@@ -52,25 +62,19 @@ export function evaluateRollString(
       description: pattern.description,
       highlightedIndices: result.highlightedIndices,
       baseMultiplier: result.baseMultiplier,
-      currentMultiplier: result.currentMultiplier ?? result.baseMultiplier,
+      currentMultiplier,
       basePatternCurrencyReward,
       currentPatternCurrencyReward
     });
   }
 
   const baseRollValue = value;
-
-  const preMultiplierFlatBonus = getPreMultiplierFlatBonus(state, {
-    raw,
-    value,
-    digitCount,
-    matches
-  });
-
+  const preMultiplierFlatBonus = getPreMultiplierFlatBonus(state, { raw, value, digitCount, matches, source });
   const modifiedBaseValue = baseRollValue + preMultiplierFlatBonus;
+
   const patternMultiplier = getPatternMultiplier(matches);
 
-  const globalMultiplier = includeGlobal
+  let globalMultiplier = includeGlobal
     ? getGlobalMultiplier(state, {
         raw,
         value,
@@ -78,9 +82,14 @@ export function evaluateRollString(
         matches,
         baseRollValue,
         preMultiplierFlatBonus,
-        modifiedBaseValue
+        modifiedBaseValue,
+        source
       })
     : 1;
+
+  if (source === "auto") {
+    globalMultiplier = scaleAutomationMultiplier(globalMultiplier, automationConfig.globalMultiplierFactor);
+  }
 
   const postMultiplierFlatBonus = includePostMultiplierFlatBonus
     ? getPostMultiplierFlatBonus(state, {
@@ -92,13 +101,15 @@ export function evaluateRollString(
         preMultiplierFlatBonus,
         modifiedBaseValue,
         patternMultiplier,
-        globalMultiplier
+        globalMultiplier,
+        source
       })
     : 0;
 
   const totalMultiplier = patternMultiplier * globalMultiplier;
-  const multipliedGain = modifiedBaseValue * totalMultiplier;
-  const totalGain = multipliedGain + postMultiplierFlatBonus;
+  const multipliedGain = multiplyBigNum(fromNumber(modifiedBaseValue), fromNumber(totalMultiplier));
+  const totalGain = addBigNum(multipliedGain, fromNumber(postMultiplierFlatBonus));
+  //const totalGain = { mantissa: 1, exponent: 10 }
 
   const totalPatternCurrencyGain = includePatternCurrency
     ? getTotalPatternCurrencyGain(matches)
@@ -108,6 +119,7 @@ export function evaluateRollString(
     raw,
     value,
     digitCount,
+    source,
     matches,
 
     baseRollValue,
@@ -122,22 +134,45 @@ export function evaluateRollString(
     multipliedGain,
     totalGain,
 
-    totalPatternCurrencyGain
+    totalPatternCurrencyGain,
+    enteredBestRolls: false
   };
 }
 
-function applyRollResult(state, rollResult) {
-  state.currentRoll = rollResult;
-  state.currencies.points += rollResult.totalGain;
+function applyRollResult(state, rollResult, { source }) {
+  state.latestRoll = rollResult;
+  state.currencies.points = addBigNum(state.currencies.points, rollResult.totalGain);
   state.currencies.patterns += rollResult.totalPatternCurrencyGain;
 
   state.stats.totalRolls += 1;
-  state.stats.lifetimePointsGained += rollResult.totalGain;
+  state.stats.lifetimePointsGained = addBigNum(state.stats.lifetimePointsGained, rollResult.totalGain);
   state.stats.lifetimePatternCurrency += rollResult.totalPatternCurrencyGain;
   state.stats.bestRollValue = Math.max(state.stats.bestRollValue, rollResult.value);
-  state.stats.bestGain = Math.max(state.stats.bestGain, rollResult.totalGain);
+  state.stats.bestGain = maxBigNum(state.stats.bestGain, rollResult.totalGain);
 
   pushRollHistory(state, rollResult);
+  const enteredBestRolls = pushBestRoll(state, rollResult);
+  rollResult.enteredBestRolls = enteredBestRolls;
+
+  if (source === "manual") {
+    state.currentRoll = rollResult;
+    state.automation.pauseRemainingMs = 5000;
+    state.automation.accumulatorMs = 0;
+    return;
+  }
+
+  if (source === "auto" && shouldDisplayAutoRoll(state, rollResult)) {
+    state.currentRoll = rollResult;
+  }
+}
+
+function getRollDigitCount(state, source) {
+  if (source !== "auto") {
+    return state.progression.maxDigitsUnlocked;
+  }
+
+  const automationConfig = getAutomationConfig(state);
+  return Math.max(1, Math.min(automationConfig.digitCap, state.progression.maxDigitsUnlocked));
 }
 
 function getPatternMultiplier(matches) {
@@ -160,6 +195,10 @@ function getTotalPatternCurrencyGain(matches) {
   return total;
 }
 
+function scaleAutomationMultiplier(multiplier, factor) {
+  return 1 + (multiplier - 1) * factor;
+}
+
 function getPreMultiplierFlatBonus(state, rollData) {
   let bonus = 0;
   bonus += 250 * getUpgradeLevel(state, "MULT030401");
@@ -168,8 +207,10 @@ function getPreMultiplierFlatBonus(state, rollData) {
 }
 
 function getGlobalMultiplier(state, rollData) {
-  let bonus = 1;
-  return bonus;
+  let multiplier = 1;
+  multiplier += 0.2 * getUpgradeLevel(state, "MULT030301");
+
+  return multiplier;
 }
 
 function getPostMultiplierFlatBonus(state, rollData) {
