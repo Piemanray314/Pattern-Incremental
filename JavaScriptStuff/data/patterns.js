@@ -375,7 +375,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits > state.progression.maxDigitsUnlocked + 5) return null;
+      if(sumDigits <= state.progression.maxDigitsUnlocked + 5) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -393,7 +393,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits > state.progression.maxDigitsUnlocked + 3) return null;
+      if(sumDigits <= state.progression.maxDigitsUnlocked + 3) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -411,7 +411,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits > state.progression.maxDigitsUnlocked + 1) return null;
+      if(sumDigits <= state.progression.maxDigitsUnlocked + 1) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -429,7 +429,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits < 9 * state.progression.maxDigitsUnlocked - 5) return null;
+      if(sumDigits >= 9 * state.progression.maxDigitsUnlocked - 5) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -447,7 +447,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits < 9 * state.progression.maxDigitsUnlocked - 3) return null;
+      if(sumDigits >= 9 * state.progression.maxDigitsUnlocked - 3) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
@@ -465,7 +465,7 @@ export const PATTERNS = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if(sumDigits < 9 * state.progression.maxDigitsUnlocked - 5) return null;
+      if(sumDigits >= 9 * state.progression.maxDigitsUnlocked - 5) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
