@@ -16,12 +16,14 @@ export const changeLog = [
       "Added automation tab",
       "Added best rolls tab with roll breakdowns",
       "Added displayed-roll logic for auto rolls",
-      "Added more patterns (24 total)"
+      "Added more patterns (24 total)",
+      "Failed to fix bugs allowing user 'the woke left' to reach unreasonably high numbers",
+      "Thank you playtesters 'the woke left', 'thefakekole,' 'Glixh Hunt3r,' and a cruddy 5-digit"
     ]
   },
   {
     version: "0.3",
-    title: "Import/Export, Backend fixes, Yaddi Yaddi",
+    title: "Import/Export, Backend fixes, and Yaddi Yaddi",
     entries: [
       "Reworked patterns to be more scaleable",
       "Added comments on many files explaining code. I couldn't be bothered after like 15 of them. Mostly for docuemntation",
@@ -31,7 +33,8 @@ export const changeLog = [
       "Fixed the Automation section of Settings being unresponsive by adding a Confirmation button",
       "Fixed bugs regarding patterns not being evaluated properly",
       "Fixed bugs regarding currentMultipliers not udpating properly",
-      "Just fixed lots of bugs in general, I forgot them all"
+      "Just fixed lots of bugs in general, I forgot them all",
+      "Removed the imaginary nekos that a certain weeb prophesied"
     ]
   }
 ];
