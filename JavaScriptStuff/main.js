@@ -5,7 +5,8 @@ import {
   initializeAppShell,
   renderTopbarInto,
   renderContentInto,
-  refreshSidebarActiveState
+  refreshSidebarActiveState,
+  renderModalInto
 } from "./ui/renderApp.js";
 import { isBigNum, toBigNum, zeroBigNum } from "./utils/bigNum.js";
 import { setNumberFormatMode } from "./utils/format.js";
@@ -39,6 +40,8 @@ function setState(mutator, renderOptions = {}) {
   if (sidebar) {
     refreshSidebarActiveState(state);
   }
+
+  renderModalInto(state, setState);
 }
 
 function tick(now) {

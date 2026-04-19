@@ -1,5 +1,6 @@
 import { compareBigNum, toBigNum } from "../utils/bigNum.js";
 
+// Updates the 10 most recent rolls with a new roll
 export function pushRollHistory(state, rollResult) {
   state.stats.previousRolls.unshift(makeRollSnapshot(rollResult));
 
@@ -8,6 +9,7 @@ export function pushRollHistory(state, rollResult) {
   }
 }
 
+// Updates the top 20 best rolls with a new roll
 export function pushBestRoll(state, rollResult) {
   const snapshot = makeRollSnapshot(rollResult);
 
@@ -34,6 +36,7 @@ export function pushBestRoll(state, rollResult) {
   );
 }
 
+// Returns the comprehensive information of a given roll
 function makeRollSnapshot(rollResult) {
   return {
     raw: rollResult.raw,

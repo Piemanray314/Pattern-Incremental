@@ -1,10 +1,37 @@
 import { makeUpgradeDefinition } from "./definitionHelpers.js";
 import { compareBigNum, fromNumber, toBigNum } from "../utils/bigNum.js";
 
+// Returns if the player has earned at least the given lifetime point total.
 export function hasAtLeastPointsEarned(state, amount) {
   return compareBigNum(toBigNum(state.stats.lifetimePointsGained), fromNumber(amount)) >= 0;
 }
 
+// ID format:
+// DIG## = digit unlock, where ## is the number of digits unlocked
+// PAT/MULT/UNL###### = type + stage + row + column, each using 2 digits
+// PAT = Pattern, MULT = Multiplier, UNL = Unlock
+
+// An example with all fields:
+/*
+  {
+    id: "DIG03",
+    title: "Unlock 3 Digits",
+    description: "Allows rolling 3-digit numbers.",
+    cost: { points: 20000 },
+    maxLevel: 1,
+    x: 0,
+    y: 0,
+    parents: ["X"],
+    visibleWhen: (state) => hasUpgrade(state, "X"),
+    canBuyWhen: (state) => hasUpgrade(state, "X"),
+    onBuy(state) {}
+  }
+*/
+// cost can use any currency, and can be written as a fixed object, array by level, or function
+// nodes connect from each upgrade to all IDs listed in parents
+// makeUpgradeDefinition(type, stage, row, column, extra) auto-generates id, x, and y to reduce redundancy
+
+// List of all upgrades in the main upgrade tree
 export const UPGRADES = [
   {
     id: "DIG01",
@@ -19,10 +46,6 @@ export const UPGRADES = [
     canBuyWhen: () => false,
     onBuy() {}
   },
-
-  // DIG00 = Digit + (00)How many digits
-  // PAT/MULT/UNL 000000 = (00)Roll Digits + (00)Row # + (00)Column #
-  // PAT = Pattern, MULT = Multiplier, UNL = Unlock
 
   {
     id: "DIG02",
@@ -56,7 +79,6 @@ export const UPGRADES = [
     parents: ["DIG02"],
     visibleWhen: (state) =>
       hasUpgrade(state, "DIG02") &&
-      // compareBigNum(toBigNum(state.stats.lifetimePointsGained), fromNumber(5000)) >= 0,
       hasAtLeastPointsEarned(state, 5000),
     canBuyWhen: (state) => hasUpgrade(state, "DIG02"),
     onBuy(state) {
@@ -136,8 +158,8 @@ export const UPGRADES = [
   }),
 
   makeUpgradeDefinition("PAT", 3, 2, 3, {
-    title: "Pattern: Increasing",
-    description: "Unlocks the Increasing pattern.",
+    title: "Pattern: Ascending",
+    description: "Unlocks the Ascending pattern.",
     cost: { points: 3000000 },
     maxLevel: 1,
     parents: ["PAT030202"],
@@ -149,8 +171,8 @@ export const UPGRADES = [
   }),
 
   makeUpgradeDefinition("PAT", 3, 2, 4, {
-    title: "Pattern: Decreasing",
-    description: "Unlocks the Decreasing pattern.",
+    title: "Pattern: Descending",
+    description: "Unlocks the Descending pattern.",
     cost: { points: 3000000 },
     maxLevel: 1,
     parents: ["PAT030203"],

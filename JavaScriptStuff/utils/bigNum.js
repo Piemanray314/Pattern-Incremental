@@ -162,3 +162,37 @@ export function bigNumToScientificString(value, digits = 2) {
   if (normalized.mantissa === 0) return "0";
   return `${normalized.mantissa.toFixed(digits)}e${normalized.exponent}`;
 }
+
+export function serializeBigNum(value, mantissaDigits = 12) {
+  const big = toBigNum(value);
+  if (big.mantissa === 0) return [0, 0];
+
+  return [roundToDigits(big.mantissa, mantissaDigits), big.exponent];
+}
+
+export function deserializeBigNum(value) {
+  if (Array.isArray(value) && value.length === 2) {
+    return makeBigNum(value[0], value[1]);
+  }
+
+  return toBigNum(value);
+}
+
+export function roundBigNumMantissa(value, digits = 12) {
+  const big = toBigNum(value);
+  if (big.mantissa === 0) return zeroBigNum();
+
+  return makeBigNum(roundToDigits(big.mantissa, digits), big.exponent);
+}
+
+function roundToDigits(value, digits) {
+  const factor = Math.pow(10, digits);
+  return Math.round(value * factor) / factor;
+}
+
+export function roundMultiplierBigNum(value) {
+  const big = toBigNum(value);
+  if (big.mantissa === 0) return zeroBigNum();
+
+  return makeBigNum(Math.round(big.mantissa * 1000000) / 1000000, big.exponent);
+}

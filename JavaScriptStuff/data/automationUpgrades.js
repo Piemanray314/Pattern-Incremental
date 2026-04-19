@@ -1,6 +1,9 @@
 import { makeUpgradeDefinition } from "./definitionHelpers.js";
 import { hasUpgrade } from "../core/upgradeHelpers.js";
 
+// For specifications regarding upgrade format, refer to upgrades.js
+
+// List of all upgrades in the automation upgrade tree
 export const AUTOMATION_UPGRADES = [
   makeUpgradeDefinition("AUTO", 3, 1, 1, {
     title: "Automation Core",

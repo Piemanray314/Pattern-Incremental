@@ -1,6 +1,47 @@
 import { getUpgradeLevel } from "../core/upgradeHelpers.js";
 import { isNthPower, sumDigits } from "../core/patternHelpers.js";
 
+// ID format: PAT###### = type + stage + row + column, each using 2 digits
+
+// An example with all fields:
+/*
+  {
+    id: "PAT000001",
+    name: "Digit Count",
+    description: "Matches every roll. Multiplier equals the digit count.",
+    previewRollString: "777",
+    baseMultiplier: (rollString) => 5,
+    patternCurrencyReward: () => 10,
+    visibleWhen: () => true,
+    unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
+    
+    getMultiplierData(state) {
+      const baseMultiplier = this.baseMultiplier();
+      const level = getUpgradeLevel(state, "MULT030302");
+      const currentMultiplier = baseMultiplier + baseMultiplier * level;
+
+      return {
+        baseMultiplier,
+        currentMultiplier
+      };
+    },
+
+    evaluate(rollString, state) {
+      if (!rollString.includes("777")) return null;
+
+      return {
+        highlightedIndices: [...rollString].map((_, index) => index),
+        ...this.getMultiplierData(state)
+      };
+    }
+  }
+*/
+// baseMultiplier and patternCurrencyReward can be expressions and default to 1
+// All pattern IDs should be identical with their IDs in upgrades and can be checked in unlockWhen(state) with this.id
+// currentMultiplier takes precedence over baseMultiplier and represents the base after upgrades
+// For patterns like Lucky 7s witha currentMultiplier, use getMultiplierData to set up intermediary multiplier calculations
+
+// List of all patterns
 export const PATTERNS = [
   {
     id: "PAT000001",
@@ -10,10 +51,19 @@ export const PATTERNS = [
     patternCurrencyReward: () => 1,
     visibleWhen: () => true,
     unlockedWhen: () => true,
+    getMultiplierData(state) {
+      const baseMultiplier = state.progression.maxDigitsUnlocked;
+
+      return {
+        baseMultiplier,
+        currentMultiplier: baseMultiplier
+      };
+    },
+
     evaluate(rollString) {
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
-        baseMultiplier: rollString.length
+        ...this.getMultiplierDataFromLength(rollString.length)
       };
     }
   },
@@ -145,31 +195,35 @@ export const PATTERNS = [
     id: "PAT030202",
     name: "Lucky 7s",
     description: "Roll contains 777",
-    previewRollString: "777",
     baseMultiplier: () => 7,
     patternCurrencyReward: () => 77,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
-    evaluate(rollString, state) {
-      if (!rollString.includes("777")) {
-        return null;
-      }
 
-      const level = getUpgradeLevel(state, "MULT030302");
+    getMultiplierData(state) {
       const baseMultiplier = this.baseMultiplier();
-      const currentMultiplier = baseMultiplier + 7 * level;
+      const level = getUpgradeLevel(state, "MULT030302");
+      const currentMultiplier = baseMultiplier + baseMultiplier * level;
+
+      return {
+        baseMultiplier,
+        currentMultiplier
+      };
+    },
+
+    evaluate(rollString, state) {
+      if (!rollString.includes("777")) return null;
 
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
-        baseMultiplier,
-        currentMultiplier
+        ...this.getMultiplierData(state)
       };
     }
   },
 
   {
     id: "PAT030203",
-    name: "Increasing",
+    name: "Ascending",
     description: "Digits increase from left to right",
     baseMultiplier: () => 3,
     patternCurrencyReward: () => 10,
@@ -190,7 +244,7 @@ export const PATTERNS = [
 
   {
     id: "PAT030204",
-    name: "Decreasing",
+    name: "Descending",
     description: "Digits decrease from left to right",
     baseMultiplier: () => 3,
     patternCurrencyReward: () => 10,
@@ -213,8 +267,8 @@ export const PATTERNS = [
     id: "PAT030105",
     name: "Square",
     description: "Roll is a square number",
-    baseMultiplier: () => 2,
-    patternCurrencyReward: () => 2,
+    baseMultiplier: () => 4,
+    patternCurrencyReward: () => 4,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -231,8 +285,8 @@ export const PATTERNS = [
     id: "PAT030106",
     name: "Cubic",
     description: "Roll is a cubic number",
-    baseMultiplier: () => 3,
-    patternCurrencyReward: () => 3,
+    baseMultiplier: () => 6,
+    patternCurrencyReward: () => 6,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -249,8 +303,8 @@ export const PATTERNS = [
     id: "PAT030107",
     name: "Quartic",
     description: "Roll is a quartic number",
-    baseMultiplier: () => 4,
-    patternCurrencyReward: () => 4,
+    baseMultiplier: () => 8,
+    patternCurrencyReward: () => 8,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -267,8 +321,8 @@ export const PATTERNS = [
     id: "PAT030108",
     name: "Quintic",
     description: "Roll is a quintic number",
-    baseMultiplier: () => 5,
-    patternCurrencyReward: () => 5,
+    baseMultiplier: () => 10,
+    patternCurrencyReward: () => 10,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -285,8 +339,8 @@ export const PATTERNS = [
     id: "PAT030109",
     name: "Sextic",
     description: "Roll is a sextic number",
-    baseMultiplier: () => 6,
-    patternCurrencyReward: () => 6,
+    baseMultiplier: () => 12,
+    patternCurrencyReward: () => 12,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -303,8 +357,8 @@ export const PATTERNS = [
     id: "PAT030110",
     name: "Septic",
     description: "Roll is a septic number",
-    baseMultiplier: () => 7,
-    patternCurrencyReward: () => 7,
+    baseMultiplier: () => 14,
+    patternCurrencyReward: () => 14,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -321,8 +375,8 @@ export const PATTERNS = [
     id: "PAT030111",
     name: "Octic",
     description: "Roll is a octic number",
-    baseMultiplier: () => 8,
-    patternCurrencyReward: () => 8,
+    baseMultiplier: () => 16,
+    patternCurrencyReward: () => 16,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -339,8 +393,8 @@ export const PATTERNS = [
     id: "PAT030112",
     name: "Nonic",
     description: "Roll is a nonic number",
-    baseMultiplier: () => 9,
-    patternCurrencyReward: () => 9,
+    baseMultiplier: () => 18,
+    patternCurrencyReward: () => 18,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -357,8 +411,8 @@ export const PATTERNS = [
     id: "PAT030113",
     name: "Decic",
     description: "Roll is a decic number",
-    baseMultiplier: () => 10,
-    patternCurrencyReward: () => 10,
+    baseMultiplier: () => 20,
+    patternCurrencyReward: () => 20,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString) {
@@ -445,7 +499,7 @@ export const PATTERNS = [
 
   {
     id: "PAT030306",
-    name: "Highball",
+    name: "Higherball",
     description: "Sum of digits is greater than or equal 9 times unlocked digits - 3",
     baseMultiplier: () => 4,
     patternCurrencyReward: () => 5,
@@ -463,7 +517,7 @@ export const PATTERNS = [
 
   {
     id: "PAT030307",
-    name: "Highball",
+    name: "Highestball",
     description: "Sum of digits is greater than or equal 9 times unlocked digits - 1",
     baseMultiplier: () => 10,
     patternCurrencyReward: () => 10,

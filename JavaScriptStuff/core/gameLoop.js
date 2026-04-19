@@ -1,7 +1,9 @@
 import { performRoll } from "./rollEngine.js";
 import { getAutomationConfig } from "./automationHelpers.js";
 
+// Main game loop
 export function updateGame(state, deltaMs) {
+  // Dictates what parts of the UI to re-rendered this frame
   const instructions = {
     topbar: false,
     content: false,
@@ -41,6 +43,7 @@ export function updateGame(state, deltaMs) {
     }
   }
 
+  // Refreshes the UI at most 4 times a second
   if (
     (state.ui.activeTab === "stats") &&
     state.timers.uiRefreshAccumulatorMs >= 250

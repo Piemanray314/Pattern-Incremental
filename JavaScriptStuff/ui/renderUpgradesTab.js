@@ -1,10 +1,5 @@
 import { UPGRADES } from "../data/upgrades.js";
-import {
-  buyUpgrade,
-  canAffordCost,
-  getUpgradeLevel,
-  getUpgradeCost
-} from "../core/upgradeHelpers.js";
+import { buyUpgrade, canAffordCost, getUpgradeLevel, getUpgradeCost } from "../core/upgradeHelpers.js";
 import { createElement } from "../utils/dom.js";
 import { formatNumber } from "../utils/format.js";
 

@@ -63,9 +63,25 @@ export function renderPatternsTab(state, setState) {
 
   renderPreviewResultInto(previewResultHost, state);
 
+  const visiblePatterns = PATTERNS.filter((pattern) =>
+    pattern.visibleWhen(state)
+  );
+
+  const unlockedCount = visiblePatterns.filter((pattern) =>
+    pattern.unlockedWhen(state)
+  ).length;
+  
+  const totalCount = PATTERNS.length;
+
   const listPanel = createElement("section", { className: "panel" });
   listPanel.append(
-    createElement("h2", { className: "panel-title", text: "Patterns" })
+  createElement("h2", {
+      className: "panel-title",
+      text:
+        unlockedCount > 0
+          ? `Patterns (${unlockedCount}/${totalCount})`
+          : "Patterns"
+    })
   );
 
   const table = createElement("div", { className: "pattern-table" });
@@ -199,21 +215,23 @@ function evaluatePatternPreview(state, input, includeGlobal) {
   };
 }
 
-function getPatternPreviewMultipliers(state, pattern, previewRoll) {
-  const result = pattern.evaluate(previewRoll, state);
+function getPatternPreviewMultipliers(state, pattern) {
+  if (typeof pattern.getMultiplierData === "function") {
+    const preview = pattern.getMultiplierData(state);
+    return {
+      baseMultiplier: preview.baseMultiplier,
+      currentMultiplier: preview.currentMultiplier ?? preview.baseMultiplier
+    };
+  }
 
   const baseMultiplier =
-    result?.baseMultiplier ??
-    (typeof pattern.baseMultiplier === "function"
-      ? pattern.baseMultiplier(previewRoll, state)
-      : 1);
-
-  const currentMultiplier =
-    result?.currentMultiplier ?? baseMultiplier;
+    typeof pattern.baseMultiplier === "function"
+      ? pattern.baseMultiplier("", state)
+      : pattern.baseMultiplier;
 
   return {
     baseMultiplier,
-    currentMultiplier
+    currentMultiplier: baseMultiplier
   };
 }
 

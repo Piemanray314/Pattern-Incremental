@@ -42,6 +42,15 @@ export function renderBestRollsTab(state, setState) {
       summaryPill(`Gain: ${formatNumber(selectedRoll.totalGain ?? selectedRoll.gain)}`)
     );
 
+    if (selectedRoll.outdated) {
+      breakdownPanel.append(
+        createElement("div", {
+          className: "muted",
+          text: "Outdated roll - may not be accurate"
+        })
+      );
+    }
+
     breakdownPanel.append(createElement("div", { className: "section-spacer" }));
     breakdownPanel.append(summary);
 
@@ -98,7 +107,8 @@ export function renderBestRollsTab(state, setState) {
         `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
         `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
         `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
-        `+${formatNumber(roll.totalGain ?? roll.gain)} points`;
+        `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
+        (roll.outdated ? " | Outdated roll - may not be accurate" : "");
 
       list.append(button);
     });

@@ -54,11 +54,17 @@ export function createInitialState() {
       upgradeTreeView: {
         scrollLeft: 0,
         scrollTop: 0
-      }
+      },
+      showChangeLogModal: false,
     },
 
     settings: {
       numberFormat: "standard"
     },
+
+    meta: {
+      saveVersion: 0.12,
+      lastSavedAt: Date.now()
+    }
   };
 }

@@ -71,12 +71,12 @@ function renderStoredRollSummary(roll) {
     className: "history-item",
     text:
       `${roll.raw} | ` +
-      `${roll.source === "auto" ? "Auto" : "Manual"} | ` +
-      `Base ${formatNumber(roll.modifiedBaseValue)} | ` +
+      `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
       `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
       `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
-      `Total ${formatMultiplier(roll.multiplier)} | ` +
-      `+${formatNumber(roll.gain)} points`
+      `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
+      `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
+      (roll.outdated ? " | Outdated roll - may not be accurate" : "")
   });
 }
 

@@ -13,19 +13,17 @@ export function renderTopbar(state, setState) {
     currencyPill(`Pies: ${formatNumber(state.currencies.pies)}`)
   );
 
-  const settingsButton = createElement("button", {
-    text: "Settings",
+  const changeLogButton = createElement("button", {
+    text: "Change Log",
     onClick: () => {
-      if (state.ui.activeTab === "settings") return;
-
       setState((draft) => {
-        draft.ui.activeTab = "settings";
-      }, { topbar: false, content: true, sidebar: true });
+        draft.ui.showChangeLogModal = true;
+      }, { topbar: false, content: true, sidebar: false });
     }
   });
 
   right.append(
-    settingsButton,
+    changeLogButton,
     topbarLink("GitHub", "#"),
     topbarLink("Discord", "#"),
     topbarLink("Channel", "#")

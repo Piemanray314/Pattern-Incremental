@@ -8,6 +8,7 @@ import { renderStatsTab } from "./renderStatsTab.js";
 import { renderBestRollsTab } from "./renderBestRollsTab.js";
 import { renderSettingsTab } from "./renderSettingsTab.js";
 import { createElement } from "../utils/dom.js";
+import { renderChangeLogModal } from "./renderChangeLogModal.js";
 
 let shell = null;
 
@@ -19,6 +20,7 @@ export function initializeAppShell(state, setState) {
   const mainLayout = createElement("div", { className: "main-layout" });
   const sidebar = createElement("aside", { className: "sidebar" });
   const content = createElement("main", { className: "content" });
+  const modalHost = createElement("div");
 
   const sidebarButtons = new Map();
 
@@ -40,25 +42,37 @@ export function initializeAppShell(state, setState) {
   }
 
   mainLayout.append(sidebar, content);
-  app.append(topbarHost, mainLayout);
+  app.append(topbarHost, mainLayout, modalHost);
 
   shell = {
     app,
     topbarHost,
     sidebar,
     content,
-    sidebarButtons
+    sidebarButtons,
+    modalHost
   };
 
   renderTopbarInto(state, setState);
   renderContentInto(state, setState);
   refreshSidebarActiveState(state);
+  renderModalInto(state, setState);
 }
 
 export function renderTopbarInto(state, setState) {
   ensureShellExists();
   shell.topbarHost.innerHTML = "";
   shell.topbarHost.append(renderTopbar(state, setState));
+}
+
+export function renderModalInto(state, setState) {
+  ensureShellExists();
+  shell.modalHost.innerHTML = "";
+
+  const modal = renderChangeLogModal(state, setState);
+  if (modal) {
+    shell.modalHost.append(modal);
+  }
 }
 
 export function renderContentInto(state, setState) {

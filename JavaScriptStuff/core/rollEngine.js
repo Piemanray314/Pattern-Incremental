@@ -2,9 +2,11 @@ import { PATTERNS } from "../data/patterns.js";
 import { numberStringToValue } from "./patternHelpers.js";
 import { pushBestRoll, pushRollHistory } from "./statsHelpers.js";
 import { getUpgradeLevel } from "./upgradeHelpers.js";
-import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum } from "../utils/bigNum.js";
+import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
 import { getAutomationConfig, shouldDisplayAutoRoll } from "./automationHelpers.js";
 
+// Main function to perform a loop. Returns the roll and saves it into state
+// { source = "manual" } = {} is a fancy way to write "If there's no second argument, or it's empty, return manual"
 export function performRoll(state, { source = "manual" } = {}) {
   const digitCount = getRollDigitCount(state, source);
   const raw = generateRollString(digitCount);
@@ -20,6 +22,7 @@ export function performRoll(state, { source = "manual" } = {}) {
   return rollResult;
 }
 
+// Main roll calculation. Checks for patterns, evaluates value after all multipliers, then returns a roll object
 export function evaluateRollString(
   state,
   raw,
@@ -34,8 +37,10 @@ export function evaluateRollString(
   const value = numberStringToValue(raw);
   const automationConfig = getAutomationConfig(state);
 
+  // Keeps track of pattern matches
   const matches = [];
 
+  // Checks every pattern for matches
   for (const pattern of PATTERNS) {
     if (!pattern.visibleWhen(state)) continue;
     if (!pattern.unlockedWhen(state)) continue;
@@ -48,9 +53,8 @@ export function evaluateRollString(
         ? toBigNum(pattern.patternCurrencyReward(raw, state))
         : oneBigNum();
 
-    let currentMultiplier = toBigNum(result.currentMultiplier ?? result.baseMultiplier);
-    let currentPatternCurrencyReward =
-      toBigNum(result.currentPatternCurrencyReward ?? basePatternCurrencyReward);
+    let currentMultiplier = roundMultiplierBigNum(toBigNum(result.currentMultiplier ?? result.baseMultiplier));
+    let currentPatternCurrencyReward = roundMultiplierBigNum(toBigNum(result.currentPatternCurrencyReward ?? basePatternCurrencyReward));
 
     if (source === "auto") {
       currentMultiplier = scaleAutomationMultiplier(
@@ -81,7 +85,7 @@ export function evaluateRollString(
   );
 
   const modifiedBaseValue = addBigNum(baseRollValue, preMultiplierFlatBonus);
-  const patternMultiplier = getPatternMultiplier(matches);
+  const patternMultiplier = roundMultiplierBigNum(getPatternMultiplier(matches));
 
   let globalMultiplier = includeGlobal
     ? toBigNum(getGlobalMultiplier(state, {
@@ -118,9 +122,12 @@ export function evaluateRollString(
       }))
     : zeroBigNum();
 
-  const totalMultiplier = multiplyBigNum(patternMultiplier, globalMultiplier);
+  // General calculation of roll value is given by
+  // totalGain = ((preMultFlat + rollValue) x patternMult x globalMult) + postMultFlat
+  const totalMultiplier = roundMultiplierBigNum(multiplyBigNum(patternMultiplier, globalMultiplier));
   const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
   const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
+  // const totalGain = makeBigNum(3.26, 1533453348); // For cheating!!
 
   const totalPatternCurrencyGain = includePatternCurrency
     ? getTotalPatternCurrencyGain(matches)
@@ -150,6 +157,7 @@ export function evaluateRollString(
   };
 }
 
+// Updates the state with the given roll result
 function applyRollResult(state, rollResult, { source }) {
   state.latestRoll = rollResult;
   state.currencies.points = addBigNum(state.currencies.points, rollResult.totalGain);
@@ -185,6 +193,7 @@ function applyRollResult(state, rollResult, { source }) {
   }
 }
 
+// Returns the number of digits in the roll
 function getRollDigitCount(state, source) {
   if (source !== "auto") {
     return state.progression.maxDigitsUnlocked;
@@ -194,6 +203,7 @@ function getRollDigitCount(state, source) {
   return Math.max(1, Math.min(automationConfig.digitCap, state.progression.maxDigitsUnlocked));
 }
 
+// Returns the final multiplier after all patterns
 function getPatternMultiplier(matches) {
   let product = oneBigNum();
 
@@ -204,6 +214,7 @@ function getPatternMultiplier(matches) {
   return product;
 }
 
+// Returns the final gain of patterns currency after all matches
 function getTotalPatternCurrencyGain(matches) {
   let total = zeroBigNum();
 
@@ -214,13 +225,15 @@ function getTotalPatternCurrencyGain(matches) {
   return total;
 }
 
+// Returns the multiplier for automated rolls
+// Slightly redundant, used to be more complicated
 function scaleAutomationMultiplier(multiplier, factor) {
   const bigMultiplier = toBigNum(multiplier);
-  const delta = subtractBigNum(bigMultiplier, oneBigNum());
-  const scaledDelta = multiplyBigNumByNumber(delta, factor);
-  return addBigNum(oneBigNum(), scaledDelta);
+  return multiplyBigNumByNumber(bigMultiplier, factor);
 }
 
+// The next few functions control how main tree upgrades affect roll calculations
+// Increases the raw value of a roll before multipliers
 function getPreMultiplierFlatBonus(state, rollData) {
   let bonus = zeroBigNum();
   bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 250 * getUpgradeLevel(state, "MULT030401")));
@@ -228,6 +241,7 @@ function getPreMultiplierFlatBonus(state, rollData) {
   return bonus;
 }
 
+// Increases the global multiplier
 function getGlobalMultiplier(state, rollData) {
   let multiplier = oneBigNum();
   multiplier = addBigNum(
@@ -237,6 +251,7 @@ function getGlobalMultiplier(state, rollData) {
   return multiplier;
 }
 
+// Increases the raw value of a roll after multipliers
 function getPostMultiplierFlatBonus(state, rollData) {
   let bonus = zeroBigNum();
   bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 10000 * getUpgradeLevel(state, "MULT030403")));
@@ -244,6 +259,7 @@ function getPostMultiplierFlatBonus(state, rollData) {
   return bonus;
 }
 
+// Generates a random roll string
 function generateRollString(digitCount) {
   let result = "";
 
@@ -260,6 +276,8 @@ function generateRollString(digitCount) {
   return result;
 }
 
+// Generates a random integer betweein min and max inclusive OBVIOUSLY
+// I'm only writing this comment to be consistent and make sure every function has a comment :)
 function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }

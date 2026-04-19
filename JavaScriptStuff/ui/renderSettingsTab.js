@@ -1,7 +1,8 @@
 import { createElement } from "../utils/dom.js";
-import { deleteSave } from "../state/save.js";
+import { deleteSave, saveGame } from "../state/save.js";
 import { createInitialState } from "../state/initialState.js";
 import { getAutomationConfig } from "../core/automationHelpers.js";
+import { serializeSave, deserializeSave } from "../state/saveCodec.js";
 
 // Render the screen again with effective interval after inputing number
 
@@ -11,6 +12,7 @@ export function renderSettingsTab(state, setState) {
   fragment.append(renderNumberSettingsPanel(state, setState));
   fragment.append(renderAutomationSettingsPanel(state, setState));
   fragment.append(renderResetPanel(setState));
+  fragment.append(renderImportExportPanel(state, setState));
 
   return fragment;
 }
@@ -31,7 +33,8 @@ function renderNumberSettingsPanel(state, setState) {
   actions.append(
     makeModeButton("Standard", "standard", state.settings.numberFormatMode, setState, "numberFormatMode"),
     makeModeButton("Scientific", "scientific", state.settings.numberFormatMode, setState, "numberFormatMode"),
-    makeModeButton("Letters", "letters", state.settings.numberFormatMode, setState, "numberFormatMode")
+    makeModeButton("Letters", "letters", state.settings.numberFormatMode, setState, "numberFormatMode"),
+    makeModeButton("Literally Complete Silliness", "complete", state.settings.numberFormatMode, setState, "numberFormatMode")
   );
 
   panel.append(createElement("div", { className: "section-spacer" }));
@@ -90,15 +93,22 @@ function renderAutomationSettingsPanel(state, setState) {
   intervalInput.value = String(state.automation.intervalMs);
   styleInput(intervalInput);
 
-  intervalInput.addEventListener("input", (event) => {
-    const parsed = Number(event.target.value);
+  const confirmIntervalButton = createElement("button", {
+    text: "Confirm Interval Change",
+    onClick: () => {
+      setState((draft) => {
+        let value = Number(intervalInput.value);
 
-    setState((draft) => {
-      draft.automation.intervalMs = Number.isFinite(parsed) ? parsed : 0;
-    }, { topbar: false, content: false, sidebar: false });
+        if (!Number.isFinite(value)) value = 0;
+        if (value < 250) value = 250;
+
+        draft.automation.intervalMs = value;
+        intervalInput.value = String(value);
+      }, { topbar: false, content: true, sidebar: false });
+    }
   });
 
-  controls.append(enabledButton, displayModeButton, intervalInput);
+  controls.append(enabledButton, displayModeButton, intervalInput, confirmIntervalButton);
   panel.append(createElement("div", { className: "section-spacer" }));
   panel.append(controls);
 
@@ -193,4 +203,76 @@ function nextDisplayMode(mode) {
   if (mode === "show_all") return "big_only";
   if (mode === "big_only") return "show_none";
   return "show_all";
+}
+
+function renderImportExportPanel(state, setState) {
+  const panel = createElement("section", { className: "panel" });
+  panel.append(createElement("h2", { className: "panel-title", text: "Import / Export Save" }));
+
+  panel.append(
+    createElement("div", {
+      className: "muted",
+      text: "Export your save for backup, or import a previous save."
+    })
+  );
+
+  panel.append(createElement("div", { className: "section-spacer" }));
+
+  const controls = createElement("div", { className: "roll-actions" });
+
+  const copyButton = createElement("button", {
+    text: "Copy Export",
+    onClick: async () => {
+      try {
+        const text = serializeSave(state);
+        await navigator.clipboard.writeText(text);
+        alert("Save copied to clipboard.");
+      } catch (error) {
+        alert("Failed to copy save.");
+      }
+    }
+  });
+
+  controls.append(copyButton);
+  panel.append(controls);
+  panel.append(createElement("div", { className: "section-spacer" }));
+
+  const textarea = document.createElement("textarea");
+  textarea.rows = 10;
+  textarea.placeholder = "Paste exported save here...";
+  textarea.style.width = "100%";
+  textarea.style.font = "inherit";
+  textarea.style.padding = "10px 12px";
+  textarea.style.borderRadius = "8px";
+  textarea.style.border = "1px solid var(--border)";
+  textarea.style.background = "var(--panel-2)";
+  textarea.style.color = "var(--text)";
+
+  panel.append(textarea);
+  panel.append(createElement("div", { className: "section-spacer" }));
+
+  const importButton = createElement("button", {
+    text: "Import Save",
+    onClick: () => {
+      try {
+        const imported = deserializeSave(textarea.value);
+
+        setState((draft) => {
+          for (const key of Object.keys(draft)) {
+            delete draft[key];
+          }
+          Object.assign(draft, imported);
+        }, { topbar: true, content: true, sidebar: true });
+
+        saveGame(imported);
+        alert("Save imported successfully.");
+      } catch (error) {
+        alert(`Import failed: ${error.message}`);
+      }
+    }
+  });
+
+  panel.append(importButton);
+
+  return panel;
 }
