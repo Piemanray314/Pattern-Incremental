@@ -51,19 +51,17 @@ export const PATTERNS = [
     patternCurrencyReward: () => 1,
     visibleWhen: () => true,
     unlockedWhen: () => true,
-    getMultiplierData(state) {
-      const baseMultiplier = state.progression.maxDigitsUnlocked;
-
+    getMultiplierData(length) {
       return {
-        baseMultiplier,
-        currentMultiplier: baseMultiplier
+        baseMultiplier: length,
+        currentMultiplier: length
       };
     },
 
     evaluate(rollString) {
       return {
         highlightedIndices: [...rollString].map((_, index) => index),
-        ...this.getMultiplierDataFromLength(rollString.length)
+        ...this.getMultiplierData(rollString.length)
       };
     }
   },

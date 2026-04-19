@@ -36,5 +36,12 @@ export const changeLog = [
       "Just fixed lots of bugs in general, I forgot them all",
       "Removed the imaginary nekos that a certain weeb prophesied"
     ]
+  },
+  {
+    version: "0.31",
+    title: "Yeah so the roll wasn't working",
+    entries: [
+      "Yeah so uhhhh I checked for like every bug without rolling from the main button, so that's fixed now!"
+    ]
   }
 ];
