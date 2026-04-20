@@ -193,7 +193,7 @@ export const PATTERNS = [
         currentMultiplier
       };
     },
-    evaluate(rollString) {
+    evaluate(rollString, state) {
       if (rollString.length <= 1) return null;
 
       for (let i = 0; i < rollString.length / 2; i++) {
