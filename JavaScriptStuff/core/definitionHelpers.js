@@ -14,6 +14,18 @@ export function makeUpgradeDefinition(type, stage, row, column, extra = {}) {
   };
 }
 
+export function makeUpgradePatternDefinition(type, stage, row, column, title, extra = {}) {
+  return {
+    id: makeUpgradeId(type, stage, row, column),
+    x: column,
+    y: row,
+    stage,
+    title,
+    description: `Unlocks the ${title} pattern`,
+    ...extra
+  };
+}
+
 // Adds a "0" in front of 1-digit values
 function pad2(value) {
   return String(value).padStart(2, "0");

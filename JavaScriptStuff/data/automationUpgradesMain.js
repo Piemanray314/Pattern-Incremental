@@ -1,7 +1,7 @@
-import { makeUpgradeDefinition } from "./definitionHelpers.js";
+import { makeUpgradeDefinition } from "../core/definitionHelpers.js";
 import { hasUpgrade } from "../core/upgradeHelpers.js";
 
-// For specifications regarding upgrade format, refer to upgrades.js
+// For specifications regarding upgrade format, refer to upgradesMain.js
 
 // List of all upgrades in the automation upgrade tree
 export const AUTOMATION_UPGRADES = [
@@ -19,7 +19,27 @@ export const AUTOMATION_UPGRADES = [
   makeUpgradeDefinition("AUTO", 3, 1, 2, {
     title: "Interval Optimization",
     description: "Reduces the minimum allowed auto-roll interval by 500 ms per level.",
-    cost: (level) => ({ points: { mantissa: 2.5 * Math.pow(4, level), exponent: 6 } }),
+    cost: [
+      { patterns: 100 },
+      { patterns: 150 },
+      { patterns: 200 },
+      { patterns: 250 },
+      { patterns: 350 },
+      { patterns: 500 },
+      { patterns: 750 },
+      { patterns: 1000 },
+      { patterns: 1250 },
+      { patterns: 1500 },
+      { patterns: 2000 },
+      { patterns: 2500 },
+      { patterns: 4000 },
+      { patterns: 8000 },
+      { patterns: 12500 },
+      { patterns: 25000 },
+      { patterns: 50000 },
+      { patterns: 100000 },
+      { patterns: 1000000 }
+    ],
     maxLevel: 19,
     parents: ["AUTO030101"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
@@ -63,7 +83,7 @@ export const AUTOMATION_UPGRADES = [
   makeUpgradeDefinition("AUTO", 3, 0, 1, {
     title: "Pattern Recovery",
     description: "Restores 10% of automation pattern multipliers and pattern currency per level.",
-    cost: (level) => ({ points: { mantissa: 4 * Math.pow(5, level), exponent: 6 }, patterns: 400 * (level + 1) }),
+    cost: (level) => ({ points: { mantissa: 4 * Math.pow(2, level), exponent: 6 }, patterns: 400 * (level + 1) }),
     maxLevel: 7,
     parents: ["AUTO030101"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),

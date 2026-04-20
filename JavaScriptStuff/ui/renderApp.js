@@ -9,6 +9,7 @@ import { renderBestRollsTab } from "./renderBestRollsTab.js";
 import { renderSettingsTab } from "./renderSettingsTab.js";
 import { createElement } from "../utils/dom.js";
 import { renderChangeLogModal } from "./renderChangeLogModal.js";
+import { saveActiveTab } from "../state/uiState.js";
 
 let shell = null;
 
@@ -34,6 +35,8 @@ export function initializeAppShell(state, setState) {
         setState((draft) => {
           draft.ui.activeTab = tab.id;
         }, { topbar: false, content: true, sidebar: true });
+
+        saveActiveTab(tab.id);
       }
     });
 

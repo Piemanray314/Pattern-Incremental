@@ -18,3 +18,24 @@ export function isNthPower(rollString, n) {
 
   return (Math.abs(Math.pow(rounded, n) - value)) < 0.00000001;
 }
+
+// Returns all digits as a numerical array
+export function getDigits(rollString) {
+  return [...rollString].map(Number);
+}
+
+// Returns all digits and their frequency
+export function getDigitCounts(rollString) {
+  const counts = {};
+
+  for (const digit of rollString) {
+    counts[digit] = (counts[digit] ?? 0) + 1;
+  }
+
+  return counts;
+}
+
+// Highlights all digits
+export function highlightAll(rollString) {
+  return Array.from({ length: rollString.length }, (_, i) => i);
+}

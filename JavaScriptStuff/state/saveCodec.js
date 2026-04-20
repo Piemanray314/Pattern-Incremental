@@ -1,6 +1,6 @@
 import { createInitialState } from "./initialState.js";
-import { UPGRADES } from "../data/upgrades.js";
-import { AUTOMATION_UPGRADES } from "../data/automationUpgrades.js";
+import { UPGRADES_MAIN } from "../data/upgradesMain.js";
+import { AUTOMATION_UPGRADES } from "../data/automationupgradesMain.js";
 import { PATTERNS } from "../data/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum } from "../utils/bigNum.js";
 
@@ -194,7 +194,7 @@ function hydrateAgainstInitialState(loadedState) {
 
 // If save has upgrades that do not exist, they get filtered out here
 function filterInvalidUpgradeIds(state) {
-  const validUpgradeIds = new Set(UPGRADES.map((u) => u.id));
+  const validUpgradeIds = new Set(UPGRADES_MAIN.map((u) => u.id));
   const validAutomationUpgradeIds = new Set(AUTOMATION_UPGRADES.map((u) => u.id));
 
   state.upgrades = Object.fromEntries(
@@ -340,7 +340,7 @@ function parseVersion(version) {
   return { major: 0, minor: 0 };
 }
 
-// import { AUTOMATION_UPGRADES } from "../data/automationUpgrades.js";
+// import { AUTOMATION_UPGRADES } from "../data/automationupgradesMain.js";
 // import { addBigNum, zeroBigNum } from "../utils/bigNum.js";
 // import { getUpgradeCost } from "../core/upgradeHelpers.js";
 
@@ -362,7 +362,7 @@ function refundAutomationUpgrades(state) {
         }
       };
 
-      const cost = getUpgradeCost(fakeState, upgrade);
+      const cost = getUpgradeCost(fakeState, upgrade, "automationUpgrades");
       if (!cost) continue;
 
       const pointCost = cost.points ?? zeroBigNum();
@@ -397,7 +397,7 @@ function refundSpecificAutomationUpgrade(state, upgradeId) {
       }
     };
 
-    const cost = getUpgradeCost(fakeState, upgrade);
+    const cost = getUpgradeCost(fakeState, upgrade, "automationUpgrades");
     if (!cost) continue;
 
     refund = addBigNum(refund, cost.points ?? zeroBigNum());

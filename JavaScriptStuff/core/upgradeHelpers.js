@@ -1,7 +1,63 @@
-import { UPGRADES } from "../data/upgrades.js";
-import { compareBigNum, subtractBigNum, toBigNum } from "../utils/bigNum.js";
+import { UPGRADES_MAIN } from "../data/upgradesMain.js";
+import { compareBigNum, subtractBigNum, toBigNum, addBigNum, multiplyBigNumByNumber, oneBigNum, zeroBigNum, roundMultiplierBigNum } from "../utils/bigNum.js";
 
-// NOTE!! Multipliers from upgrades will be checked and applied in gameLoop.js, not here.
+// Current state keys are "upgrades" and "automationUpgrades"
+
+// Returns all upgrade logic roll effects
+// rollData is passed for future flexibility, even if some effects do not use it yet
+export function getUpgradeConfig(state, rollData) {
+  return {
+    preMultiplierFlatBonus: getPreMultiplierFlatBonus(state, rollData),
+    globalMultiplier: getGlobalMultiplier(state, rollData),
+    postMultiplierFlatBonus: getPostMultiplierFlatBonus(state, rollData)
+  };
+}
+
+// Flat value added before multipliers.
+export function getPreMultiplierFlatBonus(state, rollData) {
+  let bonus = zeroBigNum();
+
+  bonus = addBigNum(
+    bonus,
+    multiplyBigNumByNumber(oneBigNum(), 250 * getUpgradeLevel(state, "MULT030401"))
+  );
+
+  bonus = addBigNum(
+    bonus,
+    multiplyBigNumByNumber(oneBigNum(), 1250 * getUpgradeLevel(state, "MULT030402"))
+  );
+
+  return bonus;
+}
+
+// Global multiplier applied after pattern multipliers.
+export function getGlobalMultiplier(state, rollData) {
+  let multiplier = oneBigNum();
+
+  multiplier = addBigNum(
+    multiplier,
+    multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT030301"))
+  );
+
+  return roundMultiplierBigNum(multiplier);
+}
+
+// Flat value added after all multipliers.
+export function getPostMultiplierFlatBonus(state, rollData) {
+  let bonus = zeroBigNum();
+
+  bonus = addBigNum(
+    bonus,
+    multiplyBigNumByNumber(oneBigNum(), 10000 * getUpgradeLevel(state, "MULT030403"))
+  );
+
+  bonus = addBigNum(
+    bonus,
+    multiplyBigNumByNumber(oneBigNum(), 50000 * getUpgradeLevel(state, "MULT030404"))
+  );
+
+  return bonus;
+}
 
 // Retrieves upgrade level (default from upgrades tab)
 export function getUpgradeLevel(state, upgradeId, stateKey = "upgrades") {
@@ -25,7 +81,7 @@ export function hasAnyUpgrade(state, upgradeIds, stateKey = "upgrades") {
 } */
 
 // Buys a given upgrade if possible
-export function buyUpgrade(state, upgradeId, source = UPGRADES, stateKey = "upgrades") {
+export function buyUpgrade(state, upgradeId, source = UPGRADES_MAIN, stateKey = "upgrades") {
   const upgrade = getUpgradeDefinition(upgradeId, source);
   if (!upgrade) return false;
 
@@ -36,7 +92,7 @@ export function buyUpgrade(state, upgradeId, source = UPGRADES, stateKey = "upgr
   if (!upgrade.visibleWhen(state)) return false;
   if (!upgrade.canBuyWhen(state)) return false;
 
-  const cost = getUpgradeCost(state, upgrade);
+  const cost = getUpgradeCost(state, upgrade, stateKey);
   if (!cost) return false;
   if (!canAffordCost(state, cost)) return false;
 
@@ -53,13 +109,13 @@ export function buyUpgrade(state, upgradeId, source = UPGRADES, stateKey = "upgr
 }
 
 // Returns the upgrade object with the given ID from the provided source list
-export function getUpgradeDefinition(upgradeId, source = UPGRADES) {
+export function getUpgradeDefinition(upgradeId, source = UPGRADES_MAIN) {
   return source.find((item) => item.id === upgradeId) ?? null;
 }
 
 // Gets the current cost of an upgrade, supporting constant, array, and function definitions
-export function getUpgradeCost(state, upgrade) {
-  const currentLevel = getUpgradeLevel(state, upgrade.id, upgrade.stateKey ?? "upgrades");
+export function getUpgradeCost(state, upgrade, stateKey = upgrade.stateKey ?? "upgrades") {
+  const currentLevel = getUpgradeLevel(state, upgrade.id, stateKey);
   const costDef = upgrade.cost;
 
   if (typeof costDef === "function") {

@@ -1,5 +1,5 @@
 import { getUpgradeLevel } from "../core/upgradeHelpers.js";
-import { isNthPower, sumDigits } from "../core/patternHelpers.js";
+import { isNthPower, sumDigits, highlightAll, getDigits } from "../core/patternHelpers.js";
 
 // ID format: PAT###### = type + stage + row + column, each using 2 digits
 
@@ -30,7 +30,7 @@ import { isNthPower, sumDigits } from "../core/patternHelpers.js";
       if (!rollString.includes("777")) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         ...this.getMultiplierData(state)
       };
     }
@@ -51,17 +51,18 @@ export const PATTERNS = [
     patternCurrencyReward: () => 1,
     visibleWhen: () => true,
     unlockedWhen: () => true,
-    getMultiplierData(length) {
+    getMultiplierData(state) {
+      const length = state.progression.maxDigitsUnlocked;
+
       return {
         baseMultiplier: length,
         currentMultiplier: length
       };
     },
-
-    evaluate(rollString) {
+    evaluate(rollString, state) {
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
-        ...this.getMultiplierData(rollString.length)
+        highlightedIndices: highlightAll(rollString),
+        ...this.getMultiplierData(state)
       };
     }
   },
@@ -144,14 +145,23 @@ export const PATTERNS = [
   },
 
   {
-    id: "PAT020104",
-    name: "All Identical Digits",
+    id: "PAT030104",
+    name: "Full Flush",
     description: "All digits are idential (and non-zero)",
     baseMultiplier: () => 10,
     patternCurrencyReward: () => 5,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
-    evaluate(rollString) {
+    getMultiplierData(state) {
+      const length = state.progression.maxDigitsUnlocked;
+      const currentMultiplier = Math.pow(10, Math.abs(length - 2));
+
+      return {
+        baseMultiplier: this.baseMultiplier(),
+        currentMultiplier
+      };
+    },
+    evaluate(rollString, state) {
       if (rollString.length <= 1) return null;
 
       const first = rollString[0];
@@ -160,8 +170,8 @@ export const PATTERNS = [
       if (!allSame) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
-        baseMultiplier: this.baseMultiplier()
+        highlightedIndices: highlightAll(rollString),
+        ...this.getMultiplierData(state)
       };
     }
   },
@@ -174,6 +184,15 @@ export const PATTERNS = [
     patternCurrencyReward: () => 10,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
+    getMultiplierData(state) {
+      const length = state.progression.maxDigitsUnlocked;
+      const currentMultiplier = 5 * Math.pow(10, Math.abs(length - 3));
+
+      return {
+        baseMultiplier: this.baseMultiplier(),
+        currentMultiplier
+      };
+    },
     evaluate(rollString) {
       if (rollString.length <= 1) return null;
 
@@ -183,8 +202,8 @@ export const PATTERNS = [
       }
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
-        baseMultiplier: this.baseMultiplier()
+        highlightedIndices: highlightAll(rollString),
+        ...this.getMultiplierData(state)
       };
     }
   },
@@ -201,7 +220,7 @@ export const PATTERNS = [
     getMultiplierData(state) {
       const baseMultiplier = this.baseMultiplier();
       const level = getUpgradeLevel(state, "MULT030302");
-      const currentMultiplier = baseMultiplier + baseMultiplier * level;
+      const currentMultiplier = baseMultiplier + 70 * level;
 
       return {
         baseMultiplier,
@@ -213,7 +232,7 @@ export const PATTERNS = [
       if (!rollString.includes("777")) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         ...this.getMultiplierData(state)
       };
     }
@@ -234,7 +253,7 @@ export const PATTERNS = [
       }
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -255,7 +274,7 @@ export const PATTERNS = [
       }
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -273,7 +292,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 2)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -291,7 +310,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 3)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -309,7 +328,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 4)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -327,7 +346,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 5)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -345,7 +364,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 6)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -363,7 +382,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 7)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -381,7 +400,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 8)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -399,7 +418,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 9)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -417,7 +436,7 @@ export const PATTERNS = [
       if(!isNthPower(rollString, 10)) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -435,7 +454,7 @@ export const PATTERNS = [
       if(sumDigits(rollString) > state.progression.maxDigitsUnlocked + 5) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -453,7 +472,7 @@ export const PATTERNS = [
       if(sumDigits(rollString) > state.progression.maxDigitsUnlocked + 3) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -471,7 +490,7 @@ export const PATTERNS = [
       if(sumDigits(rollString) > state.progression.maxDigitsUnlocked + 1) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -489,7 +508,7 @@ export const PATTERNS = [
       if(sumDigits(rollString) < 9 * state.progression.maxDigitsUnlocked - 5) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -507,7 +526,7 @@ export const PATTERNS = [
       if(sumDigits(rollString) < 9 * state.progression.maxDigitsUnlocked - 3) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -525,7 +544,102 @@ export const PATTERNS = [
       if(sumDigits(rollString) < 9 * state.progression.maxDigitsUnlocked - 5) return null;
 
       return {
-        highlightedIndices: [...rollString].map((_, index) => index),
+        highlightedIndices: highlightAll(rollString),
+        baseMultiplier: this.baseMultiplier()
+      };
+    }
+  },
+
+  {
+    id: "PAT030208",
+    name: "Unique",
+    description: "Every digit is unique (no repeating digits)",
+    baseMultiplier: () => 2,
+    patternCurrencyReward: () => 2,
+    visibleWhen: () => true,
+    unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
+    evaluate(rollString, state) {
+      if (rollString.length <= 1) return null;
+
+      if (new Set(rollString).size !== rollString.length) 
+        return null;
+
+      return {
+        highlightedIndices: highlightAll(rollString),
+        baseMultiplier: this.baseMultiplier()
+      };
+    }
+  },
+
+  {
+    id: "PAT030209",
+    name: "Pure Even",
+    description: "Every digit even",
+    baseMultiplier: () => 2,
+    patternCurrencyReward: () => 2,
+    visibleWhen: () => true,
+    unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
+    evaluate(rollString, state) {
+      if (rollString.length <= 1) return null;
+
+      const digits = getDigits(rollString);
+      for (let i = 0; i < digits.length; i++) {
+        if (digits[i] % 2 !== 0)
+          return null;
+      }
+
+      return {
+        highlightedIndices: highlightAll(rollString),
+        baseMultiplier: this.baseMultiplier()
+      };
+    }
+  },
+
+  {
+    id: "PAT030309",
+    name: "Pure Odd",
+    description: "Every digit odd",
+    baseMultiplier: () => 2,
+    patternCurrencyReward: () => 2,
+    visibleWhen: () => true,
+    unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
+    evaluate(rollString, state) {
+      if (rollString.length <= 1) return null;
+
+      const digits = getDigits(rollString);
+      for (let i = 0; i < digits.length; i++) {
+        if (digits[i] % 2 !== 1)
+          return null;
+      }
+
+      return {
+        highlightedIndices: highlightAll(rollString),
+        baseMultiplier: this.baseMultiplier()
+      };
+    }
+  },
+
+  {
+    id: "PAT030308",
+    name: "Alternating Parity",
+    description: "Alternates between even and odd every digit",
+    baseMultiplier: () => 2,
+    patternCurrencyReward: () => 2,
+    visibleWhen: () => true,
+    unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
+    evaluate(rollString, state) {
+      if (rollString.length <= 1) return null;
+
+      const digits = getDigits(rollString);
+
+      for (let i = 1; i < digits.length; i++) {
+        if (digits[i] % 2 === digits[i - 1] % 2) {
+          return null;
+        }
+      }
+
+      return {
+        highlightedIndices: highlightAll(rollString),
         baseMultiplier: this.baseMultiplier()
       };
     }

@@ -1,4 +1,5 @@
 import { zeroBigNum } from "../utils/bigNum.js";
+import { loadActiveTab, loadTreeViewPosition } from "./uiState.js";
 
 export function createInitialState() {
   return {
@@ -48,22 +49,26 @@ export function createInitialState() {
     automationUpgrades: {},
 
     ui: {
-      activeTab: "roll",
+      activeTab: loadActiveTab() ?? "roll",
       patternPreviewInput: "",
       patternPreviewIncludeGlobal: false,
-      upgradeTreeView: {
-        scrollLeft: 0,
-        scrollTop: 0
-      },
-      showChangeLogModal: false,
-    },
+      patternPreviewIncludeAutomation: false,
 
+      upgradesSubtab: "main",
+      automationSubtab: "main",
+      upgradeTreeView_main: loadTreeViewPosition("upgradeTreeView_main") ?? { scrollLeft: 0, scrollTop: 0 },
+      upgradeTreeView_4: loadTreeViewPosition("upgradeTreeView_4") ?? { scrollLeft: 0, scrollTop: 0 },
+      upgradeTreeView_5: loadTreeViewPosition("upgradeTreeView_5") ?? { scrollLeft: 0, scrollTop: 0 },
+      automationTreeView: loadTreeViewPosition("automationTreeView") ?? { scrollLeft: 0, scrollTop: 0 },
+
+      showChangeLogModal: false
+    },
     settings: {
       numberFormat: "standard"
     },
 
     meta: {
-      saveVersion: 0.12,
+      saveVersion: 0.4,
       lastSavedAt: Date.now()
     }
   };

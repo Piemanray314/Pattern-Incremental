@@ -1,7 +1,7 @@
 import { PATTERNS } from "../data/patterns.js";
 import { numberStringToValue } from "./patternHelpers.js";
 import { pushBestRoll, pushRollHistory } from "./statsHelpers.js";
-import { getUpgradeLevel } from "./upgradeHelpers.js";
+import { getUpgradeConfig } from "./upgradeHelpers.js";
 import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
 import { getAutomationConfig, shouldDisplayAutoRoll } from "./automationHelpers.js";
 
@@ -80,24 +80,20 @@ export function evaluateRollString(
   }
 
   const baseRollValue = toBigNum(value);
-  const preMultiplierFlatBonus = toBigNum(
-    getPreMultiplierFlatBonus(state, { raw, value, digitCount, matches, source })
-  );
+  const upgradeEffects = getUpgradeConfig(state, {
+    raw,
+    value,
+    digitCount,
+    matches,
+    source
+  });
 
+  const preMultiplierFlatBonus = toBigNum(upgradeEffects.preMultiplierFlatBonus);
   const modifiedBaseValue = addBigNum(baseRollValue, preMultiplierFlatBonus);
   const patternMultiplier = roundMultiplierBigNum(getPatternMultiplier(matches));
 
   let globalMultiplier = includeGlobal
-    ? toBigNum(getGlobalMultiplier(state, {
-        raw,
-        value,
-        digitCount,
-        matches,
-        baseRollValue,
-        preMultiplierFlatBonus,
-        modifiedBaseValue,
-        source
-      }))
+    ? toBigNum(upgradeEffects.globalMultiplier)
     : oneBigNum();
 
   if (source === "auto") {
@@ -108,54 +104,43 @@ export function evaluateRollString(
   }
 
   const postMultiplierFlatBonus = includePostMultiplierFlatBonus
-    ? toBigNum(getPostMultiplierFlatBonus(state, {
-        raw,
-        value,
-        digitCount,
-        matches,
-        baseRollValue,
-        preMultiplierFlatBonus,
-        modifiedBaseValue,
-        patternMultiplier,
-        globalMultiplier,
-        source
-      }))
+    ? toBigNum(upgradeEffects.postMultiplierFlatBonus)
     : zeroBigNum();
 
-  // General calculation of roll value is given by
-  // totalGain = ((preMultFlat + rollValue) x patternMult x globalMult) + postMultFlat
-  const totalMultiplier = roundMultiplierBigNum(multiplyBigNum(patternMultiplier, globalMultiplier));
-  const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
-  const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
-  // const totalGain = makeBigNum(3.26, 1533453348); // For cheating!!
+    // General calculation of roll value is given by
+    // totalGain = ((preMultFlat + rollValue) x patternMult x globalMult) + postMultFlat
+    const totalMultiplier = roundMultiplierBigNum(multiplyBigNum(patternMultiplier, globalMultiplier));
+    const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
+    const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
+    // const totalGain = makeBigNum(3.26, 1533453348); // For cheating!!
 
-  const totalPatternCurrencyGain = includePatternCurrency
-    ? getTotalPatternCurrencyGain(matches)
-    : zeroBigNum();
+    const totalPatternCurrencyGain = includePatternCurrency
+      ? getTotalPatternCurrencyGain(matches)
+      : zeroBigNum();
 
-  return {
-    raw,
-    value,
-    digitCount,
-    source,
-    matches,
+    return {
+      raw,
+      value,
+      digitCount,
+      source,
+      matches,
 
-    baseRollValue,
-    preMultiplierFlatBonus,
-    modifiedBaseValue,
+      baseRollValue,
+      preMultiplierFlatBonus,
+      modifiedBaseValue,
 
-    patternMultiplier,
-    globalMultiplier,
-    totalMultiplier,
+      patternMultiplier,
+      globalMultiplier,
+      totalMultiplier,
 
-    postMultiplierFlatBonus,
-    multipliedGain,
-    totalGain,
+      postMultiplierFlatBonus,
+      multipliedGain,
+      totalGain,
 
-    totalPatternCurrencyGain,
-    enteredBestRolls: false
-  };
-}
+      totalPatternCurrencyGain,
+      enteredBestRolls: false
+    };
+  }
 
 // Updates the state with the given roll result
 function applyRollResult(state, rollResult, { source }) {

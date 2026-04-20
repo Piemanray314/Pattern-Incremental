@@ -1,5 +1,6 @@
 import { createElement } from "../utils/dom.js";
 import { formatNumber } from "../utils/format.js";
+import { roundSmallToWholeMantissa } from "../utils/bigNum.js";
 
 export function renderTopbar(state, setState) {
   const topbar = createElement("div", { className: "topbar" });
@@ -9,7 +10,7 @@ export function renderTopbar(state, setState) {
 
   left.append(
     currencyPill(`Points: ${formatNumber(state.currencies.points)}`),
-    currencyPill(`Patterns: ${formatNumber(state.currencies.patterns)}`),
+    currencyPill(`Patterns: ${formatNumber(roundSmallToWholeMantissa(state.currencies.patterns))}`),
     currencyPill(`Pies: ${formatNumber(state.currencies.pies)}`)
   );
 

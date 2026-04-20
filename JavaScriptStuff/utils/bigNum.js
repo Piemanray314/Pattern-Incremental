@@ -190,6 +190,19 @@ function roundToDigits(value, digits) {
   return Math.round(value * factor) / factor;
 }
 
+// Mostly for pattern currency to not show decimals when under 1000
+export function roundSmallToWholeMantissa(value) {
+  const big = toBigNum(value);
+  if (big.mantissa === 0) return zeroBigNum();
+
+  if (big.exponent >= 3) {
+    return cloneBigNum(big);
+  }
+
+  const smallValue = big.mantissa * Math.pow(10, big.exponent);
+  return fromNumber(Math.round(smallValue));
+}
+
 export function roundMultiplierBigNum(value) {
   const big = toBigNum(value);
   if (big.mantissa === 0) return zeroBigNum();

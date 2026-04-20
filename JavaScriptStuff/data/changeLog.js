@@ -43,5 +43,19 @@ export const changeLog = [
     entries: [
       "Yeah so uhhhh I checked for like every bug without rolling from the main button, so that's fixed now!"
     ]
+  },
+  {
+    version: "0.4",
+    title: "MORE CONTENT RAHHHHH",
+    entries: [
+      "Added more patterns (28 total)",
+      "Added more upgrades",
+      "Added new upgrade tabs",
+      "Selected tab and position in upgrade trees now persist",
+      "Mobile/Automatic roll toggle in simulated roll",
+      "Fixed current roll multipliers not calculating properly in patterns list",
+      "Lots of rebalancing",
+      "Backend bug-fixing and changes to make incorporating future content easier"
+    ]
   }
 ];

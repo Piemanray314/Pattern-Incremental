@@ -3,6 +3,8 @@ import { createElement } from "../utils/dom.js";
 import { formatMultiplier, formatNumber } from "../utils/format.js";
 import { evaluateRollString } from "../core/rollEngine.js";
 
+// Main renderer for the patterns tab
+// Renders the preview UI and pattern list
 export function renderPatternsTab(state, setState) {
   const fragment = document.createDocumentFragment();
 
@@ -21,7 +23,7 @@ export function renderPatternsTab(state, setState) {
   const input = document.createElement("input");
   input.type = "text";
   input.value = state.ui.patternPreviewInput ?? "";
-  input.placeholder = `Number`;
+  input.placeholder = "Number";
   input.style.font = "inherit";
   input.style.padding = "10px 12px";
   input.style.borderRadius = "8px";
@@ -31,10 +33,19 @@ export function renderPatternsTab(state, setState) {
   input.style.minWidth = "240px";
 
   const includeGlobalToggle = createElement("button", {
-    text: state.ui.patternPreviewIncludeGlobal ? "Global: ON" : "Global: OFF",
+    text: state.ui.patternPreviewIncludeGlobal ? "Global Multiplier: ON" : "Global Multiplier: OFF",
     onClick: () => {
       setState((draft) => {
         draft.ui.patternPreviewIncludeGlobal = !draft.ui.patternPreviewIncludeGlobal;
+      }, { topbar: false, content: true, sidebar: false });
+    }
+  });
+
+  const includeAutomationToggle = createElement("button", {
+    text: state.ui.patternPreviewIncludeAutomation ? "Simulate Auto Roll: ON" : "Simulate Auto Roll: OFF",
+    onClick: () => {
+      setState((draft) => {
+        draft.ui.patternPreviewIncludeAutomation = !draft.ui.patternPreviewIncludeAutomation;
       }, { topbar: false, content: true, sidebar: false });
     }
   });
@@ -56,38 +67,30 @@ export function renderPatternsTab(state, setState) {
     renderPreviewResultInto(previewResultHost, state);
   });
 
-  previewControls.append(input, includeGlobalToggle, clearButton);
+  previewControls.append(input, includeGlobalToggle, includeAutomationToggle, clearButton);
   previewPanel.append(previewDescription, previewControls);
   previewPanel.append(createElement("div", { className: "section-spacer" }));
   previewPanel.append(previewResultHost);
 
   renderPreviewResultInto(previewResultHost, state);
 
-  const visiblePatterns = PATTERNS.filter((pattern) =>
-    pattern.visibleWhen(state)
-  );
+  // Below is patterns list panel
 
-  const unlockedCount = visiblePatterns.filter((pattern) =>
-    pattern.unlockedWhen(state)
-  ).length;
-  
+  const visiblePatterns = PATTERNS.filter((pattern) => pattern.visibleWhen(state));
+  const unlockedCount = visiblePatterns.filter((pattern) => pattern.unlockedWhen(state)).length;
   const totalCount = PATTERNS.length;
 
   const listPanel = createElement("section", { className: "panel" });
   listPanel.append(
-  createElement("h2", {
+    createElement("h2", {
       className: "panel-title",
-      text:
-        unlockedCount > 0
-          ? `Patterns (${unlockedCount}/${totalCount})`
-          : "Patterns"
+      text: unlockedCount > 0 ? `Patterns (${unlockedCount}/${totalCount})` : "Patterns"
     })
   );
 
   const table = createElement("div", { className: "pattern-table" });
 
   for (const pattern of PATTERNS) {
-    const isVisible = pattern.visibleWhen(state);
     const isUnlocked = pattern.unlockedWhen(state);
 
     const name = isUnlocked ? pattern.name : "???";
@@ -97,9 +100,7 @@ export function renderPatternsTab(state, setState) {
     let currentMultiplierText = "???";
 
     if (isUnlocked) {
-      const previewRoll = pattern.previewRollString ?? getDefaultPatternPreviewRoll(state, pattern);
-      const previewMultipliers = getPatternPreviewMultipliers(state, pattern, previewRoll);
-
+      const previewMultipliers = getPatternPreviewMultipliers(state, pattern);
       baseMultiplierText = formatMultiplier(previewMultipliers.baseMultiplier);
       currentMultiplierText = formatMultiplier(previewMultipliers.currentMultiplier);
     }
@@ -122,13 +123,15 @@ export function renderPatternsTab(state, setState) {
   return fragment;
 }
 
+// Renders preview into a give node
 function renderPreviewResultInto(host, state) {
   host.innerHTML = "";
 
   const previewResult = evaluatePatternPreview(
     state,
     state.ui.patternPreviewInput ?? "",
-    state.ui.patternPreviewIncludeGlobal ?? false
+    state.ui.patternPreviewIncludeGlobal ?? false,
+    state.ui.patternPreviewIncludeAutomation ?? false
   );
 
   if (!previewResult.isValid) {
@@ -144,7 +147,6 @@ function renderPreviewResultInto(host, state) {
   const summary = createElement("div", { className: "roll-summary" });
   summary.append(
     summaryPill(`Roll: ${previewResult.raw}`),
-    // summaryPill(`Base Value: ${formatNumber(previewResult.baseRollValue)}`),
     summaryPill(`Pre-Bonus: +${formatNumber(previewResult.preMultiplierFlatBonus)}`),
     summaryPill(`Modified Base: ${formatNumber(previewResult.modifiedBaseValue)}`),
     summaryPill(`Pattern Multiplier: ${formatMultiplier(previewResult.patternMultiplier)}`),
@@ -170,7 +172,8 @@ function renderPreviewResultInto(host, state) {
   host.append(matchList);
 }
 
-function evaluatePatternPreview(state, input, includeGlobal) {
+// Validates input and simulates rolls with rollEngine
+function evaluatePatternPreview(state, input, includeGlobal, includeAuto) {
   const raw = String(input ?? "").trim();
 
   if (raw.length === 0) {
@@ -204,6 +207,7 @@ function evaluatePatternPreview(state, input, includeGlobal) {
   }
 
   const previewResult = evaluateRollString(state, raw, {
+    source: includeAuto ? "auto" : "manual",
     includeGlobal,
     includePostMultiplierFlatBonus: includeGlobal,
     includePatternCurrency: false
@@ -215,6 +219,7 @@ function evaluatePatternPreview(state, input, includeGlobal) {
   };
 }
 
+// Gets multipliers for pattern list. Prioritizes getMultiplierData() defaults baseMultiplier
 function getPatternPreviewMultipliers(state, pattern) {
   if (typeof pattern.getMultiplierData === "function") {
     const preview = pattern.getMultiplierData(state);
@@ -235,16 +240,7 @@ function getPatternPreviewMultipliers(state, pattern) {
   };
 }
 
-function getDefaultPatternPreviewRoll(state, pattern) {
-  const digits = state.progression.maxDigitsUnlocked;
-
-  const explicit = pattern.previewRollString;
-  if (explicit) return explicit;
-
-  if (digits === 1) return "8";
-  return "1".repeat(digits);
-}
-
+// Renders a single pattern match row
 function renderPreviewMatchRow(rollString, match) {
   const row = createElement("div", { className: "match-row" });
 
@@ -269,6 +265,7 @@ function renderPreviewMatchRow(rollString, match) {
   return row;
 }
 
+// Helper function for roll breakdown
 function summaryPill(text) {
   return createElement("div", { className: "summary-pill", text });
 }
