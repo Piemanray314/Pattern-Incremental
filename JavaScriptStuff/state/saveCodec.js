@@ -1,6 +1,6 @@
 import { createInitialState } from "./initialState.js";
 import { UPGRADES_MAIN } from "../data/upgradesMain.js";
-import { AUTOMATION_UPGRADES } from "../data/automationupgradesMain.js";
+import { AUTOMATION_UPGRADES } from "../data/automationUpgradesMain.js";
 import { PATTERNS } from "../data/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum } from "../utils/bigNum.js";
 
@@ -340,7 +340,7 @@ function parseVersion(version) {
   return { major: 0, minor: 0 };
 }
 
-// import { AUTOMATION_UPGRADES } from "../data/automationupgradesMain.js";
+// import { AUTOMATION_UPGRADES } from "../data/automationUpgradesMain.js";
 // import { addBigNum, zeroBigNum } from "../utils/bigNum.js";
 // import { getUpgradeCost } from "../core/upgradeHelpers.js";
 
