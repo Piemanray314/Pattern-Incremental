@@ -1,5 +1,9 @@
 # Pattern Incremental
+<<<<<<< HEAD
 Current version: 0.4
+=======
+Current version: 0.31
+>>>>>>> 27669d7824cce2c9f78ee10a93be36fc71074feb
 
 Inspired by Idle Dice, https://www.rngdle.com/, and Antimatter Dimensions (￣▽￣)
 
