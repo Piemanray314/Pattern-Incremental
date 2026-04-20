@@ -41,8 +41,6 @@ export function createInitialState() {
       enabled: true,
       intervalMs: 10000,
       accumulatorMs: 0,
-      pauseRemainingMs: 0,
-      pauseAutomationOnManualRoll: true,
       displayMode: "big_only"
     },
 
@@ -68,7 +66,7 @@ export function createInitialState() {
     },
 
     meta: {
-      saveVersion: 0.4,
+      saveVersion: 0.41,
       lastSavedAt: Date.now()
     }
   };

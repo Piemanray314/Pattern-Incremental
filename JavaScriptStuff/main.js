@@ -1,13 +1,7 @@
 import { createInitialState } from "./state/initialState.js";
 import { loadGame, saveGame } from "./state/save.js";
 import { updateGame } from "./core/gameLoop.js";
-import {
-  initializeAppShell,
-  renderTopbarInto,
-  renderContentInto,
-  refreshSidebarActiveState,
-  renderModalInto
-} from "./ui/renderApp.js";
+import { initializeAppShell, renderTopbarInto, renderContentInto, refreshSidebarActiveState, renderModalInto } from "./ui/renderApp.js";
 import { isBigNum, toBigNum, zeroBigNum } from "./utils/bigNum.js";
 import { setNumberFormatMode } from "./utils/format.js";
 

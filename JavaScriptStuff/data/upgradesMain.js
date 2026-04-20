@@ -38,7 +38,7 @@ export const UPGRADES_MAIN = [
   {
     id: "DIG01",
     title: "Unlock 1 Digit",
-    description: "Allows rolling 1-digit numbers.",
+    description: "Allows rolling 1-digit numbers",
     cost: { points: 0 },
     maxLevel: 1,
     x: 0,
@@ -52,7 +52,7 @@ export const UPGRADES_MAIN = [
   {
     id: "DIG02",
     title: "Unlock 2 Digits",
-    description: "Allows rolling 2-digit numbers.",
+    description: "Allows rolling 2-digit numbers",
     cost: { points: 100 },
     maxLevel: 1,
     x: 0,
@@ -73,7 +73,7 @@ export const UPGRADES_MAIN = [
   {
     id: "DIG03",
     title: "Unlock 3 Digits",
-    description: "Allows rolling 3-digit numbers.",
+    description: "Allows rolling 3-digit numbers",
     cost: { points: 20000 },
     maxLevel: 1,
     x: 0,
@@ -445,8 +445,11 @@ export const UPGRADES_MAIN = [
     x: 0,
     y: 5,
     parents: ["DIG03", "PAT030113"],
-    visibleWhen: (state) => hasUpgrade(state, "PAT030108"),
-    canBuyWhen: (state) => hasUpgrade(state, "PAT030208"),
+    visibleWhen: (state) => 
+      hasUpgrade(state, "PAT030113") ||
+      hasUpgrade(state, "PAT030309"),
+    canBuyWhen: (state) => 
+      hasUpgrade(state, "PAT030113"),
     onBuy() {}
   })
 ];

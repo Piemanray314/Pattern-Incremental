@@ -89,7 +89,15 @@ export function renderPatternsTab(state, setState) {
   );
 
   const table = createElement("div", { className: "pattern-table" });
-
+  
+  const patternHeader = createElement("div", { className: "pattern-header" });
+  patternHeader.append(
+    createElement("div", { text: "Pattern Name" }),
+    createElement("div", { text: "Pattern Description" }),
+    createElement("div", { text: "Base Multiplier (Current Multiplier)" })
+  )
+  table.append(patternHeader);
+  
   for (const pattern of PATTERNS) {
     const isUnlocked = pattern.unlockedWhen(state);
 
@@ -106,12 +114,11 @@ export function renderPatternsTab(state, setState) {
     }
 
     const row = createElement("div", { className: "pattern-row" });
+    const multiplierText = baseMultiplierText === currentMultiplierText ? `${baseMultiplierText}` : `${baseMultiplierText} (${currentMultiplierText})`;
     row.append(
       createElement("div", { text: name }),
       createElement("div", { text: description }),
-      createElement("div", {
-        text: `${baseMultiplierText} (${currentMultiplierText})`
-      })
+      createElement("div", { text: multiplierText})
     );
 
     table.append(row);

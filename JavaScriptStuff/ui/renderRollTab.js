@@ -123,11 +123,6 @@ function buildAutomationStatusText(state, automationConfig) {
   }
 
   const enabledText = state.automation.enabled ? "ON" : "OFF";
-  const pauseSeconds = (state.automation.pauseRemainingMs / 1000).toFixed(1);
-
-  if (state.automation.pauseRemainingMs > 0) {
-    return `Automation ${enabledText} | Effective interval ${automationConfig.effectiveIntervalMs} ms | Paused for ${pauseSeconds}s after manual roll`;
-  }
 
   return `Automation ${enabledText} | Effective interval ${automationConfig.effectiveIntervalMs} ms | Display mode: ${state.automation.displayMode}`;
 }

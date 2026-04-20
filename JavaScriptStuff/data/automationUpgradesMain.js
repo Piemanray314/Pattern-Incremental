@@ -1,5 +1,6 @@
 import { makeUpgradeDefinition } from "../core/definitionHelpers.js";
 import { hasUpgrade } from "../core/upgradeHelpers.js";
+import { getAutomationMinIntervalMs } from "../core/automationHelpers.js"
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 
@@ -44,12 +45,14 @@ export const AUTOMATION_UPGRADES = [
     parents: ["AUTO030101"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
     canBuyWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
-    onBuy() {}
+    onBuy(state) {
+      state.automation.intervalMs = getAutomationMinIntervalMs(state);
+    }
   }),
 
   makeUpgradeDefinition("AUTO", 3, 2, 1, {
     title: "Auto 2-Digit Routing",
-    description: "Allows automation to roll up to 2 digits.",
+    description: "Allows automation to roll up to 2 digits",
     cost: { points: { mantissa: 2, exponent: 6 }, patterns: 150 },
     maxLevel: 1,
     parents: ["AUTO030101"],
@@ -60,7 +63,7 @@ export const AUTOMATION_UPGRADES = [
 
   makeUpgradeDefinition("AUTO", 3, 3, 1, {
     title: "Auto 3-Digit Routing",
-    description: "Allows automation to roll up to 3 digits.",
+    description: "Allows automation to roll up to 3 digits",
     cost: { points: { mantissa: 1, exponent: 8 }, patterns: 1000 },
     maxLevel: 1,
     parents: ["AUTO030201"],
@@ -71,9 +74,9 @@ export const AUTOMATION_UPGRADES = [
 
   makeUpgradeDefinition("AUTO", 3, 1, 0, {
     title: "Global Recovery",
-    description: "Restores 10% of automation global multipliers per level.",
+    description: "Restores +10% global multiplier",
     cost: (level) => ({ points: { mantissa: 5 * Math.pow(3, level), exponent: 6 }, patterns: 250 * (level + 1) }),
-    maxLevel: 5,
+    maxLevel: 7,
     parents: ["AUTO030101"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
     canBuyWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
@@ -82,9 +85,9 @@ export const AUTOMATION_UPGRADES = [
 
   makeUpgradeDefinition("AUTO", 3, 0, 1, {
     title: "Pattern Recovery",
-    description: "Restores 10% of automation pattern multipliers and pattern currency per level.",
+    description: "Restores +4% multiplier per pattern",
     cost: (level) => ({ points: { mantissa: 4 * Math.pow(2, level), exponent: 6 }, patterns: 400 * (level + 1) }),
-    maxLevel: 7,
+    maxLevel: 5,
     parents: ["AUTO030101"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
     canBuyWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
@@ -93,7 +96,7 @@ export const AUTOMATION_UPGRADES = [
 
   makeUpgradeDefinition("AUTO", 3, 0, 2, {
     title: "Pattern Boost",
-    description: "Increases automation pattern multipliers by 25% and pattern currency per level.",
+    description: "Increases patterns gained by 25%",
     cost: (level) => ({ points: { mantissa: 4 * Math.pow(5, level), exponent: 11 }, patterns: 1000 * (level + 5) }),
     maxLevel: 10,
     parents: ["AUTO030102"],

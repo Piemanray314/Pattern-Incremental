@@ -9,7 +9,7 @@ import { getAutomationConfig, shouldDisplayAutoRoll } from "./automationHelpers.
 // { source = "manual" } = {} is a fancy way to write "If there's no second argument, or it's empty, return manual"
 export function performRoll(state, { source = "manual" } = {}) {
   const digitCount = getRollDigitCount(state, source);
-  const raw = generateRollString(digitCount);
+  const raw = generateRollString(digitCount, source);
 
   const rollResult = evaluateRollString(state, raw, {
     source,
@@ -44,6 +44,8 @@ export function evaluateRollString(
   for (const pattern of PATTERNS) {
     if (!pattern.visibleWhen(state)) continue;
     if (!pattern.unlockedWhen(state)) continue;
+
+    if ((pattern.requiredDigits ?? 1) > digitCount) continue;
 
     const result = pattern.evaluate(raw, state);
     if (!result) continue;
@@ -166,10 +168,6 @@ function applyRollResult(state, rollResult, { source }) {
 
   if (source === "manual") {
     state.currentRoll = rollResult;
-    if (state.automation.pauseAutomationOnManualRoll) {
-      state.automation.pauseRemainingMs = 5000;
-      state.automation.accumulatorMs = 0;
-    }
     return;
   }
 
@@ -217,43 +215,20 @@ function scaleAutomationMultiplier(multiplier, factor) {
   return multiplyBigNumByNumber(bigMultiplier, factor);
 }
 
-// The next few functions control how main tree upgrades affect roll calculations
-// Increases the raw value of a roll before multipliers
-function getPreMultiplierFlatBonus(state, rollData) {
-  let bonus = zeroBigNum();
-  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 250 * getUpgradeLevel(state, "MULT030401")));
-  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 1250 * getUpgradeLevel(state, "MULT030402")));
-  return bonus;
-}
-
-// Increases the global multiplier
-function getGlobalMultiplier(state, rollData) {
-  let multiplier = oneBigNum();
-  multiplier = addBigNum(
-    multiplier,
-    multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT030301"))
-  );
-  return multiplier;
-}
-
-// Increases the raw value of a roll after multipliers
-function getPostMultiplierFlatBonus(state, rollData) {
-  let bonus = zeroBigNum();
-  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 10000 * getUpgradeLevel(state, "MULT030403")));
-  bonus = addBigNum(bonus, multiplyBigNumByNumber(oneBigNum(), 50000 * getUpgradeLevel(state, "MULT030404")));
-  return bonus;
-}
-
 // Generates a random roll string
-function generateRollString(digitCount) {
+function generateRollString(digitCount, source = "manual") {
   let result = "";
 
   for (let i = 0; i < digitCount; i++) {
     let digit = randomInt(0, 9);
 
-    if (i === 0 && digitCount > 1) {
+    if (i === 0) {
+    const shouldDisallowZero = digitCount > 1 || (digitCount === 1 && source === "auto");
+
+    if (shouldDisallowZero) {
       digit = randomInt(1, 9);
     }
+  }
 
     result += String(digit);
   }

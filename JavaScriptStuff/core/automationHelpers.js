@@ -7,8 +7,7 @@ const AUTO_STATE_KEY = "automationUpgrades"; // Default is the regular upgrades 
 export function getAutomationConfig(state) {
   const unlocked = hasUpgrade(state, "AUTO030101", AUTO_STATE_KEY);
 
-  const intervalReductionLevels = getUpgradeLevel(state, "AUTO030102", AUTO_STATE_KEY);
-  const minIntervalMs = Math.max(500, 10000 - intervalReductionLevels * 500);
+  const minIntervalMs = getAutomationMinIntervalMs(state);
 
   // Automation uses its own digit cap, disregarding DIGXX from upgrades
   let digitCap = 1;
@@ -20,10 +19,10 @@ export function getAutomationConfig(state) {
   const patternMultiplierRecoveryLevel = getUpgradeLevel(state, "AUTO030001", AUTO_STATE_KEY);
   const patternRecoveryLevel = getUpgradeLevel(state, "AUTO030002", AUTO_STATE_KEY);
 
-  // Default automation has 0.3x multipliers
-  const globalMultiplierFactor = Math.min(1, 0.3 + globalMultiplierRecoveryLevel * 0.1);  
-  const patternMultiplierFactor = Math.min(1, 0.3 + patternMultiplierRecoveryLevel * 0.1 + patternMultiplierRecoveryLevel * 0.2);
-  const patternCurrencyFactor = Math.min(1, 0.3 + patternRecoveryLevel * 0.1 + patternRecoveryLevel * 0.2);
+  // Default automation has 0.3x global/patterns multipliers, and a 0.8x multipler per pattern
+  const globalMultiplierFactor = 0.3 + globalMultiplierRecoveryLevel * 0.1;  
+  const patternMultiplierFactor = 0.8 + patternMultiplierRecoveryLevel * 0.04;
+  const patternCurrencyFactor = 0.3 + patternRecoveryLevel * 0.25;
 
   return {
     unlocked,
@@ -44,4 +43,10 @@ export function shouldDisplayAutoRoll(state, rollResult) {
   if (mode === "show_none") return false;
 
   return Boolean(rollResult.enteredBestRolls);
+}
+
+// Calculates automation minimal interview with upgrades
+export function getAutomationMinIntervalMs(state) {
+  const intervalReductionLevels = getUpgradeLevel(state, "AUTO030102", AUTO_STATE_KEY);
+  return Math.max(500, 10000 - intervalReductionLevels * 500);
 }

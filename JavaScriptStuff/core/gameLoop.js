@@ -12,16 +12,11 @@ export function updateGame(state, deltaMs) {
 
   state.timers.uiRefreshAccumulatorMs += deltaMs;
 
-  if (state.automation.pauseRemainingMs > 0) {
-    state.automation.pauseRemainingMs = Math.max(0, state.automation.pauseRemainingMs - deltaMs);
-  }
-
   const automationConfig = getAutomationConfig(state);
 
   if (
     automationConfig.unlocked &&
-    state.automation.enabled &&
-    state.automation.pauseRemainingMs === 0
+    state.automation.enabled
   ) {
     state.automation.accumulatorMs += deltaMs;
 

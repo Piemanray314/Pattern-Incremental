@@ -14,8 +14,8 @@ export const UPGRADES_MAIN_4 = [
   {
     id: "DIG04",
     title: "Unlock 4 Digits",
-    description: "Allows rolling 4-digit numbers.",
-    cost: { points: 20000 },
+    description: "Allows rolling 4-digit numbers (current end game)",
+    cost: { points: 2000000000 },
     maxLevel: 1,
     x: 0,
     y: 0,

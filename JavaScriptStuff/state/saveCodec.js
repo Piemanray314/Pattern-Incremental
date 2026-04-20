@@ -4,7 +4,7 @@ import { AUTOMATION_UPGRADES } from "../data/automationUpgradesMain.js";
 import { PATTERNS } from "../data/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.3"; // Main version control
+let CURRENT_SAVE_VERSION = "0.41"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {

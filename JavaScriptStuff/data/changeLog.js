@@ -1,24 +1,54 @@
+/**
+ * Ideas to implement:
+ * Prestige obviously (nested layers similar to Leaf Blower Revolution)
+ * Challenges obviously
+ * 
+ * Reduce save file size (import/export) by calculating highlighted indexes defaulting to all indexes highlighted
+ * Encode/decode save files to save space and also prevent the easiest cheats of all time
+ * Easter eggs?
+ * Achivements with buffs similar to Antimatter Dimensions
+ * More interactive rolls -> SFX, types of rolls, hotkeys, etc.
+ * 
+ * Debuff patterns. These reduce the multiplier or nullify it completely
+ * Use "pies" to decrease debuffs or disable these multipliers
+ * Pattern mastery? Idea similar to Scrap Clicker II
+ */
+
 export const changeLog = [
   {
-    version: "0.1",
-    title: "Initial Prototype",
+    version: "0.41",
+    title: "MORE FIXES RAHHHHH",
     entries: [
-      "This is the very base game. Rolling, several patterns, some upgrades, and basically nothing else",
-      "Added rolling and pattern matching",
-      "Added upgrade tree",
-      "Added very basic save system"
+      "Added \"requiredDigits\" stat to patterns to prevent exploiting 1-digit automators recieving ridiculous multipliers",
+      "Upgrades now have colors based on type",
+      "Automatically minimize auto-roll interval upon upgrading",
+      "Removed pausing auto-rolls for 5 seconds after manual rolls",
+      "Upgrades no longer show cost at max level",
+      "Added header tab on top of the patterns list",
+      "Change log now shows most recent changes first",
+      "Bug fixed the palindrome pattern not working",
+      "Bug fixed auto-rolls being able to roll 0"
     ]
   },
   {
-    version: "0.2",
-    title: "Automation and Best Rolls",
+    version: "0.4",
+    title: "MORE CONTENT RAHHHHH",
     entries: [
-      "Added automation tab",
-      "Added best rolls tab with roll breakdowns",
-      "Added displayed-roll logic for auto rolls",
-      "Added more patterns (24 total)",
-      "Failed to fix bugs allowing user 'the woke left' to reach unreasonably high numbers",
-      "Thank you playtesters 'the woke left', 'thefakekole,' 'Glixh Hunt3r,' and a cruddy 5-digit"
+      "Added more patterns (28 total)",
+      "Added more upgrades",
+      "Added new upgrade tabs",
+      "Selected tab and position in upgrade trees now persist",
+      "Mobile/Automatic roll toggle in simulated roll",
+      "Fixed current roll multipliers not calculating properly in patterns list",
+      "Lots of rebalancing",
+      "Backend bug-fixing and changes to make incorporating future content easier"
+    ]
+  },
+  {
+    version: "0.31",
+    title: "Yeah so the roll wasn't working",
+    entries: [
+      "Yeah so uhhhh I checked for like every bug without rolling from the main button, so that's fixed now!"
     ]
   },
   {
@@ -38,24 +68,25 @@ export const changeLog = [
     ]
   },
   {
-    version: "0.31",
-    title: "Yeah so the roll wasn't working",
+    version: "0.2",
+    title: "Automation and Best Rolls",
     entries: [
-      "Yeah so uhhhh I checked for like every bug without rolling from the main button, so that's fixed now!"
+      "Added automation tab",
+      "Added best rolls tab with roll breakdowns",
+      "Added displayed-roll logic for auto rolls",
+      "Added more patterns (24 total)",
+      "Failed to fix bugs allowing user 'the woke left' to reach unreasonably high numbers",
+      "Thank you playtesters 'the woke left', 'thefakekole,' 'Glixh Hunt3r,' and a cruddy 5-digit"
     ]
   },
   {
-    version: "0.4",
-    title: "MORE CONTENT RAHHHHH",
+    version: "0.1",
+    title: "Initial Prototype",
     entries: [
-      "Added more patterns (28 total)",
-      "Added more upgrades",
-      "Added new upgrade tabs",
-      "Selected tab and position in upgrade trees now persist",
-      "Mobile/Automatic roll toggle in simulated roll",
-      "Fixed current roll multipliers not calculating properly in patterns list",
-      "Lots of rebalancing",
-      "Backend bug-fixing and changes to make incorporating future content easier"
+      "This is the very base game. Rolling, several patterns, some upgrades, and basically nothing else",
+      "Added rolling and pattern matching",
+      "Added upgrade tree",
+      "Added very basic save system"
     ]
   }
 ];

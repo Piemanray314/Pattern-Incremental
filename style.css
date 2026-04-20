@@ -244,7 +244,26 @@ button:disabled {
 
 .upgrade-card.purchased {
   border-color: #ffffff;
-  background: #283042;
+}
+
+.upgrade-card.type-dig {
+  background: #1e293b;
+}
+
+.upgrade-card.type-unl {
+  background: #46421c;
+}
+
+.upgrade-card.type-auto {
+  background: #1f3a34;
+}
+
+.upgrade-card.type-pat {
+  background: #3a2c1f;
+}
+
+.upgrade-card.type-mult {
+  background: #203940;
 }
 
 .upgrade-card.available {
@@ -288,9 +307,20 @@ button:disabled {
   gap: 10px;
 }
 
+.pattern-header {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 6px;
+  place-items: center;
+}
+
 .pattern-row {
   display: grid;
-  grid-template-columns: 1fr 2fr 180px;
+  grid-template-columns: 2fr 5fr 1fr;
   gap: 12px;
   border: 1px solid var(--border);
   background: var(--panel-2);

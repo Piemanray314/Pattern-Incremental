@@ -42,7 +42,7 @@ export function formatNumber(value, mode = currentNumberFormatMode) {
 
 // Formats a given number into a multiplier in the given mode
 export function formatMultiplier(value, mode = currentNumberFormatMode) {
-  return `${formatNumber(value, mode)}x`;
+  return `${formatNumber(value, mode)}×`;
 }
 
 // Trims trailing zeroes lol

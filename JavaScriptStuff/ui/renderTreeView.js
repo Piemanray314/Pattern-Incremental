@@ -127,8 +127,10 @@ function renderTreeCard({
   else if (blocked) extraClass = "blocked";
   else if (hiddenVisible) extraClass = "hidden-visible";
 
+  const typeClass = `type-${getUpgradeType(item.id).toLowerCase()}`;
+
   const card = createElement("div", {
-    className: `upgrade-card ${extraClass}`
+    className: `upgrade-card ${extraClass} ${typeClass}`
   });
 
   card.style.left = `${getNodeX(item, offsetX)}px`;
@@ -141,8 +143,13 @@ function renderTreeCard({
   );
 
   const footer = createElement("div", { className: "upgrade-footer" });
+  if (!purchased && cost) {
+    footer.append(
+      createElement("div", { text: `Cost: ${formatCost(cost)}` })
+    );
+  }
+
   footer.append(
-    createElement("div", { text: `Cost: ${formatCost(cost)}` }),
     createElement("div", { text: `Quantity: ${level}/${maxLevel}` })
   );
 
@@ -326,4 +333,9 @@ function enableDragPan(scrollHost, state, viewStateKey) {
     event.stopPropagation();
     moved = false;
   }, true);
+}
+
+function getUpgradeType(id) {
+  const match = String(id).match(/^[A-Z]+/);
+  return match ? match[0] : "OTHER";
 }
