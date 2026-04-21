@@ -3,6 +3,7 @@
 
 const ACTIVE_TAB_KEY = "pattern_incremental_active_tab";
 
+// Saves the active tab (left bar)\
 export function saveActiveTab(tabId) {
   try {
     sessionStorage.setItem(ACTIVE_TAB_KEY, tabId);
@@ -23,6 +24,7 @@ function treeViewKey(viewStateKey) {
   return `pattern_incremental_tree_view_${viewStateKey}`;
 }
 
+// Saves the x, y position of the "camera" while in upgrades
 export function saveTreeViewPosition(viewStateKey, position) {
   try {
     sessionStorage.setItem(
@@ -47,6 +49,27 @@ export function loadTreeViewPosition(viewStateKey) {
       scrollLeft: parsed?.scrollLeft ?? 0,
       scrollTop: parsed?.scrollTop ?? 0
     };
+  } catch {
+    return null;
+  }
+}
+
+// Saves subtabs in upgrades (and in the future, automation and prestige)
+function subtabKey(subtabStateKey) {
+  return `pattern_incremental_subtab_${subtabStateKey}`;
+}
+
+export function saveSubtab(subtabStateKey, subtabId) {
+  try {
+    sessionStorage.setItem(subtabKey(subtabStateKey), subtabId);
+  } catch {
+    
+  }
+}
+
+export function loadSubtab(subtabStateKey) {
+  try {
+    return sessionStorage.getItem(subtabKey(subtabStateKey));
   } catch {
     return null;
   }

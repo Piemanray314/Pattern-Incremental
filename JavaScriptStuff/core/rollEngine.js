@@ -40,6 +40,20 @@ export function evaluateRollString(
   // Keeps track of pattern matches
   const matches = [];
 
+  const baseRollValue = toBigNum(value);
+  const upgradeConfig = getUpgradeConfig(state);
+
+  // Piemanray314
+  // Duplicate pattern check
+  const seen = new Set();
+
+  for (const pattern of PATTERNS) {
+    if (seen.has(pattern.id)) {
+      console.error(`Duplicate pattern id: ${pattern.id}`);
+    }
+    seen.add(pattern.id);
+  }
+
   // Checks every pattern for matches
   for (const pattern of PATTERNS) {
     if (!pattern.visibleWhen(state)) continue;
@@ -58,6 +72,9 @@ export function evaluateRollString(
     let currentMultiplier = roundMultiplierBigNum(toBigNum(result.currentMultiplier ?? result.baseMultiplier));
     let currentPatternCurrencyReward = roundMultiplierBigNum(toBigNum(result.currentPatternCurrencyReward ?? basePatternCurrencyReward));
 
+    currentMultiplier = multiplyBigNum(currentMultiplier, upgradeConfig.patternMultiplierFactor);
+    currentPatternCurrencyReward = multiplyBigNum(currentPatternCurrencyReward, upgradeConfig.patternCurrencyFactor);
+
     if (source === "auto") {
       currentMultiplier = scaleAutomationMultiplier(
         currentMultiplier,
@@ -66,6 +83,15 @@ export function evaluateRollString(
       currentPatternCurrencyReward = multiplyBigNumByNumber(
         currentPatternCurrencyReward,
         automationConfig.patternCurrencyFactor
+      );
+    } else if (source === "manual") {
+      currentMultiplier = multiplyBigNum(
+        currentMultiplier,
+        upgradeConfig.manualPatternMultiplierFactor
+      );
+      currentPatternCurrencyReward = multiplyBigNum(
+        currentPatternCurrencyReward,
+        upgradeConfig.manualPatternCurrencyFactor
       );
     }
 
@@ -81,21 +107,12 @@ export function evaluateRollString(
     });
   }
 
-  const baseRollValue = toBigNum(value);
-  const upgradeEffects = getUpgradeConfig(state, {
-    raw,
-    value,
-    digitCount,
-    matches,
-    source
-  });
-
-  const preMultiplierFlatBonus = toBigNum(upgradeEffects.preMultiplierFlatBonus);
+  const preMultiplierFlatBonus = toBigNum(upgradeConfig.preMultiplierFlatBonus);
   const modifiedBaseValue = addBigNum(baseRollValue, preMultiplierFlatBonus);
   const patternMultiplier = roundMultiplierBigNum(getPatternMultiplier(matches));
 
   let globalMultiplier = includeGlobal
-    ? toBigNum(upgradeEffects.globalMultiplier)
+    ? toBigNum(upgradeConfig.globalMultiplier)
     : oneBigNum();
 
   if (source === "auto") {
@@ -103,10 +120,15 @@ export function evaluateRollString(
       globalMultiplier,
       automationConfig.globalMultiplierFactor
     );
+  } else if (source === "manual") {
+    globalMultiplier = multiplyBigNum(
+      globalMultiplier,
+      upgradeConfig.manualGlobalMultiplier
+    );
   }
 
   const postMultiplierFlatBonus = includePostMultiplierFlatBonus
-    ? toBigNum(upgradeEffects.postMultiplierFlatBonus)
+    ? toBigNum(upgradeConfig.postMultiplierFlatBonus)
     : zeroBigNum();
 
     // General calculation of roll value is given by
@@ -114,7 +136,7 @@ export function evaluateRollString(
     const totalMultiplier = roundMultiplierBigNum(multiplyBigNum(patternMultiplier, globalMultiplier));
     const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
     const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
-    // const totalGain = makeBigNum(3.26, 1533453348); // For cheating!!
+    // const totalGain = makeBigNum(3.26, 1533453348); // Piemanray314
 
     const totalPatternCurrencyGain = includePatternCurrency
       ? getTotalPatternCurrencyGain(matches)

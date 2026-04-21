@@ -1,10 +1,10 @@
 import { createInitialState } from "./initialState.js";
-import { UPGRADES_MAIN } from "../data/upgradesMain.js";
-import { AUTOMATION_UPGRADES } from "../data/automationUpgradesMain.js";
+import { UPGRADE_TREE_GROUPS } from "../data/upgradeTreeGroups.js";
+import { AUTOMATION_TREE_GROUPS } from "../data/automationTreeGroups.js";
 import { PATTERNS } from "../data/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.41"; // Main version control
+let CURRENT_SAVE_VERSION = "0.5"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
@@ -120,8 +120,8 @@ function compactRollSnapshot(roll) {
 export function migrateSave(rawState, saveVersion) {
   let state = structuredCloneSafe(rawState);
 
-  /* Example version check for refunding upgrades
-
+  //Example version check for refunding upgrades
+  /* 
   if (isVersionBefore(saveVersion, "1.0")) {
     state = refundAutomationUpgrades(state);
   }
@@ -179,6 +179,11 @@ function hydrateAgainstInitialState(loadedState) {
       ...loadedState.automation
     },
 
+    ui: {
+      ...fresh.ui,
+      ...loadedState.ui
+    },
+
     settings: {
       ...fresh.settings,
       ...loadedState.settings
@@ -194,8 +199,12 @@ function hydrateAgainstInitialState(loadedState) {
 
 // If save has upgrades that do not exist, they get filtered out here
 function filterInvalidUpgradeIds(state) {
-  const validUpgradeIds = new Set(UPGRADES_MAIN.map((u) => u.id));
-  const validAutomationUpgradeIds = new Set(AUTOMATION_UPGRADES.map((u) => u.id));
+  const validUpgradeIds = new Set(
+    UPGRADE_TREE_GROUPS.flatMap((group) => group.definitions).map((u) => u.id)
+  );
+  const validAutomationUpgradeIds = new Set(
+    AUTOMATION_TREE_GROUPS.flatMap((group) => group.definitions).map((u) => u.id)
+  );
 
   state.upgrades = Object.fromEntries(
     Object.entries(state.upgrades ?? {}).filter(([id]) => validUpgradeIds.has(id))
@@ -339,73 +348,3 @@ function parseVersion(version) {
 
   return { major: 0, minor: 0 };
 }
-
-// import { AUTOMATION_UPGRADES } from "../data/automationUpgradesMain.js";
-// import { addBigNum, zeroBigNum } from "../utils/bigNum.js";
-// import { getUpgradeCost } from "../core/upgradeHelpers.js";
-
-/* Example function used in example version check. This refunds all automation upgrades
-
-function refundAutomationUpgrades(state) {
-  let refund = zeroBigNum();
-
-  for (const upgrade of AUTOMATION_UPGRADES) {
-    const ownedLevel = state.automationUpgrades?.[upgrade.id] ?? 0;
-    if (ownedLevel <= 0) continue;
-
-    for (let level = 0; level < ownedLevel; level++) {
-      const fakeState = {
-        ...state,
-        automationUpgrades: {
-          ...state.automationUpgrades,
-          [upgrade.id]: level
-        }
-      };
-
-      const cost = getUpgradeCost(fakeState, upgrade, "automationUpgrades");
-      if (!cost) continue;
-
-      const pointCost = cost.points ?? zeroBigNum();
-      refund = addBigNum(refund, pointCost);
-    }
-  }
-
-  state.currencies.points = addBigNum(state.currencies.points, refund);
-  state.automationUpgrades = {};
-
-  return state;
-}
-  */
-
-/* Example function used in example version check. This refunds a specific automation upgrade
- 
-function refundSpecificAutomationUpgrade(state, upgradeId) {
-  const upgrade = AUTOMATION_UPGRADES.find((u) => u.id === upgradeId);
-  if (!upgrade) return state;
-
-  const ownedLevel = state.automationUpgrades?.[upgradeId] ?? 0;
-  if (ownedLevel <= 0) return state;
-
-  let refund = zeroBigNum();
-
-  for (let level = 0; level < ownedLevel; level++) {
-    const fakeState = {
-      ...state,
-      automationUpgrades: {
-        ...state.automationUpgrades,
-        [upgradeId]: level
-      }
-    };
-
-    const cost = getUpgradeCost(fakeState, upgrade, "automationUpgrades");
-    if (!cost) continue;
-
-    refund = addBigNum(refund, cost.points ?? zeroBigNum());
-  }
-
-  state.currencies.points = addBigNum(state.currencies.points, refund);
-  delete state.automationUpgrades[upgradeId];
-
-  return state;
-}
-  */

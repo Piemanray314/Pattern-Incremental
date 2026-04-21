@@ -134,6 +134,35 @@ export function multiplyBigNum(a, b) {
   });
 }
 
+export function powerBigNum(a, n) {
+  const left = toBigNum(a);
+
+  if (!Number.isFinite(n) || n < 0) {
+    return zeroBigNum();
+  }
+
+  if (n === 0) {
+    return oneBigNum();
+  }
+
+  if (left.mantissa === 0) {
+    return zeroBigNum();
+  }
+
+  if (Number.isInteger(n)) {
+    return normalize({
+      mantissa: Math.pow(left.mantissa, n),
+      exponent: left.exponent * n
+    });
+  }
+
+  const logValue = Math.log10(left.mantissa) + left.exponent;
+  const poweredLog = logValue * n;
+  const exponent = Math.floor(poweredLog);
+
+  return makeBigNum(Math.pow(10, poweredLog - exponent), exponent);
+}
+
 export function multiplyBigNumByNumber(a, n) {
   if (!Number.isFinite(n) || n === 0) return zeroBigNum();
   return multiplyBigNum(a, fromNumber(n));
@@ -203,6 +232,7 @@ export function roundSmallToWholeMantissa(value) {
   return fromNumber(Math.round(smallValue));
 }
 
+// Rounding for float precision purposes, not actual rounding
 export function roundMultiplierBigNum(value) {
   const big = toBigNum(value);
   if (big.mantissa === 0) return zeroBigNum();

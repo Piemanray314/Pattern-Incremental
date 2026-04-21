@@ -16,6 +16,19 @@
 
 export const changeLog = [
   {
+    version: "0.5",
+    title: "Logarithmic Tier update",
+    entries: [
+      "Added most of the planned second tier content (logarithmic tier)",
+      "Added more patterns (69 total)",
+      "Manual/Auto toggle in preview now changes pattern list multipliers",
+      "Most patterns have a hard-coded minimum required digits to prevent automation abuse",
+      "Many patterns now scale with digit count",
+      "Selected 'mini-tab' in tabs now persist",
+      "Loooooots of bug fixing again"
+    ]
+  },
+  {
     version: "0.41",
     title: "MORE FIXES RAHHHHH",
     entries: [

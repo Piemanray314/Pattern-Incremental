@@ -13,15 +13,14 @@ export function getAutomationConfig(state) {
   let digitCap = 1;
   if (hasUpgrade(state, "AUTO030201", AUTO_STATE_KEY)) digitCap = 2;
   if (hasUpgrade(state, "AUTO030301", AUTO_STATE_KEY)) digitCap = 3;
+  if (hasUpgrade(state, "AUTO040401", AUTO_STATE_KEY)) digitCap = 4;
   digitCap = Math.min(digitCap, state.progression.maxDigitsUnlocked);
 
   const globalMultiplierRecoveryLevel = getUpgradeLevel(state, "AUTO030100", AUTO_STATE_KEY);
-  const patternMultiplierRecoveryLevel = getUpgradeLevel(state, "AUTO030001", AUTO_STATE_KEY);
   const patternRecoveryLevel = getUpgradeLevel(state, "AUTO030002", AUTO_STATE_KEY);
 
   // Default automation has 0.3x global/patterns multipliers, and a 0.8x multipler per pattern
   const globalMultiplierFactor = 0.3 + globalMultiplierRecoveryLevel * 0.1;  
-  const patternMultiplierFactor = 0.8 + patternMultiplierRecoveryLevel * 0.04;
   const patternCurrencyFactor = 0.3 + patternRecoveryLevel * 0.25;
 
   return {
@@ -29,10 +28,17 @@ export function getAutomationConfig(state) {
     minIntervalMs,
     digitCap,
     globalMultiplierFactor,
-    patternMultiplierFactor,
+    patternMultiplierFactor: getPatternMultiplicationFactor(state),
     patternCurrencyFactor,
     effectiveIntervalMs: Math.max(state.automation.intervalMs, minIntervalMs)
   };
+}
+
+export function getPatternMultiplicationFactor(state) {
+  let factor = 1;
+  const patternMultiplierRecoveryLevel = getUpgradeLevel(state, "AUTO030001", AUTO_STATE_KEY);
+  const patternMultiplierFactor = 0.8 + patternMultiplierRecoveryLevel * 0.04;
+  return patternMultiplierFactor;
 }
 
 // Returns if auto-rolls should be displayed and how

@@ -5,33 +5,35 @@ import { compareBigNum, subtractBigNum, toBigNum, addBigNum, multiplyBigNumByNum
 
 // Returns all upgrade logic roll effects
 // rollData is passed for future flexibility, even if some effects do not use it yet
-export function getUpgradeConfig(state, rollData) {
+export function getUpgradeConfig(state) {
   return {
-    preMultiplierFlatBonus: getPreMultiplierFlatBonus(state, rollData),
-    globalMultiplier: getGlobalMultiplier(state, rollData),
-    postMultiplierFlatBonus: getPostMultiplierFlatBonus(state, rollData)
+    preMultiplierFlatBonus: getPreMultiplierFlatBonus(state),
+    globalMultiplier: getGlobalMultiplier(state),
+    postMultiplierFlatBonus: getPostMultiplierFlatBonus(state),
+    patternMultiplierFactor: getPatternMultiplierFactor(state),
+    patternCurrencyFactor: getPatternCurrencyFactor(state),
+    manualGlobalMultiplier: getManualGlobalMultiplier(state),
+    manualPatternMultiplierFactor: getManualPatternMultiplierFactor(state),
+    manualPatternCurrencyFactor: getManualPatternCurrencyFactor(state)
   };
 }
 
-// Flat value added before multipliers.
-export function getPreMultiplierFlatBonus(state, rollData) {
+// Flat value added before multipliers
+export function getPreMultiplierFlatBonus(state) {
   let bonus = zeroBigNum();
 
-  bonus = addBigNum(
-    bonus,
-    multiplyBigNumByNumber(oneBigNum(), 250 * getUpgradeLevel(state, "MULT030401"))
-  );
-
-  bonus = addBigNum(
-    bonus,
-    multiplyBigNumByNumber(oneBigNum(), 1250 * getUpgradeLevel(state, "MULT030402"))
-  );
+  bonus = addBigNum(bonus,
+    multiplyBigNumByNumber(oneBigNum(), 250 * getUpgradeLevel(state, "MULT030401")));
+  bonus = addBigNum(bonus,
+    multiplyBigNumByNumber(oneBigNum(), 1250 * getUpgradeLevel(state, "MULT030402")));
+  bonus = addBigNum(bonus,
+    multiplyBigNumByNumber(oneBigNum(), 25000 * getUpgradeLevel(state, "MULT040202")));
 
   return bonus;
 }
 
-// Global multiplier applied after pattern multipliers.
-export function getGlobalMultiplier(state, rollData) {
+// Global multiplier applied after pattern multipliers
+export function getGlobalMultiplier(state) {
   let multiplier = oneBigNum();
 
   multiplier = addBigNum(
@@ -39,11 +41,17 @@ export function getGlobalMultiplier(state, rollData) {
     multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT030301"))
   );
 
+  multiplier = addBigNum(
+    multiplier,
+    multiplyBigNumByNumber(oneBigNum(), 0.5 * getUpgradeLevel(state, "MULT040201"))
+  );
+
+
   return roundMultiplierBigNum(multiplier);
 }
 
-// Flat value added after all multipliers.
-export function getPostMultiplierFlatBonus(state, rollData) {
+// Flat value added after all multipliers
+export function getPostMultiplierFlatBonus(state) {
   let bonus = zeroBigNum();
 
   bonus = addBigNum(
@@ -57,6 +65,56 @@ export function getPostMultiplierFlatBonus(state, rollData) {
   );
 
   return bonus;
+}
+
+// Multiplier to each individual pattern (scales very hard)
+export function getPatternMultiplierFactor(state) {
+  let multiplier = oneBigNum();
+
+  multiplier = addBigNum(
+    multiplier,
+    multiplyBigNumByNumber(oneBigNum(), 0.04 * getUpgradeLevel(state, "MULT040100"))
+  );
+
+  return multiplier;
+}
+
+// Multiplier to the pattern currency
+export function getPatternCurrencyFactor(state) {
+  let multiplier = oneBigNum();
+
+  multiplier = addBigNum(
+    multiplier,
+    multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT040300"))
+  );
+
+  return multiplier;
+}
+
+// Global multiplier applied after pattern multipliers on manual rolls
+export function getManualGlobalMultiplier(state) {
+  let multiplier = oneBigNum();
+
+  return roundMultiplierBigNum(multiplier);
+}
+
+// Manual multiplier to each individual pattern (scales very hard)
+export function getManualPatternMultiplierFactor(state) {
+  let multiplier = oneBigNum();
+
+  multiplier = addBigNum(
+    multiplier,
+    multiplyBigNumByNumber(oneBigNum(), 0.1 * getUpgradeLevel(state, "MULT040200"))
+  );
+
+  return multiplier;
+}
+
+// Manual multiplier to the pattern currency
+export function getManualPatternCurrencyFactor(state) {
+  let multiplier = oneBigNum();
+
+  return multiplier;
 }
 
 // Retrieves upgrade level (default from upgrades tab)

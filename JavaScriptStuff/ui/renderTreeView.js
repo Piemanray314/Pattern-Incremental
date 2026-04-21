@@ -137,10 +137,19 @@ function renderTreeCard({
   card.style.top = `${getNodeY(item, offsetY)}px`;
 
   const top = createElement("div");
-  top.append(
-    createElement("div", { className: "upgrade-title", text: item.title }),
-    createElement("div", { className: "upgrade-desc", text: item.description })
-  );
+  // Piemanray314 <- So I can Ctrl + F this later and hide IDs on release versions :)
+  const devView = false;
+  if (devView) {
+    top.append(
+      createElement("div", { className: "upgrade-title", text: `${item.title}, ${item.id}` }),
+      createElement("div", { className: "upgrade-desc", text: item.description })
+    );
+  } else {
+    top.append(
+      createElement("div", { className: "upgrade-title", text: item.title }),
+      createElement("div", { className: "upgrade-desc", text: item.description })
+    );
+  }
 
   const footer = createElement("div", { className: "upgrade-footer" });
   if (!purchased && cost) {

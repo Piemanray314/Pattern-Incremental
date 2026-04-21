@@ -14,7 +14,7 @@ I'm not great at JavaScript, but I know the basics of HTML/CSS/JS, so this is my
 I have years of experience in Java though (less in other languages), so it's not terrible to adapt. Very weird though. JS, you are _weird_.
 Also first time like actually using GitHub!!
 
-A lot of help from ChatGPT was used initially. The general process is:
+A lot of help from ChatGPT was used initially, mostly for initial UI then some later for general standards. The general process is:
 1. I'll code something "functional" but not sustainable (mostly cause not knowing good syntax and good JS practices)
 2. I asked ChatGPT for recommendations, asking things like is it scaleable, and is it written in a clean manner
 3. It fixes my code, I learn some JavaScript, then adopt some of its recommendations

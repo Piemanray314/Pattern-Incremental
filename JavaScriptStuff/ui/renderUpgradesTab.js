@@ -1,5 +1,6 @@
 import { renderTreeView } from "./renderTreeView.js";
 import { UPGRADE_TREE_GROUPS } from "../data/upgradeTreeGroups.js";
+import { saveSubtab } from "../state/uiState.js";
 import { createElement } from "../utils/dom.js";
 
 export function renderUpgradesTab(state, setState) {
@@ -17,11 +18,13 @@ export function renderUpgradesTab(state, setState) {
   for (const group of visibleGroups) {
     const button = createElement("button", {
       text: group.label,
-      onClick: () => {
-        setState((draft) => {
-          draft.ui.upgradesSubtab = group.id;
-        }, { topbar: false, content: true, sidebar: false });
-      }
+        onClick: () => {
+          setState((draft) => {
+            draft.ui.upgradesSubtab = group.id;
+          }, { topbar: false, content: true, sidebar: false });
+
+          saveSubtab("upgradesSubtab", group.id);
+        }
     });
 
     if (group.id === activeId) {

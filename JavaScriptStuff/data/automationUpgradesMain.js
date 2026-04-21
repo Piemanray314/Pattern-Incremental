@@ -64,11 +64,22 @@ export const AUTOMATION_UPGRADES = [
   makeUpgradeDefinition("AUTO", 3, 3, 1, {
     title: "Auto 3-Digit Routing",
     description: "Allows automation to roll up to 3 digits",
-    cost: { points: { mantissa: 1, exponent: 8 }, patterns: 1000 },
+    cost: { points: { mantissa: 1, exponent: 8 }, patterns: 2500 },
     maxLevel: 1,
     parents: ["AUTO030201"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030201", "automationUpgrades"),
     canBuyWhen: (state) => hasUpgrade(state, "AUTO030201", "automationUpgrades") && hasUpgrade(state, "DIG03"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("AUTO", 4, 4, 1, {
+    title: "Auto 4-Digit Routing",
+    description: "Allows automation to roll up to 4 digits",
+    cost: { points: { mantissa: 1, exponent: 12 }, patterns: 50000 },
+    maxLevel: 1,
+    parents: ["AUTO030301"],
+    visibleWhen: (state) => hasUpgrade(state, "AUTO030301", "automationUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "AUTO030301", "automationUpgrades") && hasUpgrade(state, "DIG04"),
     onBuy() {}
   }),
 

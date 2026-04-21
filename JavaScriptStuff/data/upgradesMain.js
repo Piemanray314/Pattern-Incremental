@@ -254,7 +254,7 @@ export const UPGRADES_MAIN = [
   }),
 
   makeUpgradeDefinition("UNL", 3, 0, 5, {
-    title: "Pattern Pack",
+    title: "Pattern Pack: Basic",
     description: "Unlocks the first pattern pack",
     cost: { points: { mantissa: 1, exponent: 6 } },
     maxLevel: 1,
@@ -439,17 +439,18 @@ export const UPGRADES_MAIN = [
 
   makeUpgradeDefinition("UNL", 3, 99, 99, {
     title: "Tier Up",
-    description: "Unlocks the next tier",
+    description: "Unlocks the next tier (top of tree)",
     cost: { points: { mantissa: 1, exponent: 9 } },
     maxLevel: 1,
     x: 0,
     y: 5,
-    parents: ["DIG03", "PAT030113"],
+    parents: ["DIG03", "PAT030113", "PAT030308"],
     visibleWhen: (state) => 
       hasUpgrade(state, "PAT030113") ||
-      hasUpgrade(state, "PAT030309"),
+      hasUpgrade(state, "PAT030308"),
     canBuyWhen: (state) => 
-      hasUpgrade(state, "PAT030113"),
+      hasUpgrade(state, "PAT030113") &&
+      hasUpgrade(state, "PAT030308"),
     onBuy() {}
   })
 ];

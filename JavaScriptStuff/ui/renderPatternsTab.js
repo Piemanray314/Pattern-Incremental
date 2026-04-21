@@ -2,6 +2,9 @@ import { PATTERNS } from "../data/patterns.js";
 import { createElement } from "../utils/dom.js";
 import { formatMultiplier, formatNumber } from "../utils/format.js";
 import { evaluateRollString } from "../core/rollEngine.js";
+import { getPatternMultiplicationFactor } from "../core/automationHelpers.js";
+import { getPatternMultiplierFactor, getManualPatternMultiplierFactor } from "../core/upgradeHelpers.js";
+import { multiplyBigNum, toBigNum } from "../utils/bigNum.js";
 
 // Main renderer for the patterns tab
 // Renders the preview UI and pattern list
@@ -108,9 +111,18 @@ export function renderPatternsTab(state, setState) {
     let currentMultiplierText = "???";
 
     if (isUnlocked) {
-      const previewMultipliers = getPatternPreviewMultipliers(state, pattern);
-      baseMultiplierText = formatMultiplier(previewMultipliers.baseMultiplier);
-      currentMultiplierText = formatMultiplier(previewMultipliers.currentMultiplier);
+      const previewMultipliers = getPatternPreviewMultipliers(state, pattern, "1".repeat(state.progression.maxDigitsUnlocked));
+
+      let factor = getPatternMultiplierFactor(state)
+
+      if(state.ui.patternPreviewIncludeAutomation) {
+        factor = multiplyBigNum(factor, toBigNum(getPatternMultiplicationFactor(state)));
+      } else {
+        factor = multiplyBigNum(factor, getManualPatternMultiplierFactor(state));
+      }
+
+      baseMultiplierText = formatMultiplier(multiplyBigNum(previewMultipliers.baseMultiplier, factor));
+      currentMultiplierText = formatMultiplier(multiplyBigNum(previewMultipliers.currentMultiplier, factor));
     }
 
     const row = createElement("div", { className: "pattern-row" });
@@ -226,10 +238,10 @@ function evaluatePatternPreview(state, input, includeGlobal, includeAuto) {
   };
 }
 
-// Gets multipliers for pattern list. Prioritizes getMultiplierData() defaults baseMultiplier
-function getPatternPreviewMultipliers(state, pattern) {
+// Gets multipliers for pattern list. Prioritizes getMultiplierData(), defaults baseMultiplier
+function getPatternPreviewMultipliers(state, pattern, previewRoll) {
   if (typeof pattern.getMultiplierData === "function") {
-    const preview = pattern.getMultiplierData(state);
+    const preview = pattern.getMultiplierData(previewRoll, state);
     return {
       baseMultiplier: preview.baseMultiplier,
       currentMultiplier: preview.currentMultiplier ?? preview.baseMultiplier
@@ -238,7 +250,7 @@ function getPatternPreviewMultipliers(state, pattern) {
 
   const baseMultiplier =
     typeof pattern.baseMultiplier === "function"
-      ? pattern.baseMultiplier("", state)
+      ? pattern.baseMultiplier(previewRoll, state)
       : pattern.baseMultiplier;
 
   return {
