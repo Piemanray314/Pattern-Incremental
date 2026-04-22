@@ -1,7 +1,7 @@
 import { createInitialState } from "./state/initialState.js";
 import { loadGame, saveGame } from "./state/save.js";
 import { updateGame } from "./core/gameLoop.js";
-import { initializeAppShell, renderTopbarInto, renderContentInto, refreshSidebarActiveState, renderModalInto } from "./ui/renderApp.js";
+import { initializeAppShell, renderTopbarInto, renderContentInto, refreshSidebarActiveState, renderModalInto, renderSidebarInto, refreshActiveTabLiveContent } from "./ui/renderApp.js";
 import { setNumberFormatMode } from "./utils/format.js";
 
 let state = loadGame() ?? createInitialState();
@@ -30,7 +30,7 @@ function setState(mutator, renderOptions = {}) {
   }
 
   if (sidebar) {
-    refreshSidebarActiveState(state);
+    renderSidebarInto(state, setState);
   }
 
   renderModalInto(state, setState);
@@ -53,6 +53,10 @@ function tick(now) {
 
   if (renderInstructions.sidebar) {
     refreshSidebarActiveState(state);
+  }
+
+  if (state.ui.activeTab === "casting") {
+    refreshActiveTabLiveContent(state);
   }
 
   requestAnimationFrame(tick);

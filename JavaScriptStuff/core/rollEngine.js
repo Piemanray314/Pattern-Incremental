@@ -4,6 +4,7 @@ import { pushBestRoll, pushRollHistory } from "./statsHelpers.js";
 import { getUpgradeConfig } from "./upgradeHelpers.js";
 import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
 import { getAutomationConfig, shouldDisplayAutoRoll } from "./automationHelpers.js";
+import { getCastingUpgradeConfig } from "./castingUpgradeHelpers.js";
 
 // Main function to perform a loop. Returns the roll and saves it into state
 // { source = "manual" } = {} is a fancy way to write "If there's no second argument, or it's empty, return manual"
@@ -36,6 +37,7 @@ export function evaluateRollString(
   const digitCount = raw.length;
   const value = numberStringToValue(raw);
   const automationConfig = getAutomationConfig(state);
+  const castingConfig = getCastingUpgradeConfig(state);
 
   // Keeps track of pattern matches
   const matches = [];
@@ -71,6 +73,9 @@ export function evaluateRollString(
 
     let currentMultiplier = roundMultiplierBigNum(toBigNum(result.currentMultiplier ?? result.baseMultiplier));
     let currentPatternCurrencyReward = roundMultiplierBigNum(toBigNum(result.currentPatternCurrencyReward ?? basePatternCurrencyReward));
+
+    currentPatternCurrencyReward = addBigNum(currentPatternCurrencyReward, toBigNum(castingConfig.patternFlat));
+    currentPatternCurrencyReward = multiplyBigNum(currentPatternCurrencyReward, castingConfig.patternMultiplier);
 
     currentMultiplier = multiplyBigNum(currentMultiplier, upgradeConfig.patternMultiplierFactor);
     currentPatternCurrencyReward = multiplyBigNum(currentPatternCurrencyReward, upgradeConfig.patternCurrencyFactor);
@@ -131,40 +136,48 @@ export function evaluateRollString(
     ? toBigNum(upgradeConfig.postMultiplierFlatBonus)
     : zeroBigNum();
 
-    // General calculation of roll value is given by
-    // totalGain = ((preMultFlat + rollValue) x patternMult x globalMult) + postMultFlat
-    const totalMultiplier = roundMultiplierBigNum(multiplyBigNum(patternMultiplier, globalMultiplier));
-    const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
-    const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
-    // const totalGain = makeBigNum(3.26, 1533453348); // Piemanray314
+  const castingMultiplier = toBigNum(castingConfig.pointMultiplier);
 
-    const totalPatternCurrencyGain = includePatternCurrency
-      ? getTotalPatternCurrencyGain(matches)
-      : zeroBigNum();
+  // General calculation of roll value is given by
+  // totalGain = (((preMultFlat + rollValue) x patternMult x globalMult) + postMultFlat) × Casting Multiplier
+  const preCastingMultiplier = roundMultiplierBigNum(
+    multiplyBigNum(patternMultiplier, globalMultiplier)
+  );
+  const totalMultiplier = roundMultiplierBigNum(
+    multiplyBigNum(preCastingMultiplier, castingMultiplier)
+  );
+  const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
+  const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
+  // const totalGain = makeBigNum(3.26, 1533453348); // Piemanray314
 
-    return {
-      raw,
-      value,
-      digitCount,
-      source,
-      matches,
+  const totalPatternCurrencyGain = includePatternCurrency
+    ? getTotalPatternCurrencyGain(matches)
+    : zeroBigNum();
 
-      baseRollValue,
-      preMultiplierFlatBonus,
-      modifiedBaseValue,
+  return {
+    raw,
+    value,
+    digitCount,
+    source,
+    matches,
 
-      patternMultiplier,
-      globalMultiplier,
-      totalMultiplier,
+    baseRollValue,
+    preMultiplierFlatBonus,
+    modifiedBaseValue,
 
-      postMultiplierFlatBonus,
-      multipliedGain,
-      totalGain,
+    patternMultiplier,
+    globalMultiplier,
+    castingMultiplier,
+    totalMultiplier,
 
-      totalPatternCurrencyGain,
-      enteredBestRolls: false
-    };
-  }
+    postMultiplierFlatBonus,
+    multipliedGain,
+    totalGain,
+
+    totalPatternCurrencyGain,
+    enteredBestRolls: false
+  };
+}
 
 // Updates the state with the given roll result
 function applyRollResult(state, rollResult, { source }) {
@@ -173,6 +186,15 @@ function applyRollResult(state, rollResult, { source }) {
   state.currencies.patterns = addBigNum(state.currencies.patterns, rollResult.totalPatternCurrencyGain);
 
   state.stats.totalRolls += 1;
+  state.stats.rollsThisCast += 1;
+  state.stats.pointsThisCast = addBigNum(
+    state.stats.pointsThisCast,
+    rollResult.totalGain
+  );
+  state.stats.patternsThisCast = addBigNum(
+    state.stats.patternsThisCast,
+    rollResult.totalPatternCurrencyGain
+  );
   state.stats.lifetimePointsGained = addBigNum(
     state.stats.lifetimePointsGained,
     rollResult.totalGain

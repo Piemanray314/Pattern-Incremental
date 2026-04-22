@@ -4,7 +4,7 @@ import { AUTOMATION_TREE_GROUPS } from "../data/automationTreeGroups.js";
 import { PATTERNS } from "../data/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.5"; // Main version control
+let CURRENT_SAVE_VERSION = "0.6"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
@@ -43,15 +43,19 @@ function buildCompactState(state) {
     currencies: {
       points: state.currencies.points,
       patterns: state.currencies.patterns,
+      casts: state.currencies.casts,
+      shards: state.currencies.shards,
       pies: state.currencies.pies
     },
 
     progression: {
-      maxDigitsUnlocked: state.progression.maxDigitsUnlocked
+      maxDigitsUnlocked: state.progression.maxDigitsUnlocked,
+      castingUnlocked: state.progression.castingUnlocked
     },
 
     upgrades: state.upgrades,
     automationUpgrades: state.automationUpgrades,
+    castingUpgrades: state.castingUpgrades,
 
     currentRoll: compactRollSnapshot(state.currentRoll),
     latestRoll: compactRollSnapshot(state.latestRoll),
@@ -65,7 +69,12 @@ function buildCompactState(state) {
       bestGain: state.stats.bestGain,
       previousRolls: (state.stats.previousRolls ?? []).map(compactRollSnapshot),
       bestRolls: (state.stats.bestRolls ?? []).map(compactRollSnapshot),
-      selectedBestRollIndex: state.stats.selectedBestRollIndex ?? 0
+      selectedBestRollIndex: state.stats.selectedBestRollIndex ?? 0,
+      totalCasts: state.stats.totalCasts,
+      rollsThisCast: state.stats.rollsThisCast,
+      pointsThisCast: state.stats.pointsThisCast,
+      patternsThisCast: state.stats.patternsThisCast,
+      previousCasts: state.stats.previousCasts ?? []
     },
 
     automation: {
@@ -101,6 +110,7 @@ function compactRollSnapshot(roll) {
     modifiedBaseValue: compactValue(roll.modifiedBaseValue),
     patternMultiplier: compactValue(roll.patternMultiplier),
     globalMultiplier: compactValue(roll.globalMultiplier),
+    castingMultiplier: compactValue(roll.castingMultiplier),
     totalMultiplier: compactValue(roll.totalMultiplier),
     postMultiplierFlatBonus: compactValue(roll.postMultiplierFlatBonus),
     multipliedGain: compactValue(roll.multipliedGain),
@@ -169,6 +179,11 @@ function hydrateAgainstInitialState(loadedState) {
       ...loadedState.automationUpgrades
     },
 
+    castingUpgrades: {
+      ...fresh.castingUpgrades,
+      ...loadedState.castingUpgrades
+    },
+
     stats: {
       ...fresh.stats,
       ...loadedState.stats
@@ -221,11 +236,24 @@ function filterInvalidUpgradeIds(state) {
 function normalizeBigNumFields(state) {
   state.currencies.points = deserializeBigNum(state.currencies.points);
   state.currencies.patterns = deserializeBigNum(state.currencies.patterns);
+  state.currencies.casts = deserializeBigNum(state.currencies.casts);
+  state.currencies.shards = deserializeBigNum(state.currencies.shards);
   state.currencies.pies = deserializeBigNum(state.currencies.pies);
 
   state.stats.lifetimePointsGained = deserializeBigNum(state.stats.lifetimePointsGained);
   state.stats.lifetimePatternCurrency = deserializeBigNum(state.stats.lifetimePatternCurrency);
   state.stats.bestGain = deserializeBigNum(state.stats.bestGain);
+  state.stats.pointsThisCast = deserializeBigNum(state.stats.pointsThisCast);
+  state.stats.patternsThisCast = deserializeBigNum(state.stats.patternsThisCast);
+
+  state.stats.previousCasts = (state.stats.previousCasts ?? []).map((cast) => ({
+    ...cast,
+    points: deserializeBigNum(cast.points),
+    patterns: deserializeBigNum(cast.patterns),
+    castsGained: deserializeBigNum(cast.castsGained),
+    shardsGained: deserializeBigNum(cast.shardsGained)
+  }));
+
 
   if (state.currentRoll) normalizeCompactRoll(state.currentRoll);
   if (state.latestRoll) normalizeCompactRoll(state.latestRoll);
@@ -245,6 +273,7 @@ function normalizeCompactRoll(roll) {
   roll.modifiedBaseValue = deserializeBigNum(roll.modifiedBaseValue);
   roll.patternMultiplier = deserializeBigNum(roll.patternMultiplier);
   roll.globalMultiplier = deserializeBigNum(roll.globalMultiplier);
+  roll.castingMultiplier = deserializeBigNum(roll.castingMultiplier ?? 1);
   roll.totalMultiplier = deserializeBigNum(roll.totalMultiplier ?? roll.multiplier);
   roll.postMultiplierFlatBonus = deserializeBigNum(roll.postMultiplierFlatBonus);
   roll.multipliedGain = deserializeBigNum(roll.multipliedGain);

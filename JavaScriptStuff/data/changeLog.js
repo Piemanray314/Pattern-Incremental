@@ -16,6 +16,19 @@
 
 export const changeLog = [
   {
+    version: "0.6",
+    title: "Casting Update Part 1",
+    entries: [
+      "Added Casting: the first prestige mechanic!",
+      "Two new currencies: Casts and Shards",
+      "New Casting tab, and new casting upgrades",
+      "New 'Guide' tab",
+      "Slight rebalancing on previous upgrades",
+      "Reworked statistics tab to no longer show recent roll statistics, include casts, and include a few more overall statistics",
+      "Slightly reworked Automation upgrades",
+    ]
+  },
+  {
     version: "0.5",
     title: "Logarithmic Tier update",
     entries: [

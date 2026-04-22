@@ -186,6 +186,10 @@ export function maxBigNum(a, b) {
   return compareBigNum(a, b) >= 0 ? cloneBigNum(a) : cloneBigNum(b);
 }
 
+export function minBigNum(a, b) {
+  return compareBigNum(a, b) <= 0 ? cloneBigNum(a) : cloneBigNum(b);
+}
+
 export function bigNumToScientificString(value, digits = 2) {
   const normalized = toBigNum(value);
   if (normalized.mantissa === 0) return "0";
@@ -238,4 +242,10 @@ export function roundMultiplierBigNum(value) {
   if (big.mantissa === 0) return zeroBigNum();
 
   return makeBigNum(Math.round(big.mantissa * 1000000) / 1000000, big.exponent);
+}
+
+export function safeLog10BigNum(value) {
+  const big = toBigNum(value);
+  if (big.mantissa === 0) return 0;
+  return Math.log10(big.mantissa) + big.exponent;
 }

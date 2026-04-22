@@ -121,7 +121,7 @@ export function renderPatternsTab(state, setState) {
         factor = multiplyBigNum(factor, getManualPatternMultiplierFactor(state));
       }
 
-      baseMultiplierText = formatMultiplier(multiplyBigNum(previewMultipliers.baseMultiplier, factor));
+      baseMultiplierText = formatMultiplier(previewMultipliers.baseMultiplier);
       currentMultiplierText = formatMultiplier(multiplyBigNum(previewMultipliers.currentMultiplier, factor));
     }
 
@@ -169,9 +169,12 @@ function renderPreviewResultInto(host, state) {
     summaryPill(`Pre-Bonus: +${formatNumber(previewResult.preMultiplierFlatBonus)}`),
     summaryPill(`Modified Base: ${formatNumber(previewResult.modifiedBaseValue)}`),
     summaryPill(`Pattern Multiplier: ${formatMultiplier(previewResult.patternMultiplier)}`),
-    summaryPill(`Global Multiplier: ${formatMultiplier(previewResult.globalMultiplier)}`),
-    summaryPill(`Final Value: ${formatNumber(previewResult.totalGain)}`)
+    summaryPill(`Global Multiplier: ${formatMultiplier(previewResult.globalMultiplier)}`)
   );
+  if (state.progression.castingUnlocked) {
+    summary.append(summaryPill(`Casting Multiplier: ${formatMultiplier(previewResult.castingMultiplier ?? 1)}`));
+  }
+  summary.append(summaryPill(`Final Value: ${formatNumber(previewResult.totalGain)}`));
 
   host.append(summary);
   host.append(createElement("div", { className: "section-spacer" }));

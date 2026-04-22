@@ -11,6 +11,8 @@ export function renderTopbar(state, setState) {
   left.append(
     currencyPill(`Points: ${formatNumber(state.currencies.points)}`),
     currencyPill(`Patterns: ${formatNumber(roundSmallToWholeMantissa(state.currencies.patterns))}`),
+    currencyPill(`Casts: ${formatNumber(roundSmallToWholeMantissa(state.currencies.casts))}`),
+    currencyPill(`Shards: ${formatNumber(roundSmallToWholeMantissa(state.currencies.shards))}`),
     currencyPill(`Pies: ${formatNumber(state.currencies.pies)}`)
   );
 
@@ -25,9 +27,9 @@ export function renderTopbar(state, setState) {
 
   right.append(
     changeLogButton,
-    topbarLink("GitHub", "#"),
-    topbarLink("Discord", "#"),
-    topbarLink("Channel", "#")
+    topbarLink("GitHub", "https://github.com/Piemanray314/Pattern-Incremental"),
+    topbarLink("Discord", "https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
+    topbarLink("Channel", "https://www.youtube.com/@Piemanray314")
   );
 
   topbar.append(left, right);

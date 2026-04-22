@@ -49,6 +49,7 @@ function makeRollSnapshot(rollResult) {
 
     patternMultiplier: rollResult.patternMultiplier,
     globalMultiplier: rollResult.globalMultiplier,
+    castingMultiplier: rollResult.castingMultiplier,
     totalMultiplier: rollResult.totalMultiplier,
 
     postMultiplierFlatBonus: rollResult.postMultiplierFlatBonus,

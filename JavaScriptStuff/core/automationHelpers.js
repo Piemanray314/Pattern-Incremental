@@ -14,6 +14,7 @@ export function getAutomationConfig(state) {
   if (hasUpgrade(state, "AUTO030201", AUTO_STATE_KEY)) digitCap = 2;
   if (hasUpgrade(state, "AUTO030301", AUTO_STATE_KEY)) digitCap = 3;
   if (hasUpgrade(state, "AUTO040401", AUTO_STATE_KEY)) digitCap = 4;
+  if (hasUpgrade(state, "AUTO050501", AUTO_STATE_KEY)) digitCap = 5;
   digitCap = Math.min(digitCap, state.progression.maxDigitsUnlocked);
 
   const globalMultiplierRecoveryLevel = getUpgradeLevel(state, "AUTO030100", AUTO_STATE_KEY);
@@ -35,10 +36,10 @@ export function getAutomationConfig(state) {
 }
 
 export function getPatternMultiplicationFactor(state) {
-  let factor = 1;
-  const patternMultiplierRecoveryLevel = getUpgradeLevel(state, "AUTO030001", AUTO_STATE_KEY);
-  const patternMultiplierFactor = 0.8 + patternMultiplierRecoveryLevel * 0.04;
-  return patternMultiplierFactor;
+  let factor = 0.8
+    + getUpgradeLevel(state, "AUTO030001", AUTO_STATE_KEY) * 0.04
+    + getUpgradeLevel(state, "AUTO040402", AUTO_STATE_KEY) * 0.08;
+  return factor;
 }
 
 // Returns if auto-rolls should be displayed and how

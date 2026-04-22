@@ -14,6 +14,18 @@ export function makeUpgradeDefinition(type, stage, row, column, extra = {}) {
   };
 }
 
+// Prestige is format PRES 0 XX YY
+export function makePrestigeUpgradeDefinition(type, stage, row, column, extra = {}) {
+  return {
+    id: `${type}${stage}${pad2(row)}${pad2(column)}`,
+    x: column,
+    y: row,
+    stage,
+    ...extra
+  };
+}
+
+// Creates pattern descriptions based on title
 export function makeUpgradePatternDefinition(type, stage, row, column, title, extra = {}) {
   return {
     id: makeUpgradeId(type, stage, row, column),

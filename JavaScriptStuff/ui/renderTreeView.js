@@ -1,5 +1,5 @@
 import { createElement } from "../utils/dom.js";
-import { buyUpgrade, canAffordCost, getUpgradeLevel, getUpgradeCost } from "../core/upgradeHelpers.js";
+import { buyUpgrade, canAffordCost, getUpgradeLevel, getUpgradeCost, getUpgradeMaxLevel } from "../core/upgradeHelpers.js";
 import { formatNumber } from "../utils/format.js";
 import { saveTreeViewPosition } from "../state/uiState.js";
 
@@ -112,7 +112,7 @@ function renderTreeCard({
   offsetY
 }) {
   const level = getUpgradeLevel(state, item.id, stateKey);
-  const maxLevel = item.maxLevel ?? 1;
+  const maxLevel = getUpgradeMaxLevel(state, item, stateKey);
   const purchased = level >= maxLevel;
   const cost = getUpgradeCost(state, item, stateKey);
   const affordable = canAffordCost(state, cost);
@@ -167,7 +167,7 @@ function renderTreeCard({
     onClick: () => {
       setState((draft) => {
         buyUpgrade(draft, item.id, definitions, stateKey);
-      }, { topbar: true, content: true, sidebar: false });
+      }, { topbar: true, content: true, sidebar: true });
     }
   });
 

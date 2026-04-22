@@ -52,10 +52,18 @@ export function renderRollTab(state, setState) {
     );
 
     const summary = createElement("div", { className: "roll-summary" });
+
     summary.append(
-      summaryPill(`Base: ${formatNumber(displayedRoll.baseRollValue)}`),
       summaryPill(`Value: ${formatNumber(displayedRoll.modifiedBaseValue)}`),
-      summaryPill(`Multiplier: ${formatMultiplier(displayedRoll.totalMultiplier)}`),
+      summaryPill(`Pattern Multiplier: ${formatMultiplier(displayedRoll.patternMultiplier)}`),
+      summaryPill(`Global Multiplier: ${formatMultiplier(displayedRoll.globalMultiplier)}`)
+    );
+    if (state.progression.castingUnlocked) {
+      summary.append(
+        summaryPill(`Casting Multiplier: ${formatMultiplier(state.currentRoll.castingMultiplier ?? 1)}`)
+      );
+    }
+    summary.append(
       summaryPill(`Gain: ${formatNumber(displayedRoll.totalGain)}`),
       summaryPill(`Source: ${displayedRoll.source === "auto" ? "Auto" : "Manual"}`)
     );

@@ -1,5 +1,6 @@
 import { UPGRADES_MAIN } from "./upgradesMain.js";
 import { UPGRADES_MAIN_4 } from "./upgradesMain4.js";
+import { UPGRADES_MAIN_5 } from "./upgradesMain5.js";
 import { hasUpgrade } from "../core/upgradeHelpers.js";
 
 // For tiers, maybe something like:
@@ -24,15 +25,15 @@ export const UPGRADE_TREE_GROUPS = [
     viewStateKey: "upgradeTreeView_4",
     visibleWhen: (state) => hasUpgrade(state, "UNL039999")
   },
-];
-
-/*
   {
     id: "digits5",
-    label: "5-Digit",
-    definitions: UPGRADES_DIGIT_5,
+    label: "Linear Tier",
+    definitions: UPGRADES_MAIN_5,
     stateKey: "upgrades",
     viewStateKey: "upgradeTreeView_5",
-    visibleWhen: (state) => hasUpgrade(state, "UNL050000")
+    visibleWhen: (state) => hasUpgrade(state, "UNL049999")
   }
-*/
+];
+
+
+  

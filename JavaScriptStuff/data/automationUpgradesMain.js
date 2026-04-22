@@ -75,7 +75,7 @@ export const AUTOMATION_UPGRADES = [
   makeUpgradeDefinition("AUTO", 4, 4, 1, {
     title: "Auto 4-Digit Routing",
     description: "Allows automation to roll up to 4 digits",
-    cost: { points: { mantissa: 1, exponent: 12 }, patterns: 50000 },
+    cost: { points: { mantissa: 1, exponent: 12 }, patterns: 30000 },
     maxLevel: 1,
     parents: ["AUTO030301"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030301", "automationUpgrades"),
@@ -83,11 +83,22 @@ export const AUTOMATION_UPGRADES = [
     onBuy() {}
   }),
 
+  makeUpgradeDefinition("AUTO", 5, 5, 1, {
+    title: "Auto 5-Digit Routing",
+    description: "Allows automation to roll up to 5 digits",
+    cost: { points: { mantissa: 1, exponent: 33 }, patterns: 30000 },
+    maxLevel: 1,
+    parents: ["AUTO040401"],
+    visibleWhen: (state) => hasUpgrade(state, "AUTO040401", "automationUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "AUTO040401", "automationUpgrades") && hasUpgrade(state, "DIG05"),
+    onBuy() {}
+  }),
+
   makeUpgradeDefinition("AUTO", 3, 1, 0, {
     title: "Global Recovery",
     description: "Restores +10% global multiplier",
     cost: (level) => ({ points: { mantissa: 5 * Math.pow(3, level), exponent: 6 }, patterns: 250 * (level + 1) }),
-    maxLevel: 7,
+    maxLevel: 17,
     parents: ["AUTO030101"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
     canBuyWhen: (state) => hasUpgrade(state, "AUTO030101", "automationUpgrades"),
@@ -113,6 +124,17 @@ export const AUTOMATION_UPGRADES = [
     parents: ["AUTO030102"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO030102", "automationUpgrades"),
     canBuyWhen: (state) => hasUpgrade(state, "AUTO030102", "automationUpgrades"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("AUTO", 4, 4, 2, {
+    title: "Compounding Interest",
+    description: "Adds +8% multiplier per pattern on automatic rolls",
+    cost: (level) => ({ points: { mantissa: 4 * Math.pow(2, level), exponent: 12 }, patterns: 400 * (level + 1) }),
+    maxLevel: 5,
+    parents: ["AUTO040401"],
+    visibleWhen: (state) => hasUpgrade(state, "AUTO030301", "automationUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "AUTO040401", "automationUpgrades"),
     onBuy() {}
   })
 ];

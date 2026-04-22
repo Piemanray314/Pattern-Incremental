@@ -64,8 +64,7 @@ export const UPGRADES_MAIN = [
     canBuyWhen: (state) => hasUpgrade(state, "DIG01"),
     onBuy(state) {
       state.progression.maxDigitsUnlocked = Math.max(
-        state.progression.maxDigitsUnlocked,
-        2
+        state.progression.maxDigitsUnlocked, 2
       );
     }
   },
@@ -85,8 +84,7 @@ export const UPGRADES_MAIN = [
     canBuyWhen: (state) => hasUpgrade(state, "DIG02"),
     onBuy(state) {
       state.progression.maxDigitsUnlocked = Math.max(
-        state.progression.maxDigitsUnlocked,
-        3
+        state.progression.maxDigitsUnlocked, 3
       );
     }
   },
@@ -260,7 +258,7 @@ export const UPGRADES_MAIN = [
     maxLevel: 1,
     x: 5, // Writing explicitly cause it's in a weird spot without parents + I can find this comment >:)
     y: 0,
-    parents: [],
+    parents: ["DIG03"],
     visibleWhen: (state) => hasUpgrade(state, "DIG03"),
     canBuyWhen: (state) => hasUpgrade(state, "DIG03"),
     onBuy() {}

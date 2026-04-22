@@ -31,16 +31,16 @@ export function renderBestRollsTab(state, setState) {
 
     const summary = createElement("div", { className: "roll-summary" });
     summary.append(
-      summaryPill(`Source: ${selectedRoll.source === "auto" ? "Auto" : "Manual"}`),
-      summaryPill(`Base: ${formatNumber(selectedRoll.baseRollValue ?? selectedRoll.value)}`),
-      summaryPill(`Value: ${formatNumber(selectedRoll.modifiedBaseValue ?? selectedRoll.value)}`),
-      summaryPill(`Pattern: ${formatMultiplier(selectedRoll.patternMultiplier)}`),
-      summaryPill(`Global: ${formatMultiplier(selectedRoll.globalMultiplier)}`),
-      summaryPill(
-        `Total: ${formatMultiplier(selectedRoll.totalMultiplier ?? selectedRoll.multiplier)}`
-      ),
-      summaryPill(`Gain: ${formatNumber(selectedRoll.totalGain ?? selectedRoll.gain)}`)
+      summaryPill(`Roll: ${selectedRoll.raw}`),
+      summaryPill(`Pre-Bonus: +${formatNumber(selectedRoll.preMultiplierFlatBonus)}`),
+      summaryPill(`Modified Base: ${formatNumber(selectedRoll.modifiedBaseValue)}`),
+      summaryPill(`Pattern Multiplier: ${formatMultiplier(selectedRoll.patternMultiplier)}`),
+      summaryPill(`Global Multiplier: ${formatMultiplier(selectedRoll.globalMultiplier)}`)
     );
+    if (state.progression.castingUnlocked) {
+      summary.append(summaryPill(`Casting Multiplier: ${formatMultiplier(selectedRoll.castingMultiplier ?? 1)}`));
+    }
+    summary.append(summaryPill(`Final Value: ${formatNumber(selectedRoll.totalGain)}`));
 
     if (selectedRoll.outdated) {
       breakdownPanel.append(
@@ -99,16 +99,29 @@ export function renderBestRollsTab(state, setState) {
       button.style.width = "100%";
 
       const prefix = index === selectedIndex ? "▶ " : "";
-
-      button.textContent =
-        `${prefix}${roll.raw} | ` +
-        `${roll.source === "auto" ? "Auto" : "Manual"} | ` +
-        `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
-        `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
-        `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
-        `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
-        `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
-        (roll.outdated ? " | Outdated roll - may not be accurate" : "");
+      
+      if (state.progression.castingUnlocked) {
+        button.textContent =
+          `${prefix}${roll.raw} | ` +
+          `${roll.source === "auto" ? "Auto" : "Manual"} | ` +
+          `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
+          `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
+          `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+          `Casting ${formatMultiplier(roll.castingMultiplier)} | ` +
+          `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
+          `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
+          (roll.outdated ? " | Outdated roll - may not be accurate" : "");
+      } else {
+        button.textContent =
+          `${prefix}${roll.raw} | ` +
+          `${roll.source === "auto" ? "Auto" : "Manual"} | ` +
+          `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
+          `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
+          `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+          `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
+          `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
+          (roll.outdated ? " | Outdated roll - may not be accurate" : "");
+      }
 
       list.append(button);
     });

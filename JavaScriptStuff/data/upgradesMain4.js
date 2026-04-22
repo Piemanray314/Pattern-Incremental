@@ -10,7 +10,7 @@ export const UPGRADES_MAIN_4 = [
     id: "DIG04",
     title: "Unlock 4 Digits",
     description: "Allows rolling 4-digit numbers",
-    cost: { points: 2000000000 },
+    cost: { points: 4 },
     maxLevel: 1,
     x: 0,
     y: 0,
@@ -19,8 +19,7 @@ export const UPGRADES_MAIN_4 = [
     canBuyWhen: (state) => hasUpgrade(state, "DIG03"),
     onBuy(state) {
       state.progression.maxDigitsUnlocked = Math.max(
-        state.progression.maxDigitsUnlocked,
-        4
+        state.progression.maxDigitsUnlocked, 4
       );
     }
   },
@@ -73,7 +72,7 @@ export const UPGRADES_MAIN_4 = [
     title: "Pattern Inflation",
     description: "Increase the multiplier of ALL patterns by +4%",
     cost: (level) => ({ points: multiplyBigNum({ mantissa: 1, exponent: 12 }, powerBigNum(100, level)) }),
-    maxLevel: 10,
+    maxLevel: (state) => hasUpgrade(state, "PRES00102", "castingUpgrades") ? 100 : 10,
     parents: ["MULT040200"],
     visibleWhen: (state) => hasUpgrade(state, "MULT040200"),
     canBuyWhen: (state) => hasUpgrade(state, "MULT040200"),
@@ -295,8 +294,10 @@ export const UPGRADES_MAIN_4 = [
     onBuy() {}
   }),
   
-  makeUpgradePatternDefinition("UNL", 4, 2, 7, "Current End Game", {
-    cost: { points: { mantissa: 1, exponent: 30 } },
+  makeUpgradeDefinition("UNL", 4, 2, 7, {
+    title: "Casting",
+    description: "Unlocks Casting",
+    cost: { points: { mantissa: 1, exponent: 21 } },
     maxLevel: 1,
     parents: ["PAT040307", "PAT040107"],
     visibleWhen: (state) =>
@@ -305,6 +306,21 @@ export const UPGRADES_MAIN_4 = [
     canBuyWhen: (state) => 
       hasUpgrade(state, "PAT040307") && 
       hasUpgrade(state, "PAT040107"),
+    onBuy(state) {
+      state.progression.castingUnlocked = true;
+    }
+  }),
+  
+  makeUpgradeDefinition("UNL", 4, 99, 99, {
+    title: "Tier Up",
+    description: "Unlocks the Linear Tier",
+    cost: { points: { mantissa: 1, exponent: 28 } },
+    maxLevel: 1,
+    x: 8,
+    y: 2,
+    parents: ["UNL040207"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL040207"),
+    canBuyWhen: (state) => hasUpgrade(state, "UNL040207"),
     onBuy() {}
   }),
   

@@ -14,7 +14,7 @@ export const PATTERNS_T2 = [
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if (!rollString.includes("777")) return null;
+      if (!rollString.includes("7777")) return null;
 
       return {
         highlightedIndices: getSubstringIndices(rollString, "7777"),
@@ -397,7 +397,7 @@ export const PATTERNS_T2 = [
     description: "All digits are within 1 of the previous",
     requiredDigits: 3,
     baseMultiplier: () => 5,
-    patternCurrencyReward: () => 10,
+    patternCurrencyReward: () => 25,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     getMultiplierData(rollString, state) {

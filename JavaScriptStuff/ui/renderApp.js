@@ -1,4 +1,4 @@
-import { TAB_IDS } from "./tabs.js";
+import { TABS } from "../data/tabs.js";
 import { renderTopbar } from "./renderTopbar.js";
 import { renderRollTab } from "./renderRollTab.js";
 import { renderUpgradesTab } from "./renderUpgradesTab.js";
@@ -10,6 +10,8 @@ import { renderSettingsTab } from "./renderSettingsTab.js";
 import { createElement } from "../utils/dom.js";
 import { renderChangeLogModal } from "./renderChangeLogModal.js";
 import { saveActiveTab } from "../state/uiState.js";
+import { renderGuideTab } from "./renderGuideTab.js";
+import { renderCastingTab, refreshCastingTabLiveContent } from "./renderCastingTab.js";
 
 let shell = null;
 
@@ -25,7 +27,9 @@ export function initializeAppShell(state, setState) {
 
   const sidebarButtons = new Map();
 
-  for (const tab of TAB_IDS) {
+  const visibleTabs = TABS.filter((tab) => tab.visibleWhen(state));
+
+  for (const tab of visibleTabs) {
     const button = createElement("button", {
       className: "sidebar-tab",
       text: tab.label,
@@ -52,7 +56,7 @@ export function initializeAppShell(state, setState) {
     topbarHost,
     sidebar,
     content,
-    sidebarButtons,
+    sidebarButtons: new Map(),
     modalHost
   };
 
@@ -60,6 +64,7 @@ export function initializeAppShell(state, setState) {
   renderContentInto(state, setState);
   refreshSidebarActiveState(state);
   renderModalInto(state, setState);
+  renderSidebarInto(state, setState);
 }
 
 export function renderTopbarInto(state, setState) {
@@ -82,24 +87,38 @@ export function renderContentInto(state, setState) {
   ensureShellExists();
   shell.content.innerHTML = "";
 
+  const visibleTabs = TABS.filter((tab) => tab.visibleWhen(state));
+  const activeTabIsVisible = visibleTabs.some((tab) => tab.id === state.ui.activeTab);
+
+  if (!activeTabIsVisible) {
+    state.ui.activeTab = visibleTabs[0]?.id ?? "roll";
+    saveActiveTab(state.ui.activeTab);
+  }
+
   switch (state.ui.activeTab) {
     case "roll":
       shell.content.append(renderRollTab(state, setState));
       break;
+    case "patterns":
+      shell.content.append(renderPatternsTab(state, setState));
+      break;
     case "upgrades":
       shell.content.append(renderUpgradesTab(state, setState));
+      break;
+    case "casting":
+      shell.content.append(renderCastingTab(state, setState));
       break;
     case "automation":
       shell.content.append(renderAutomationTab(state, setState));
       break;
-    case "patterns":
-      shell.content.append(renderPatternsTab(state, setState));
+    case "bestRolls":
+      shell.content.append(renderBestRollsTab(state, setState));
       break;
     case "stats":
       shell.content.append(renderStatsTab(state));
       break;
-    case "bestRolls":
-      shell.content.append(renderBestRollsTab(state, setState));
+    case "guide":
+      shell.content.append(renderGuideTab(state, setState));
       break;
     case "settings":
       shell.content.append(renderSettingsTab(state, setState));
@@ -108,6 +127,35 @@ export function renderContentInto(state, setState) {
       shell.content.append(renderRollTab(state, setState));
       break;
   }
+}
+
+export function renderSidebarInto(state, setState) {
+  ensureShellExists();
+  shell.sidebar.innerHTML = "";
+  shell.sidebarButtons = new Map();
+
+  const visibleTabs = TABS.filter((tab) => tab.visibleWhen(state));
+
+  for (const tab of visibleTabs) {
+    const button = createElement("button", {
+      className: "sidebar-tab",
+      text: tab.label,
+      onClick: () => {
+        if (state.ui.activeTab === tab.id) return;
+
+        setState((draft) => {
+          draft.ui.activeTab = tab.id;
+        }, { topbar: false, content: true, sidebar: true });
+
+        saveActiveTab(tab.id);
+      }
+    });
+
+    shell.sidebarButtons.set(tab.id, button);
+    shell.sidebar.append(button);
+  }
+
+  refreshSidebarActiveState(state);
 }
 
 export function refreshSidebarActiveState(state) {
@@ -121,5 +169,13 @@ export function refreshSidebarActiveState(state) {
 function ensureShellExists() {
   if (!shell) {
     throw new Error("App shell has not been initialized yet.");
+  }
+}
+
+export function refreshActiveTabLiveContent(state) {
+  ensureShellExists();
+
+  if (state.ui.activeTab === "casting") {
+    refreshCastingTabLiveContent(state);
   }
 }

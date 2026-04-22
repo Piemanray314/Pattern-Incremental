@@ -144,7 +144,7 @@ export function buyUpgrade(state, upgradeId, source = UPGRADES_MAIN, stateKey = 
   if (!upgrade) return false;
 
   const currentLevel = getUpgradeLevel(state, upgradeId, stateKey);
-  const maxLevel = upgrade.maxLevel ?? 1;
+  const maxLevel = getUpgradeMaxLevel(state, upgrade, stateKey);
 
   if (currentLevel >= maxLevel) return false;
   if (!upgrade.visibleWhen(state)) return false;
@@ -187,6 +187,17 @@ export function getUpgradeCost(state, upgrade, stateKey = upgrade.stateKey ?? "u
   return normalizeCostObject(costDef);
 }
 
+// Returns the current max level of an upgrade, supporting constants and functions
+export function getUpgradeMaxLevel(state, upgrade, stateKey = upgrade.stateKey ?? "upgrades") {
+  const maxLevelDef = upgrade.maxLevel ?? 1;
+
+  if (typeof maxLevelDef === "function") {
+    return maxLevelDef(state, stateKey);
+  }
+
+  return maxLevelDef;
+}
+
 // Normalizes a raw cost object so all currency amounts use BigNum values
 export function normalizeCostObject(cost) {
   if (!cost) return null;
@@ -215,4 +226,38 @@ export function payCost(state, cost) {
       amount
     );
   }
+}
+
+// Grants an upgrade directly without paying cost
+export function grantUpgradeLevel(
+  state,
+  upgradeId,
+  targetLevel,
+  source = UPGRADES_MAIN,
+  stateKey = "upgrades",
+  { runOnBuy = true } = {}
+) {
+  const upgrade = getUpgradeDefinition(upgradeId, source);
+  if (!upgrade) return false;
+
+  const maxLevel = getUpgradeMaxLevel(state, upgrade, stateKey);
+  const clampedTargetLevel = Math.max(0, Math.min(targetLevel, maxLevel));
+  const currentLevel = getUpgradeLevel(state, upgradeId, stateKey);
+
+  if (!state[stateKey]) state[stateKey] = {};
+
+  // Nothing to do
+  if (clampedTargetLevel <= currentLevel) return false;
+
+  state[stateKey][upgradeId] = clampedTargetLevel;
+
+  // Run onBuy once for each granted level if requested.
+  // This is safest if onBuy has level-based effects.
+  if (runOnBuy && typeof upgrade.onBuy === "function") {
+    for (let level = currentLevel + 1; level <= clampedTargetLevel; level++) {
+      upgrade.onBuy(state, level);
+    }
+  }
+
+  return true;
 }
