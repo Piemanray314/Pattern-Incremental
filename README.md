@@ -1,5 +1,5 @@
 # Pattern Incremental
-Current version: 0.6
+Current version: 0.61 [QoL Update]
 
 Inspired by Idle Dice, https://www.rngdle.com/, and Antimatter Dimensions (￣▽￣)
 
