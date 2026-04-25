@@ -1,7 +1,7 @@
-import { renderTreeView } from "./renderTreeView.js";
-import { UPGRADE_TREE_GROUPS } from "../data/upgradeTreeGroups.js";
-import { saveSubtab } from "../state/uiState.js";
-import { createElement } from "../utils/dom.js";
+import { renderTreeView } from "../renderTreeView.js";
+import { UPGRADE_TREE_GROUPS } from "../../data/mainupgrades/upgradeTreeGroups.js";
+import { saveSubtab } from "../../state/uiState.js";
+import { createElement } from "../../utils/dom.js";
 
 export function renderUpgradesTab(state, setState) {
   const container = document.createDocumentFragment();

@@ -3,8 +3,17 @@ import { loadGame, saveGame } from "./state/save.js";
 import { updateGame } from "./core/gameLoop.js";
 import { initializeAppShell, renderTopbarInto, renderContentInto, refreshSidebarActiveState, renderModalInto, renderSidebarInto, refreshActiveTabLiveContent } from "./ui/renderApp.js";
 import { setNumberFormatMode } from "./utils/format.js";
+import { deserializeSave, serializeSave } from "./state/saveCodec.js";
 
-let state = loadGame() ?? createInitialState();
+let saveLoadFailed = false;
+
+let state = loadGame();
+
+if (!state) {
+  saveLoadFailed = Boolean(localStorage.getItem("pattern_incremental_save"));
+  state = createInitialState();
+}
+
 setNumberFormatMode(state.settings.numberFormatMode);
 
 let lastFrameTime = performance.now();
@@ -15,7 +24,8 @@ function setState(mutator, renderOptions = {}) {
   const {
     topbar = true,
     content = true,
-    sidebar = false
+    sidebar = false,
+    effectText = false
   } = renderOptions;
 
   mutator(state);
@@ -55,6 +65,10 @@ function tick(now) {
     refreshSidebarActiveState(state);
   }
 
+  if (renderInstructions.effectText) {
+    refreshActiveUpgradeEffectTexts(state);
+  }
+
   if (state.ui.activeTab === "casting") {
     refreshActiveTabLiveContent(state);
   }
@@ -62,12 +76,14 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 
-setInterval(() => {
-  saveGame(state);
-}, 5000);
+// setInterval(() => {
+//   if (saveLoadFailed) return;
+//   saveGame(state);
+// }, 15000);
 
-window.addEventListener("beforeunload", () => {
-  saveGame(state);
-});
+// window.addEventListener("beforeunload", () => {
+//   if (saveLoadFailed || window.skipNextAutosave) return;
+//   saveGame(state);
+// });
 
 requestAnimationFrame(tick);

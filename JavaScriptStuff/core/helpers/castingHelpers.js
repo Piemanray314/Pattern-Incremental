@@ -1,8 +1,8 @@
-import { addBigNum, compareBigNum, fromNumber, multiplyBigNum, oneBigNum, toBigNum, zeroBigNum, powerBigNum, maxBigNum, safeLog10BigNum } from "../utils/bigNum.js";
-import { createInitialState } from "../state/initialState.js";
+import { addBigNum, compareBigNum, fromNumber, multiplyBigNum, oneBigNum, toBigNum, zeroBigNum, powerBigNum, maxBigNum, safeLog10BigNum } from "../../utils/bigNum.js";
+import { createInitialState } from "../../state/initialState.js";
 import { grantUpgradeLevel, hasUpgrade } from "./upgradeHelpers.js";
 import { getCastingUpgradeConfig } from "./castingUpgradeHelpers.js";
-import { UPGRADES_MAIN } from "../data/upgradesMain.js";
+import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
 
 // Returns the rewards the player would get if they recast
 export function getCastingRewards(state) {
@@ -46,7 +46,7 @@ export function performCast(state) {
   ? Object.fromEntries(
       Object.entries(state.automationUpgrades ?? {}).filter(([id]) => {
         // Remove automation digit-cap unlocks, keep everything else
-        return !["AUTO030201", "AUTO030301", "AUTO040401"].includes(id);
+        return !["AUTO030201", "AUTO030301", "AUTO040401", "AUTO050501", "AUTO040402"].includes(id);
       })
     )
   : {};
@@ -58,6 +58,10 @@ export function performCast(state) {
     enabled: state.automation.enabled,
     intervalMs: state.automation.intervalMs,
     displayMode: state.automation.displayMode
+  };
+
+  const keepSettings = {
+    numberFormatMode: state.settings.numberFormatMode,
   };
 
   const previousCastEntry = {
@@ -86,12 +90,15 @@ export function performCast(state) {
   state.automation.intervalMs = keptAutomationDisplay.intervalMs;
   state.automation.displayMode = keptAutomationDisplay.displayMode;
 
+  state.settings.numberFormatMode = keepSettings.numberFormatMode;
+
   state.stats.totalCasts = keepTotalCasts + 1;
   state.stats.previousCasts = [previousCastEntry, ...(state.stats.previousCasts ?? [])].slice(0, 10);
 
   state.stats.rollsThisCast = 0;
   state.stats.pointsThisCast = zeroBigNum();
   state.stats.patternsThisCast = zeroBigNum();
+  state.stats.castStartTime = Date.now();
 
   state.progression.castingUnlocked = true;
 

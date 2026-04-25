@@ -204,7 +204,7 @@ export function serializeBigNum(value, mantissaDigits = 12) {
 }
 
 export function deserializeBigNum(value) {
-  if (Array.isArray(value) && value.length === 2) {
+  if (Array.isArray(value)) {
     return makeBigNum(value[0], value[1]);
   }
 

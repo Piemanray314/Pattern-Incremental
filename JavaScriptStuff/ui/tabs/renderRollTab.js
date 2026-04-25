@@ -1,7 +1,7 @@
-import { createElement } from "../utils/dom.js";
-import { formatMultiplier, formatNumber } from "../utils/format.js";
-import { performRoll } from "../core/rollEngine.js";
-import { getAutomationConfig } from "../core/automationHelpers.js";
+import { createElement } from "../../utils/dom.js";
+import { formatMultiplier, formatNumber } from "../../utils/format.js";
+import { performRoll } from "../../core/rollEngine.js";
+import { getAutomationConfig } from "../../core/helpers/automationHelpers.js";
 
 export function renderRollTab(state, setState) {
   const container = document.createDocumentFragment();

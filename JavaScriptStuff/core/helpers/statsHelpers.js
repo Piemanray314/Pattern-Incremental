@@ -1,4 +1,4 @@
-import { compareBigNum, toBigNum } from "../utils/bigNum.js";
+import { compareBigNum, toBigNum } from "../../utils/bigNum.js";
 
 // Updates the 10 most recent rolls with a new roll
 export function pushRollHistory(state, rollResult) {

@@ -1,5 +1,5 @@
 import { createElement } from "../utils/dom.js";
-import { buyUpgrade, canAffordCost, getUpgradeLevel, getUpgradeCost, getUpgradeMaxLevel } from "../core/upgradeHelpers.js";
+import { buyUpgrade, canAffordCost, getUpgradeLevel, getUpgradeCost, getUpgradeMaxLevel } from "../core/helpers/upgradeHelpers.js";
 import { formatNumber } from "../utils/format.js";
 import { saveTreeViewPosition } from "../state/uiState.js";
 
@@ -9,6 +9,8 @@ const GRID_X = 320;
 const GRID_Y = 220;
 const START_X = 40;
 const START_Y = 40;
+
+let treePurchaseLocked = false;
 
 export function renderTreeView({
   state,
@@ -22,7 +24,7 @@ export function renderTreeView({
   const panel = createElement("section", { className: "panel upgrade-tree-panel" });
 
   const headerRow = createElement("div", { className: "panel-header-row" });
-  const titleEl = createElement("h2", { className: "panel-title", text: title });
+  const titleElement = createElement("h2", { className: "panel-title", text: title });
 
   const resetViewButton = createElement("button", {
     text: resetViewLabel,
@@ -36,9 +38,10 @@ export function renderTreeView({
     }
   });
 
-  headerRow.append(titleEl, resetViewButton);
+  headerRow.append(titleElement, resetViewButton);
   panel.append(headerRow);
 
+  // Main container
   const scrollHost = createElement("div");
   scrollHost.style.overflow = "auto";
   scrollHost.style.maxWidth = "100%";
@@ -54,6 +57,7 @@ export function renderTreeView({
   canvas.style.width = `${bounds.width}px`;
   canvas.style.height = `${bounds.height}px`;
 
+  // Node stuff
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("class", "upgrade-connector-layer");
   svg.setAttribute("width", "100%");
@@ -78,6 +82,7 @@ export function renderTreeView({
 
   canvas.appendChild(svg);
 
+  // Main card render
   for (const item of visibleDefs) {
     canvas.appendChild(
       renderTreeCard({
@@ -87,7 +92,9 @@ export function renderTreeView({
         stateKey,
         offsetX: bounds.offsetX,
         offsetY: bounds.offsetY,
-        definitions
+        definitions,
+        viewStateKey,
+        scrollHost
       })
     );
   }
@@ -102,6 +109,7 @@ export function renderTreeView({
   return panel;
 }
 
+// Renders each upgrade card in the tree
 function renderTreeCard({
   state,
   setState,
@@ -109,7 +117,9 @@ function renderTreeCard({
   stateKey,
   definitions,
   offsetX,
-  offsetY
+  offsetY,
+  viewStateKey,
+  scrollHost
 }) {
   const level = getUpgradeLevel(state, item.id, stateKey);
   const maxLevel = getUpgradeMaxLevel(state, item, stateKey);
@@ -137,8 +147,8 @@ function renderTreeCard({
   card.style.top = `${getNodeY(item, offsetY)}px`;
 
   const top = createElement("div");
-  // Piemanray314 <- So I can Ctrl + F this later and hide IDs on release versions :)
-  const devView = false;
+  // Piemanray314, Card information
+  const devView = true;
   if (devView) {
     top.append(
       createElement("div", { className: "upgrade-title", text: `${item.title}, ${item.id}` }),
@@ -152,31 +162,70 @@ function renderTreeCard({
   }
 
   const footer = createElement("div", { className: "upgrade-footer" });
-  if (!purchased && cost) {
-    footer.append(
-      createElement("div", { text: `Cost: ${formatCost(cost)}` })
-    );
-  }
 
+  // Level
   footer.append(
-    createElement("div", { text: `Quantity: ${level}/${maxLevel}` })
+    createElement("div", { text: `Level: ${level}/${maxLevel}` })
   );
 
+  // Effects if valid
+  if (typeof item.effectText === "function") {
+    const effectElement = createElement("div", {
+      className: "upgrade-effect-text",
+      text: `Effect: ${item.effectText(state, level)}`
+    });
+
+    effectElement.dataset.upgradeId = item.id;
+    effectElement.dataset.stateKey = stateKey;
+
+    footer.append(effectElement);
+  }
+
+  // Purchase/Buy button
   const button = createElement("button", {
-    text: purchased ? "Purchased" : "Buy",
+    text: purchased ? "Purchased" : `${formatCost(cost)}`,
     onClick: () => {
+      if (treePurchaseLocked) return;
+      treePurchaseLocked = true;
+
       setState((draft) => {
         buyUpgrade(draft, item.id, definitions, stateKey);
       }, { topbar: true, content: true, sidebar: true });
+
+      requestAnimationFrame(() => {
+        treePurchaseLocked = false;
+      });
     }
   });
 
+  // Buy max handler
+  card.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+
+    const currentPosition = {
+      scrollLeft: scrollHost.scrollLeft,
+      scrollTop: scrollHost.scrollTop
+    };
+
+    setState((draft) => {
+      draft.ui[viewStateKey] = currentPosition;
+      buyUpgradeMax(draft, item, definitions, stateKey);
+    }, { topbar: true, content: true, sidebar: true });
+
+    saveTreeViewPosition(viewStateKey, currentPosition);
+  });
+
   button.disabled = purchased || !requirementsMet || !affordable;
+
+  if (maxLevel > 1 && !purchased) {
+    button.append(createElement("div", { className: "upgrade-hint", text: "Right-click: Buy max" }));
+  }
 
   card.append(top, footer, button);
   return card;
 }
 
+// Formats the cost
 function formatCost(cost) {
   if (!cost) return "Maxed";
 
@@ -247,6 +296,7 @@ function getNodeCenterY(item, offsetY) {
   return getNodeY(item, offsetY) + CARD_HEIGHT / 2;
 }
 
+// Restores the scroll position (in case of a page refresh or something)
 function restoreScrollPosition(scrollHost, state, viewStateKey) {
   const savedView = state.ui[viewStateKey] ?? { scrollLeft: 0, scrollTop: 0 };
 
@@ -256,6 +306,7 @@ function restoreScrollPosition(scrollHost, state, viewStateKey) {
   });
 }
 
+// Save scroll position to state
 function persistScrollPosition(scrollHost, state, viewStateKey) {
   let scrollSaveTimeout = null;
 
@@ -347,4 +398,31 @@ function enableDragPan(scrollHost, state, viewStateKey) {
 function getUpgradeType(id) {
   const match = String(id).match(/^[A-Z]+/);
   return match ? match[0] : "OTHER";
+}
+
+// Renders the effect portion of cards
+export function refreshUpgradeEffectTexts(state, definitions, stateKey) {
+  const effectElements = document.querySelectorAll(".upgrade-effect-text");
+
+  for (const element of effectElements) {
+    const upgradeId = element.dataset.upgradeId;
+    const upgrade = definitions.find((item) => item.id === upgradeId);
+    if (!upgrade || typeof upgrade.effectText !== "function") continue;
+
+    const level = getUpgradeLevel(state, upgrade.id, stateKey);
+    element.textContent = `Effect: ${upgrade.effectText(state, level)}`;
+  }
+}
+
+// BUY MAX RAHHHHHH
+function buyUpgradeMax(state, item, definitions, stateKey) {
+  let boughtAny = false;
+  let safety = 10000;
+
+  while (safety > 0 && buyUpgrade(state, item.id, definitions, stateKey)) {
+    boughtAny = true;
+    safety -= 1;
+  }
+
+  return boughtAny;
 }

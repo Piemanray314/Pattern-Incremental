@@ -16,6 +16,20 @@
 
 export const changeLog = [
   {
+    version: "0.61",
+    title: "Small QoL update",
+    entries: [
+      "Save files are now much smaller (though not encrypted yet cause bugtesting would be a pain peko",
+      "Save files can now be downloaded/uploaded",
+      "Added many fail safes in case saves become corrupted or no longer backwards compatible somehow. A backup can be found in local storage under key \"pattern_incremental_save_backup_before_load\"",
+      "Upgrades with multiple levels now have a buy max option",
+      "Buy button replaced with cost, and (current) effects are now shown for relevant upgrades",
+      "Slight upgrade changes, new TAS upgrades",
+      "Number settings persist through cast",
+      "Time is now formatted",
+    ]
+  },
+  {
     version: "0.6",
     title: "Casting Update Part 1",
     entries: [

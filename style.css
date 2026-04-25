@@ -154,6 +154,12 @@ button:disabled {
   margin: 8px 0 0;
 }
 
+.file-save {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .muted {
   color: var(--muted);
 }
@@ -298,6 +304,13 @@ button:disabled {
   flex-direction: column;
   gap: 6px;
   font-size: 14px;
+}
+
+.upgrade-hint {
+  font-size: 10px;
+  opacity: 0.5;
+  margin-top: 2px;
+  pointer-events: none; /* prevents weird hover/click issues */
 }
 
 .pattern-table,

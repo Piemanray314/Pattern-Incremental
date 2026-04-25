@@ -1,5 +1,5 @@
-import { createElement } from "../utils/dom.js";
-import { formatMultiplier, formatNumber } from "../utils/format.js";
+import { createElement } from "../../utils/dom.js";
+import { formatMultiplier, formatNumber } from "../../utils/format.js";
 
 export function renderBestRollsTab(state, setState) {
   const fragment = document.createDocumentFragment();

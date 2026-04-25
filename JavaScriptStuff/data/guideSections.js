@@ -1,4 +1,4 @@
-import { hasUpgrade } from "../core/upgradeHelpers.js";
+import { hasUpgrade } from "../core/helpers/upgradeHelpers.js";
 
 export const GUIDE_SECTIONS = [
   {

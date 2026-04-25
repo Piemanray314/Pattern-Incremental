@@ -1,5 +1,5 @@
-import { createElement } from "../utils/dom.js";
-import { formatMultiplier, formatNumber } from "../utils/format.js";
+import { createElement } from "../../utils/dom.js";
+import { formatMultiplier, formatNumber, formatElapsedTime } from "../../utils/format.js";
 
 export function renderStatsTab(state) {
   const fragment = document.createDocumentFragment();
@@ -10,15 +10,15 @@ export function renderStatsTab(state) {
 
   const statsList = createElement("div", { className: "stats-list" });
   const elapsedMs = Date.now() - state.stats.totalTimeStartedAt;
-  const elapsedSeconds = Math.floor(elapsedMs / 1000);
+  const elapsedCastMs = Date.now() - state.stats.castStartTime;
 
   statsList.append(
     statRow("Total Rolls", formatNumber(state.stats.totalRolls)),
-    statRow("Time Elapsed", `${elapsedSeconds} seconds`),
     statRow("Best Roll Value", formatNumber(state.stats.bestRollValue)),
     statRow("Best Gain", formatNumber(state.stats.bestGain)),
     statRow("Lifetime Points Gained", formatNumber(state.stats.lifetimePointsGained)),
-    statRow("Lifetime Patterns Gained", formatNumber(state.stats.lifetimePatternCurrency))
+    statRow("Lifetime Patterns Gained", formatNumber(state.stats.lifetimePatternCurrency)),
+    statRow("Time Elapsed", formatElapsedTime(elapsedMs))
   );
 
   if (showCasting) {
@@ -26,7 +26,8 @@ export function renderStatsTab(state) {
       statRow("Total Casts", formatNumber(state.stats.totalCasts)),
       statRow("Rolls This Cast", formatNumber(state.stats.rollsThisCast)),
       statRow("Points This Cast", formatNumber(state.stats.pointsThisCast)),
-      statRow("Patterns This Cast", formatNumber(state.stats.patternsThisCast))
+      statRow("Patterns This Cast", formatNumber(state.stats.patternsThisCast)),
+      statRow("Time Elapsed This Cast", formatElapsedTime(elapsedCastMs))
     );
   }
 

@@ -1,17 +1,17 @@
 import { TABS } from "../data/tabs.js";
 import { renderTopbar } from "./renderTopbar.js";
-import { renderRollTab } from "./renderRollTab.js";
-import { renderUpgradesTab } from "./renderUpgradesTab.js";
-import { renderAutomationTab } from "./renderAutomationTab.js";
-import { renderPatternsTab } from "./renderPatternsTab.js";
-import { renderStatsTab } from "./renderStatsTab.js";
-import { renderBestRollsTab } from "./renderBestRollsTab.js";
-import { renderSettingsTab } from "./renderSettingsTab.js";
+import { renderRollTab } from "./tabs/renderRollTab.js";
+import { renderUpgradesTab } from "./tabs/renderUpgradesTab.js";
+import { renderAutomationTab } from "./tabs/renderAutomationTab.js";
+import { renderPatternsTab } from "./tabs/renderPatternsTab.js";
+import { renderStatsTab } from "./tabs/renderStatsTab.js";
+import { renderBestRollsTab } from "./tabs/renderBestRollsTab.js";
+import { renderSettingsTab } from "./tabs/renderSettingsTab.js";
 import { createElement } from "../utils/dom.js";
 import { renderChangeLogModal } from "./renderChangeLogModal.js";
 import { saveActiveTab } from "../state/uiState.js";
-import { renderGuideTab } from "./renderGuideTab.js";
-import { renderCastingTab, refreshCastingTabLiveContent } from "./renderCastingTab.js";
+import { renderGuideTab } from "./tabs/renderGuideTab.js";
+import { renderCastingTab, refreshCastingTabLiveContent } from "./tabs/renderCastingTab.js";
 
 let shell = null;
 

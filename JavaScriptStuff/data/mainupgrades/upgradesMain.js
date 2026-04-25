@@ -1,5 +1,5 @@
-import { makeUpgradeDefinition, makeUpgradePatternDefinition } from "../core/definitionHelpers.js";
-import { compareBigNum, fromNumber, toBigNum } from "../utils/bigNum.js";
+import { makeUpgradeDefinition, makeUpgradePatternDefinition } from "../../core/helpers/definitionHelpers.js";
+import { compareBigNum, fromNumber, toBigNum } from "../../utils/bigNum.js";
 
 // Returns if the player has earned at least the given lifetime point total.
 export function hasAtLeastPointsEarned(state, amount) {
@@ -25,6 +25,9 @@ export function hasAtLeastPointsEarned(state, amount) {
     visibleWhen: (state) => hasUpgrade(state, "X"),
     canBuyWhen: (state) => hasUpgrade(state, "X"),
     onBuy(state) {}
+    effectText(state) {
+      return formatMultiplier(function);
+    }
   }
 */
 // cost can use any currency, and can be written as a fixed object, array by level, or function

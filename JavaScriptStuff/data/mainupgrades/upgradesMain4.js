@@ -1,6 +1,6 @@
-import { makeUpgradeDefinition, makeUpgradePatternDefinition } from "../core/definitionHelpers.js";
-import { hasUpgrade } from "../core/upgradeHelpers.js";
-import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../utils/bigNum.js";
+import { makeUpgradeDefinition, makeUpgradePatternDefinition } from "../../core/helpers/definitionHelpers.js";
+import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
+import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../../utils/bigNum.js";
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 
@@ -342,8 +342,8 @@ export const UPGRADES_MAIN_4 = [
     onBuy() {}
   }),
   
-  makeUpgradePatternDefinition("PAT", 4, 5, 2, "Satanic", {
-    cost: { points: { mantissa: 6.66, exponent: 9 } },
+  makeUpgradePatternDefinition("PAT", 4, 5, 2, "What's 9 + 10?", {
+    cost: { points: { mantissa: 1.9, exponent: 9 } },
     maxLevel: 1,
     parents: ["UNL040402"],
     visibleWhen: (state) => hasUpgrade(state, "UNL040402"),

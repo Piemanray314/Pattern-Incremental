@@ -1,5 +1,5 @@
-import { getUpgradeLevel } from "../../core/upgradeHelpers.js";
-import { getMultiplierDataPower, isNthPower, sumDigits, highlightAll, getDigits, getSubstringIndices } from "../../core/patternHelpers.js";
+import { getUpgradeLevel } from "../../core/helpers/upgradeHelpers.js";
+import { getMultiplierDataPower, isNthPower, sumDigits, highlightAll, getDigits, getSubstringIndices } from "../../core/helpers/patternHelpers.js";
 
 // ID format: PAT###### = type + stage + row + column, each using 2 digits
 

@@ -1,6 +1,8 @@
-import { makePrestigeUpgradeDefinition, makeUpgradePatternDefinition } from "../core/definitionHelpers.js";
-import { hasUpgrade } from "../core/upgradeHelpers.js";
-import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../utils/bigNum.js";
+import { makePrestigeUpgradeDefinition, makeUpgradePatternDefinition } from "../../core/helpers/definitionHelpers.js";
+import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
+import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../../utils/bigNum.js";
+import { formatMultiplier } from "../../utils/format.js";
+import { PRES1000XMultiplier, PRES10200Multiplier, PRES10201Multiplier } from "../../core/helpers/castingUpgradeHelpers.js";
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 
@@ -15,7 +17,10 @@ export const PRESTIGE_CAST_SHARD = [
     parents: [],
     visibleWhen: () => true,
     canBuyWhen: () => true,
-    onBuy() {}
+    onBuy() {},
+    effectText(state) {
+      return formatMultiplier(PRES1000XMultiplier(state, 0.25));
+    }
   }),
   
   makePrestigeUpgradeDefinition("PRES", 1, 0, 1, {
@@ -26,7 +31,10 @@ export const PRESTIGE_CAST_SHARD = [
     parents: ["PRES10000"],
     visibleWhen: () => true,
     canBuyWhen: (state) => hasUpgrade(state, "PRES10000", "castingUpgrades"),
-    onBuy() {}
+    onBuy() {},
+    effectText(state) {
+      return formatMultiplier(PRES1000XMultiplier(state, 1/3));
+    }
   }),
   
   makePrestigeUpgradeDefinition("PRES", 1, 0, 2, {
@@ -37,7 +45,10 @@ export const PRESTIGE_CAST_SHARD = [
     parents: ["PRES10001"],
     visibleWhen: () => true,
     canBuyWhen: (state) => hasUpgrade(state, "PRES10001", "castingUpgrades"),
-    onBuy() {}
+    onBuy() {},
+    effectText(state) {
+      return formatMultiplier(PRES1000XMultiplier(state, 0.5));
+    }
   }),
   
   makePrestigeUpgradeDefinition("PRES", 1, 0, 3, {
@@ -48,7 +59,10 @@ export const PRESTIGE_CAST_SHARD = [
     parents: ["PRES10002"],
     visibleWhen: () => true,
     canBuyWhen: (state) => hasUpgrade(state, "PRES10002", "castingUpgrades"),
-    onBuy() {}
+    onBuy() {},
+    effectText(state) {
+      return formatMultiplier(PRES1000XMultiplier(state, 1));
+    }
   }),
 
   makePrestigeUpgradeDefinition("PRES", 1, 1, 0, {
@@ -103,7 +117,10 @@ export const PRESTIGE_CAST_SHARD = [
     parents: [],
     visibleWhen: () => true,
     canBuyWhen: () => true,
-    onBuy() {}
+    onBuy() {},
+    effectText(state, level) {
+      return formatMultiplier(PRES10200Multiplier(state, level));
+    }
   }),
   
   makePrestigeUpgradeDefinition("PRES", 1, 2, 1, {
@@ -114,7 +131,10 @@ export const PRESTIGE_CAST_SHARD = [
     parents: ["PRES10200"],
     visibleWhen: () => true,
     canBuyWhen: (state) => hasUpgrade(state, "PRES10200", "castingUpgrades"),
-    onBuy() {}
+    onBuy() {},
+    effectText(state, level) {
+      return formatMultiplier(PRES10201Multiplier(state, level));
+    }
   }),
   
   makePrestigeUpgradeDefinition("PRES", 1, 2, 2, {

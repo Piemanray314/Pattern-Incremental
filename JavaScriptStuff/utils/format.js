@@ -166,6 +166,26 @@ function groupIndexToLetters(groupIndex) {
   return result || "A";
 }
 
+// Deals with time in standard format
+export function formatElapsedTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+
+  const years = Math.floor(totalSeconds / 31536000);
+  const days = Math.floor((totalSeconds % 31536000) / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (years >= 1) {
+    return `${years}y ${days}d ${hours}h ${minutes}m ${seconds}s`;
+  } else if (days >= 1) {
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  } else if (hours >= 1) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+  return `${minutes}m ${seconds}s`;
+}
+
 // Formats bigNum with full short-scale names when possible
 // Conway–Wechsler-style short-scale number names once things go crazy
 // Here's a good overview explained: https://kyodaisuu.github.io/illion/

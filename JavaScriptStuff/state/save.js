@@ -18,9 +18,11 @@ export function loadGame() {
   if (!raw) return null;
 
   try {
+    localStorage.setItem(`${SAVE_KEY}_backup_before_load`, raw);
     return deserializeSave(raw);
   } catch (error) {
     console.error("Failed to load save:", error);
+    alert("Save failed to load. Your old save was backed up and will not be overwritten.");
     return null;
   }
 }

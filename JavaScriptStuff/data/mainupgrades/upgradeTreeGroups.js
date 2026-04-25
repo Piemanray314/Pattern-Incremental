@@ -1,7 +1,7 @@
 import { UPGRADES_MAIN } from "./upgradesMain.js";
 import { UPGRADES_MAIN_4 } from "./upgradesMain4.js";
 import { UPGRADES_MAIN_5 } from "./upgradesMain5.js";
-import { hasUpgrade } from "../core/upgradeHelpers.js";
+import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
 
 // For tiers, maybe something like:
 // Constant -> Logarithmic -> Linear -> Linearithmic -> Polynomial ->

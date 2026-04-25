@@ -1,24 +1,20 @@
 import { createInitialState } from "./initialState.js";
-import { UPGRADE_TREE_GROUPS } from "../data/upgradeTreeGroups.js";
-import { AUTOMATION_TREE_GROUPS } from "../data/automationTreeGroups.js";
-import { PATTERNS } from "../data/patterns.js";
-import { isBigNum, serializeBigNum, deserializeBigNum } from "../utils/bigNum.js";
+import { UPGRADE_TREE_GROUPS } from "../data/mainupgrades/upgradeTreeGroups.js";
+import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTreeGroups.js";
+import { PATTERNS } from "../data/patterns/patterns.js";
+import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.6"; // Main version control
+let CURRENT_SAVE_VERSION = "0.61"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
-  const compactState = buildCompactState(state);
+  const compactState = compactKeys(buildCompactState(state));
 
-  return JSON.stringify(
-    {
-      saveVersion: CURRENT_SAVE_VERSION,
-      exportedAt: Date.now(),
-      gameState: compactState
-    }, 
-    null,
-    0
-  );
+  return JSON.stringify({
+    v: CURRENT_SAVE_VERSION,
+    t: Date.now(),
+    g: compactState
+  });
 }
 
 // Parses imported save text, extracts its version, and migrates it into the current state format
@@ -30,10 +26,19 @@ export function deserializeSave(text) {
   }
 
   const saveVersion =
-  typeof parsed.saveVersion === "string" || typeof parsed.saveVersion === "number"
-    ? parsed.saveVersion : 0;
+    parsed.saveVersion ??
+    parsed.v ??
+    parsed?.gameState?.meta?.saveVersion ??
+    parsed?.g?.m?.sv ??
+    0;
 
-  const rawState = parsed.gameState ?? parsed;
+  const wrappedState =
+    parsed.gameState ??
+    parsed.g ??
+    parsed;
+
+  const rawState = expandKeys(wrappedState);
+
   return migrateSave(rawState, saveVersion);
 }
 
@@ -74,6 +79,7 @@ function buildCompactState(state) {
       rollsThisCast: state.stats.rollsThisCast,
       pointsThisCast: state.stats.pointsThisCast,
       patternsThisCast: state.stats.patternsThisCast,
+      castStartTime: state.stats.castStartTime,
       previousCasts: state.stats.previousCasts ?? []
     },
 
@@ -117,28 +123,18 @@ function compactRollSnapshot(roll) {
     totalGain: compactValue(roll.totalGain),
     totalPatternCurrencyGain: compactValue(roll.totalPatternCurrencyGain),
 
-    matches: (roll.matches ?? []).map((match) => ({
-      patternId: match.patternId,
-      highlightedIndices: Array.isArray(match.highlightedIndices) ? match.highlightedIndices : [],
-        currentMultiplier: compactValue(match.currentMultiplier),
-        currentPatternCurrencyReward: compactValue(match.currentPatternCurrencyReward)
-    }))
+    matches: (roll.matches ?? []).map((match) => [
+      match.patternId,
+      Array.isArray(match.highlightedIndices) ? match.highlightedIndices : [],
+      compactValue(match.currentMultiplier),
+      compactValue(match.currentPatternCurrencyReward)
+    ])
   };
 }
 
 // Main import function. Converts loaded save data into the current state format and fills in any missing fields
 export function migrateSave(rawState, saveVersion) {
   let state = structuredCloneSafe(rawState);
-
-  //Example version check for refunding upgrades
-  /* 
-  if (isVersionBefore(saveVersion, "1.0")) {
-    state = refundAutomationUpgrades(state);
-  }
-  if (isVersionBefore(saveVersion, "0.4")) {
-    state = refundSpecificAutomationUpgrade(state, "AUTO030201");
-  }
-  */
 
   state = hydrateAgainstInitialState(state);
   state = filterInvalidUpgradeIds(state);
@@ -234,29 +230,31 @@ function filterInvalidUpgradeIds(state) {
 
 // Restores saved BigNum fields back into their runtime format after loading a save
 function normalizeBigNumFields(state) {
-  state.currencies.points = deserializeBigNum(state.currencies.points);
-  state.currencies.patterns = deserializeBigNum(state.currencies.patterns);
-  state.currencies.casts = deserializeBigNum(state.currencies.casts);
-  state.currencies.shards = deserializeBigNum(state.currencies.shards);
-  state.currencies.pies = deserializeBigNum(state.currencies.pies);
+  state.currencies ??= {};
+  state.stats ?? {};
 
-  state.stats.lifetimePointsGained = deserializeBigNum(state.stats.lifetimePointsGained);
-  state.stats.lifetimePatternCurrency = deserializeBigNum(state.stats.lifetimePatternCurrency);
-  state.stats.bestGain = deserializeBigNum(state.stats.bestGain);
-  state.stats.pointsThisCast = deserializeBigNum(state.stats.pointsThisCast);
-  state.stats.patternsThisCast = deserializeBigNum(state.stats.patternsThisCast);
+  state.currencies.points = deserializeBigNum(state.currencies.points ?? zeroBigNum());
+  state.currencies.patterns = deserializeBigNum(state.currencies.patterns ?? zeroBigNum());
+  state.currencies.casts = deserializeBigNum(state.currencies.casts ?? zeroBigNum());
+  state.currencies.shards = deserializeBigNum(state.currencies.shards ?? zeroBigNum());
+  state.currencies.pies = deserializeBigNum(state.currencies.pies ?? zeroBigNum());
+
+  state.stats.lifetimePointsGained = deserializeBigNum(state.stats.lifetimePointsGained ?? zeroBigNum());
+  state.stats.lifetimePatternCurrency = deserializeBigNum(state.stats.lifetimePatternCurrency ?? zeroBigNum());
+  state.stats.bestGain = deserializeBigNum(state.stats.bestGain ?? zeroBigNum());
+  state.stats.pointsThisCast = deserializeBigNum(state.stats.pointsThisCast ?? zeroBigNum());
+  state.stats.patternsThisCast = deserializeBigNum(state.stats.patternsThisCast ?? zeroBigNum());
 
   state.stats.previousCasts = (state.stats.previousCasts ?? []).map((cast) => ({
     ...cast,
-    points: deserializeBigNum(cast.points),
-    patterns: deserializeBigNum(cast.patterns),
-    castsGained: deserializeBigNum(cast.castsGained),
-    shardsGained: deserializeBigNum(cast.shardsGained)
+    points: deserializeBigNum(cast.points ?? zeroBigNum()),
+    patterns: deserializeBigNum(cast.patterns ?? zeroBigNum()),
+    castsGained: deserializeBigNum(cast.castsGained ?? zeroBigNum()),
+    shardsGained: deserializeBigNum(cast.shardsGained ?? zeroBigNum())
   }));
 
-
-  if (state.currentRoll) normalizeCompactRoll(state.currentRoll);
-  if (state.latestRoll) normalizeCompactRoll(state.latestRoll);
+  if (state.currentRoll) normalizeCompactRoll(state.currentRoll ?? []);
+  if (state.latestRoll) normalizeCompactRoll(state.latestRoll ?? []);
 
   state.stats.previousRolls = (state.stats.previousRolls ?? []).map(normalizeCompactRoll);
   state.stats.bestRolls = (state.stats.bestRolls ?? []).map(normalizeCompactRoll);
@@ -280,15 +278,31 @@ function normalizeCompactRoll(roll) {
   roll.totalGain = deserializeBigNum(roll.totalGain ?? roll.gain);
   roll.totalPatternCurrencyGain = deserializeBigNum(roll.totalPatternCurrencyGain ?? 0);
 
-  roll.matches = (roll.matches ?? []).map((match) => ({
-    patternId: match.patternId,
-    highlightedIndices: Array.isArray(match.highlightedIndices) ? match.highlightedIndices : [],
-    currentMultiplier: deserializeBigNum(match.currentMultiplier),
-    currentPatternCurrencyReward: deserializeBigNum(match.currentPatternCurrencyReward),
-    patternName: "",
-    description: "",
-    outdated: false
-  }));
+  roll.matches = (roll.matches ?? []).map((match) => {
+    // 0.61+ Format
+    if (Array.isArray(match)) {
+      return {
+        patternId: match[0],
+        highlightedIndices: Array.isArray(match[1]) ? match[1] : [],
+        currentMultiplier: deserializeBigNum(match[2]),
+        currentPatternCurrencyReward: deserializeBigNum(match[3]),
+        patternName: "",
+        description: "",
+        outdated: false
+      };
+    }
+
+    // 0.6 and previous format
+    return {
+      patternId: match.patternId,
+      highlightedIndices: Array.isArray(match.highlightedIndices) ? match.highlightedIndices : [],
+      currentMultiplier: deserializeBigNum(match.currentMultiplier),
+      currentPatternCurrencyReward: deserializeBigNum(match.currentPatternCurrencyReward),
+      patternName: "",
+      description: "",
+      outdated: false
+    };
+  });
 
   return roll;
 }
@@ -347,7 +361,10 @@ function structuredCloneSafe(value) {
 
 // If BigNum, rounds it to 12 digits or whatever is specified in bigNum: serializeBigNum
 function compactValue(value) {
-  return isBigNum(value) ? serializeBigNum(value) : value;
+  if (isBigNum(value)) {
+    return [roundSmallToWholeMantissa(value).mantissa, value.exponent];
+  }
+  return value;
 }
 
 // Compares versions, returns if a is older than b
@@ -376,4 +393,122 @@ function parseVersion(version) {
   }
 
   return { major: 0, minor: 0 };
+}
+
+// Dictionary for compacting longer words (0.61+)
+const SAVE_KEY_MAP = {
+  currencies: "c",
+  points: "p",
+  patterns: "pt",
+  pies: "pi",
+  casts: "ca",
+  shards: "sh",
+
+  progression: "pr",
+  maxDigitsUnlocked: "md",
+  castingUnlocked: "cu",
+
+  upgrades: "u",
+  automationUpgrades: "au",
+  castingUpgrades: "cu2",
+
+  currentRoll: "cr",
+  latestRoll: "lr",
+
+  stats: "s",
+  totalRolls: "tr",
+  totalTimeStartedAt: "tts",
+  castStartTime: "cst",
+  lifetimePointsGained: "lpg",
+  lifetimePatternCurrency: "lpc",
+  rollsThisCast: "rtc",
+  pointsThisCast: "ptc",
+  patternsThisCast: "pac",
+  totalCasts: "tc",
+  previousCasts: "pc",
+  bestRollValue: "brv",
+  bestGain: "bg",
+  previousRolls: "ph",
+  bestRolls: "br",
+  selectedBestRollIndex: "sbi",
+
+  automation: "a",
+  enabled: "e",
+  intervalMs: "i",
+  accumulatorMs: "am",
+  displayMode: "dm",
+
+  settings: "se",
+  numberFormatMode: "nfm",
+
+  meta: "m",
+  saveVersion: "sv",
+  lastSavedAt: "lsa",
+
+  raw: "r",
+  source: "so",
+  value: "v",
+  digitCount: "dc",
+  baseRollValue: "bv",
+  preMultiplierFlatBonus: "pf",
+  modifiedBaseValue: "mb",
+  patternMultiplier: "pm",
+  globalMultiplier: "gm",
+  castingMultiplier: "cm",
+  preCastingMultiplier: "pcm",
+  totalMultiplier: "tm",
+  postMultiplierFlatBonus: "po",
+  multipliedGain: "mg",
+  totalGain: "tg",
+  totalPatternCurrencyGain: "tpc",
+  matches: "mt",
+
+  patternId: "pid",
+  highlightedIndices: "hi",
+  currentMultiplier: "cmu",
+  currentPatternCurrencyReward: "cpr"
+};
+
+const LOAD_KEY_MAP = Object.fromEntries(
+  Object.entries(SAVE_KEY_MAP).map(([longKey, shortKey]) => [shortKey, longKey])
+);
+
+// Compact using SAVE_KEY_MAP
+function compactKeys(value) {
+  if (Array.isArray(value)) {
+    return value.map(compactKeys);
+  }
+
+  if (value && typeof value === "object") {
+    const compacted = {};
+
+    for (const [key, innerValue] of Object.entries(value)) {
+      const compactKey = SAVE_KEY_MAP[key] ?? key;
+      compacted[compactKey] = compactKeys(innerValue);
+    }
+
+    return compacted;
+  }
+
+  return value;
+}
+
+// Extract using SAVE_KEY_MAP
+function expandKeys(value) {
+  if (Array.isArray(value)) {
+    return value.map(expandKeys);
+  }
+
+  if (value && typeof value === "object") {
+    const expanded = {};
+
+    for (const [key, innerValue] of Object.entries(value)) {
+      const expandedKey = LOAD_KEY_MAP[key] ?? key;
+      expanded[expandedKey] = expandKeys(innerValue);
+    }
+
+    return expanded;
+  }
+
+  return value;
 }

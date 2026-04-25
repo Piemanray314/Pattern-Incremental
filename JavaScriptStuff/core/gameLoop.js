@@ -1,5 +1,5 @@
 import { performRoll } from "./rollEngine.js";
-import { getAutomationConfig } from "./automationHelpers.js";
+import { getAutomationConfig } from "../core/helpers/automationHelpers.js";
 
 // Main game loop
 export function updateGame(state, deltaMs) {
@@ -7,17 +7,15 @@ export function updateGame(state, deltaMs) {
   const instructions = {
     topbar: false,
     content: false,
-    sidebar: false
+    sidebar: false,
+    effectText: false
   };
 
   state.timers.uiRefreshAccumulatorMs += deltaMs;
 
   const automationConfig = getAutomationConfig(state);
 
-  if (
-    automationConfig.unlocked &&
-    state.automation.enabled
-  ) {
+  if (automationConfig.unlocked && state.automation.enabled) {
     state.automation.accumulatorMs += deltaMs;
 
     const effectiveIntervalMs = automationConfig.effectiveIntervalMs;
@@ -39,12 +37,13 @@ export function updateGame(state, deltaMs) {
   }
 
   // Refreshes the UI at most 4 times a second
-  if (
-    (state.ui.activeTab === "stats") &&
-    state.timers.uiRefreshAccumulatorMs >= 250
-  ) {
+  if ((state.ui.activeTab === "stats") && state.timers.uiRefreshAccumulatorMs >= 250) {
     state.timers.uiRefreshAccumulatorMs = 0;
     instructions.content = true;
+  }
+  if (state.timers.effectTextRefreshAccumulatorMs >= 1000) {
+    state.timers.effectTextRefreshAccumulatorMs = 0;
+    instructions.effectText = true;
   }
 
   return instructions;

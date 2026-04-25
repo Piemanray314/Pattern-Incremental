@@ -1,5 +1,5 @@
-import { UPGRADES_MAIN } from "../data/upgradesMain.js";
-import { compareBigNum, subtractBigNum, toBigNum, addBigNum, multiplyBigNumByNumber, oneBigNum, zeroBigNum, roundMultiplierBigNum } from "../utils/bigNum.js";
+import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
+import { compareBigNum, subtractBigNum, toBigNum, addBigNum, multiplyBigNumByNumber, oneBigNum, zeroBigNum, roundMultiplierBigNum } from "../../utils/bigNum.js";
 
 // Current state keys are "upgrades" and "automationUpgrades"
 

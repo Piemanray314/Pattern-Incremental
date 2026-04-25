@@ -1,10 +1,10 @@
-import { PATTERNS } from "../data/patterns.js";
-import { numberStringToValue } from "./patternHelpers.js";
-import { pushBestRoll, pushRollHistory } from "./statsHelpers.js";
-import { getUpgradeConfig } from "./upgradeHelpers.js";
+import { PATTERNS } from "../data/patterns/patterns.js";
+import { numberStringToValue } from "./helpers/patternHelpers.js";
+import { pushBestRoll, pushRollHistory } from "./helpers/statsHelpers.js";
+import { getUpgradeConfig } from "./helpers/upgradeHelpers.js";
 import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
-import { getAutomationConfig, shouldDisplayAutoRoll } from "./automationHelpers.js";
-import { getCastingUpgradeConfig } from "./castingUpgradeHelpers.js";
+import { getAutomationConfig, shouldDisplayAutoRoll } from "./helpers/automationHelpers.js";
+import { getCastingUpgradeConfig } from "./helpers/castingUpgradeHelpers.js";
 
 // Main function to perform a loop. Returns the roll and saves it into state
 // { source = "manual" } = {} is a fancy way to write "If there's no second argument, or it's empty, return manual"

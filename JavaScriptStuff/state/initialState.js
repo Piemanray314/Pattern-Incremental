@@ -37,12 +37,14 @@ export function createInitialState() {
       rollsThisCast: 0,
       pointsThisCast: zeroBigNum(),
       patternsThisCast: zeroBigNum(),
+      castStartTime: Date.now(),
       previousCasts: [],
     },
 
     timers: {
       uiRefreshAccumulatorMs: 0,
-      autoRollAccumulatorMs: 0
+      autoRollAccumulatorMs: 0,
+      effectTextRefreshAccumulatorMs: 0
     },
 
     automation: {
@@ -81,7 +83,7 @@ export function createInitialState() {
     },
 
     meta: {
-      saveVersion: 0.6,
+      saveVersion: 0.61,
       lastSavedAt: Date.now()
     }
   };

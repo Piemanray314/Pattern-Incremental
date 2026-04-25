@@ -1,6 +1,6 @@
-import { makeUpgradeDefinition, makeUpgradePatternDefinition } from "../core/definitionHelpers.js";
-import { hasUpgrade } from "../core/upgradeHelpers.js";
-import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../utils/bigNum.js";
+import { makeUpgradeDefinition, makeUpgradePatternDefinition } from "../../core/helpers/definitionHelpers.js";
+import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
+import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../../utils/bigNum.js";
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 

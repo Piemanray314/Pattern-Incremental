@@ -1,7 +1,7 @@
-import { createElement } from "../utils/dom.js";
-import { saveSubtab } from "../state/uiState.js";
-import { GUIDE_SECTIONS } from "../data/guideSections.js";
-import { getGuideContent } from "../data/guideContent.js";
+import { createElement } from "../../utils/dom.js";
+import { saveSubtab } from "../../state/uiState.js";
+import { GUIDE_SECTIONS } from "../../data/guideSections.js";
+import { getGuideContent } from "../../data/guideContent.js";
 
 export function renderGuideTab(state, setState) {
   const fragment = document.createDocumentFragment();

@@ -1,6 +1,6 @@
-import { makeUpgradeDefinition } from "../core/definitionHelpers.js";
-import { hasUpgrade } from "../core/upgradeHelpers.js";
-import { getAutomationMinIntervalMs } from "../core/automationHelpers.js"
+import { makeUpgradeDefinition } from "../../core/helpers/definitionHelpers.js";
+import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
+import { getAutomationMinIntervalMs } from "../../core/helpers/automationHelpers.js"
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 

@@ -1,7 +1,7 @@
-import { getUpgradeLevel } from "../../core/upgradeHelpers.js";
+import { getUpgradeLevel } from "../../core/helpers/upgradeHelpers.js";
 import { getMultiplierDataPower, isNthPower, sumDigits, highlightAll, getDigits, 
   getSubstringIndices, countDistinctDigits, getConsecutiveEqualIndices, allAdjacentDifferencesAtMost, 
-  isStrictAscendingByOne, isStrictDescendingByOne, getMiniSandwichIndices, getSandwichIndices, allDigitsWithinSpan } from "../../core/patternHelpers.js";
+  isStrictAscendingByOne, isStrictDescendingByOne, getMiniSandwichIndices, getSandwichIndices, allDigitsWithinSpan } from "../../core/helpers/patternHelpers.js";
 
 export const PATTERNS_T2 = [
   {
@@ -498,17 +498,17 @@ export const PATTERNS_T2 = [
   {
     id: "PAT040502",
     name: "Satanic",
-    description: "Roll contains 666",
+    description: "Roll contains 19",
     requiredDigits: 3,
-    baseMultiplier: () => 666,
-    patternCurrencyReward: () => 666,
+    baseMultiplier: () => 19,
+    patternCurrencyReward: () => 19,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if (!rollString.includes("666")) return null;
+      if (!rollString.includes("19")) return null;
 
       return {
-        highlightedIndices: getSubstringIndices(rollString, "666"),
+        highlightedIndices: getSubstringIndices(rollString, "19"),
         baseMultiplier: this.baseMultiplier()
       };
     }

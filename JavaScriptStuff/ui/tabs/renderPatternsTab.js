@@ -1,10 +1,10 @@
-import { PATTERNS } from "../data/patterns.js";
-import { createElement } from "../utils/dom.js";
-import { formatMultiplier, formatNumber } from "../utils/format.js";
-import { evaluateRollString } from "../core/rollEngine.js";
-import { getPatternMultiplicationFactor } from "../core/automationHelpers.js";
-import { getPatternMultiplierFactor, getManualPatternMultiplierFactor } from "../core/upgradeHelpers.js";
-import { multiplyBigNum, toBigNum } from "../utils/bigNum.js";
+import { PATTERNS } from "../../data/patterns/patterns.js";
+import { createElement } from "../../utils/dom.js";
+import { formatMultiplier, formatNumber } from "../../utils/format.js";
+import { evaluateRollString } from "../../core/rollEngine.js";
+import { getPatternMultiplicationFactor } from "../../core/helpers/automationHelpers.js";
+import { getPatternMultiplierFactor, getManualPatternMultiplierFactor } from "../../core/helpers/upgradeHelpers.js";
+import { multiplyBigNum, toBigNum } from "../../utils/bigNum.js";
 
 // Main renderer for the patterns tab
 // Renders the preview UI and pattern list
