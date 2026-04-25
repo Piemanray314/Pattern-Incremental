@@ -76,14 +76,14 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 
-// setInterval(() => {
-//   if (saveLoadFailed) return;
-//   saveGame(state);
-// }, 15000);
+setInterval(() => {
+  if (saveLoadFailed) return;
+  saveGame(state);
+}, 15000);
 
-// window.addEventListener("beforeunload", () => {
-//   if (saveLoadFailed || window.skipNextAutosave) return;
-//   saveGame(state);
-// });
+window.addEventListener("beforeunload", () => {
+  if (saveLoadFailed || window.skipNextAutosave) return;
+  saveGame(state);
+});
 
 requestAnimationFrame(tick);

@@ -16,6 +16,13 @@
 
 export const changeLog = [
   {
+    version: "0.62",
+    title: "Small QoL update",
+    entries: [
+      "Refreshing the page not properly saving fixed",
+    ]
+  },
+  {
     version: "0.61",
     title: "Small QoL update",
     entries: [
