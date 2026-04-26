@@ -22,6 +22,7 @@ export const changeLog = [
     entries: [
       "Fixed topbar buttons being virtually unclickable because the topbar rerendered every tick",
       "Currencies now render every 0.1 seconds or upon rolls",
+      "Fixed issue with patterns not rendering scaling correctly at higher digits",
     ]
   },
   {
