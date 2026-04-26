@@ -11,11 +11,13 @@ export function updateGame(state, deltaMs) {
     topbar: false,
     content: false,
     sidebar: false,
-    effectText: false
+    effectText: false,
+    topbarLive: true
   };
 
   state.timers.uiRefreshAccumulatorMs += deltaMs;
   state.timers.effectTextRefreshAccumulatorMs += deltaMs;
+  state.timers.topbarLiveRefreshAccumulatorMs += deltaMs;
 
   const automationConfig = getAutomationConfig(state);
 
@@ -28,7 +30,7 @@ export function updateGame(state, deltaMs) {
       state.automation.accumulatorMs -= effectiveIntervalMs;
       const rollResult = performRoll(state, { source: "auto" });
 
-      instructions.topbar = true;
+      instructions.topbarLive = true;
 
       if (state.ui.activeTab === "stats" || state.ui.activeTab === "bestRolls") {
         instructions.content = true;
@@ -46,7 +48,6 @@ export function updateGame(state, deltaMs) {
   if (shardMitosisPerSecond.mantissa !== 0) {
     const gain = multiplyBigNumByNumber(shardMitosisPerSecond, deltaMs / 1000);
     state.currencies.shards = addBigNum(state.currencies.shards, gain);
-    instructions.topbar = true;
   }
 
   // Refreshes the UI at most 4 times a second
@@ -57,6 +58,12 @@ export function updateGame(state, deltaMs) {
   if (state.timers.effectTextRefreshAccumulatorMs >= 1000) {
     state.timers.effectTextRefreshAccumulatorMs = 0;
     instructions.effectText = true;
+  }
+
+  // Refreshes the topbar currencies 10 times a second
+  if (state.timers.topbarLiveRefreshAccumulatorMs >= 100) {
+    state.timers.topbarLiveRefreshAccumulatorMs = 0;
+    instructions.topbarLive = true;
   }
 
   return instructions;

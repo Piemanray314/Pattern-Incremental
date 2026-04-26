@@ -8,13 +8,18 @@ export function renderTopbar(state, setState) {
   const left = createElement("div", { className: "topbar-left" });
   const right = createElement("div", { className: "topbar-right" });
 
-  left.append(
-    currencyPill(`Points: ${formatNumber(state.currencies.points)}`),
-    currencyPill(`Patterns: ${formatNumber(roundSmallToWholeMantissa(state.currencies.patterns))}`),
-    currencyPill(`Casts: ${formatNumber(roundSmallToWholeMantissa(state.currencies.casts))}`),
-    currencyPill(`Shards: ${formatNumber(roundSmallToWholeMantissa(state.currencies.shards))}`),
-    currencyPill(`Pies: ${formatNumber(state.currencies.pies)}`)
-  );
+  const pointsPill = currencyPill("points", `Points: ${formatNumber(state.currencies.points)}`);
+  const patternsPill = currencyPill("patterns", `Patterns: ${formatNumber(roundSmallToWholeMantissa(state.currencies.patterns))}`);
+  const castsPill = currencyPill("casts", `Casts: ${formatNumber(roundSmallToWholeMantissa(state.currencies.casts))}`);
+  const shardsPill = currencyPill("shards", `Shards: ${formatNumber(roundSmallToWholeMantissa(state.currencies.shards))}`);
+  const piesPill = currencyPill("pies", `Pies: ${formatNumber(state.currencies.pies)}`);
+  pointsPill.dataset.currencyKey = "points";
+  patternsPill.dataset.currencyKey = "patterns";
+  castsPill.dataset.currencyKey = "casts";
+  shardsPill.dataset.currencyKey = "shards";
+  piesPill.dataset.currencyKey = "pies";
+
+  left.append(pointsPill, patternsPill, castsPill, shardsPill, piesPill);
 
   const changeLogButton = createElement("button", {
     text: "Change Log",
@@ -36,8 +41,12 @@ export function renderTopbar(state, setState) {
   return topbar;
 }
 
-function currencyPill(text) {
-  return createElement("div", { className: "currency-pill", text });
+function currencyPill(key, text) {
+  return createElement("div", {
+    className: "currency-pill",
+    text,
+    dataset: { currencyKey: key }
+  });
 }
 
 function topbarLink(text, href) {
@@ -45,4 +54,18 @@ function topbarLink(text, href) {
   link.href = href;
   link.target = "_blank";
   return link;
+}
+
+export function refreshTopbarCurrencies(state) {
+  updateCurrencyPill("points", `Points: ${formatNumber(state.currencies.points)}`);
+  updateCurrencyPill("patterns", `Patterns: ${formatNumber(state.currencies.patterns)}`);
+  updateCurrencyPill("casts", `Casts: ${formatNumber(state.currencies.casts)}`);
+  updateCurrencyPill("shards", `Shards: ${formatNumber(state.currencies.shards)}`);
+  updateCurrencyPill("pies", `Pies: ${formatNumber(state.currencies.pies)}`);
+}
+
+function updateCurrencyPill(key, text) {
+  const element = document.querySelector(`[data-currency-key="${key}"]`);
+  if (!element) return;
+  element.textContent = text;
 }

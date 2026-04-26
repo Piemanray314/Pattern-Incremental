@@ -4,7 +4,7 @@ import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTre
 import { PATTERNS } from "../data/patterns/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa, multiplyBigNum, oneBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.7"; // Main version control
+let CURRENT_SAVE_VERSION = "0.71"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {

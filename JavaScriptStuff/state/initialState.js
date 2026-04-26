@@ -84,7 +84,7 @@ export function createInitialState() {
     },
 
     meta: {
-      saveVersion: 0.7,
+      saveVersion: 0.71,
       lastSavedAt: Date.now()
     }
   };

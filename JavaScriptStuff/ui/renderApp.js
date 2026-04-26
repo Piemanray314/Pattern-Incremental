@@ -1,5 +1,5 @@
 import { TABS } from "../data/tabs.js";
-import { renderTopbar } from "./renderTopbar.js";
+import { refreshTopbarCurrencies, renderTopbar } from "./renderTopbar.js";
 import { renderRollTab } from "./tabs/renderRollTab.js";
 import { renderUpgradesTab } from "./tabs/renderUpgradesTab.js";
 import { renderAutomationTab } from "./tabs/renderAutomationTab.js";
@@ -27,7 +27,7 @@ export function initializeAppShell(state, setState) {
   const mainLayout = createElement("div", { className: "main-layout" });
   const sidebar = createElement("aside", { className: "sidebar" });
   const content = createElement("main", { className: "content" });
-  const modalHost = createElement("div");
+  const modalHost = createElement("div", { className: "modal-host" });
 
   const sidebarButtons = new Map();
 
@@ -224,3 +224,6 @@ export function refreshActiveEffectTexts(state) {
   }
 }
 
+export function refreshTopbarLiveContent(state) {
+  refreshTopbarCurrencies(state);
+}

@@ -17,6 +17,14 @@
 
 export const changeLog = [
   {
+    version: "0.71",
+    title: "Topbar Hotfix",
+    entries: [
+      "Fixed topbar buttons being virtually unclickable because the topbar rerendered every tick",
+      "Currencies now render every 0.1 seconds or upon rolls",
+    ]
+  },
+  {
     version: "0.7",
     title: "Linear Update",
     entries: [
@@ -26,7 +34,7 @@ export const changeLog = [
       "Added zooming functionality on upgrade trees. Mousewheel on web, but buttons are also available.",
       "Fixed certain patterns being too lenient + their indices",
       "Refreshing the page not properly saving fixed",
-      "Some balancing changes. Thank you to all playtesters, especially glixh_hunt3r!",
+      "Some balancing changes. Thank you to all playtesters, especially Glixh Hunt3r!",
     ]
   },
   {
