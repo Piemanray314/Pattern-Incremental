@@ -174,6 +174,9 @@ function renderPreviewResultInto(host, state) {
   if (state.progression.castingUnlocked) {
     summary.append(summaryPill(`Casting Multiplier: ${formatMultiplier(previewResult.castingMultiplier ?? 1)}`));
   }
+  if ((previewResult.multiplierRolls ?? []).length > 0) {
+    summary.append(summaryPill(`Multiplier Rolls: ${formatMultiplier(previewResult.multiplierRollTotal ?? 1)}`));
+  }
   summary.append(summaryPill(`Final Value: ${formatNumber(previewResult.totalGain)}`));
 
   host.append(summary);
@@ -232,7 +235,8 @@ function evaluatePatternPreview(state, input, includeGlobal, includeAuto) {
     source: includeAuto ? "auto" : "manual",
     includeGlobal,
     includePostMultiplierFlatBonus: includeGlobal,
-    includePatternCurrency: false
+    includePatternCurrency: false,
+    includeMultiplierRolls: false
   });
 
   return {

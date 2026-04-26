@@ -39,6 +39,7 @@ export function createInitialState() {
       patternsThisCast: zeroBigNum(),
       castStartTime: Date.now(),
       previousCasts: [],
+      bestShardsPerCast: zeroBigNum(),
     },
 
     timers: {
@@ -68,12 +69,12 @@ export function createInitialState() {
       automationSubtab: loadSubtab("automationSubtab") ?? "main",
       guideSubtab: loadSubtab("guideSubtab") ?? "rolls",
       castingSubtab: loadSubtab("castingSubtab") ?? "recast",
-      upgradeTreeView_main: loadTreeViewPosition("upgradeTreeView_main") ?? { scrollLeft: 0, scrollTop: 0 },
-      upgradeTreeView_4: loadTreeViewPosition("upgradeTreeView_4") ?? { scrollLeft: 0, scrollTop: 0 },
-      upgradeTreeView_5: loadTreeViewPosition("upgradeTreeView_5") ?? { scrollLeft: 0, scrollTop: 0 },
-      automationTreeView: loadTreeViewPosition("automationTreeView") ?? { scrollLeft: 0, scrollTop: 0 },
-      castingTreeView_casts: loadTreeViewPosition("castingTreeView_casts") ?? { scrollLeft: 0, scrollTop: 0 },
-      castingTreeView_shards: loadTreeViewPosition("castingTreeView_shards") ?? { scrollLeft: 0, scrollTop: 0 },
+      upgradeTreeView_main: loadTreeViewPosition("upgradeTreeView_main") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
+      upgradeTreeView_4: loadTreeViewPosition("upgradeTreeView_4") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
+      upgradeTreeView_5: loadTreeViewPosition("upgradeTreeView_5") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
+      automationTreeView: loadTreeViewPosition("automationTreeView") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
+      castingTreeView_casts: loadTreeViewPosition("castingTreeView_casts") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
+      castingTreeView_shards: loadTreeViewPosition("castingTreeView_shards") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
 
       showChangeLogModal: false
     },
@@ -83,7 +84,7 @@ export function createInitialState() {
     },
 
     meta: {
-      saveVersion: 0.61,
+      saveVersion: 0.7,
       lastSavedAt: Date.now()
     }
   };

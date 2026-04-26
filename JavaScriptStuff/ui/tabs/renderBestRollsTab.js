@@ -24,7 +24,7 @@ export function renderBestRollsTab(state, setState) {
   } else {
     breakdownPanel.append(
       createElement("div", {
-        className: "current-roll-big",
+        className: "roll-main",
         text: selectedRoll.raw
       })
     );
@@ -39,6 +39,11 @@ export function renderBestRollsTab(state, setState) {
     );
     if (state.progression.castingUnlocked) {
       summary.append(summaryPill(`Casting Multiplier: ${formatMultiplier(selectedRoll.castingMultiplier ?? 1)}`));
+    }
+    if ((selectedRoll.multiplierRolls ?? []).length > 0) {
+      summary.append(
+        summaryPill(`Multiplier Rolls: ${formatMultiplier(selectedRoll.multiplierRollTotal ?? 1)}`)
+      );
     }
     summary.append(summaryPill(`Final Value: ${formatNumber(selectedRoll.totalGain)}`));
 

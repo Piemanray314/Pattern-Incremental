@@ -1,5 +1,5 @@
 import { hasUpgrade, getUpgradeLevel, grantUpgradeLevel, getUpgradeMaxLevel } from "./upgradeHelpers.js";
-import { toBigNum, multiplyBigNum, powerBigNum, addBigNum, oneBigNum, safeLog10BigNum, fromNumber, maxBigNum, makeBigNum } from "../../utils/bigNum.js";
+import { toBigNum, multiplyBigNum, powerBigNum, addBigNum, zeroBigNum, oneBigNum, safeLog10BigNum, fromNumber, maxBigNum, makeBigNum, divideBigNumByNumber } from "../../utils/bigNum.js";
 import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
 import { UPGRADES_MAIN_4 } from "../../data/mainupgrades/upgradesMain4.js";
 
@@ -116,6 +116,95 @@ export function grantPreviousTierUpgrades(state, targetLevelMode) {
       );
     }
   }
+}
+
+// Returns multiplier-roll settings controlled by casting upgrades
+export function getMultiplierRollConfig(state) {
+  return {
+    count: getMultiplierRollCount(state),
+    dice: [
+      getMultiplierRollDieConfig(state, 0),
+      getMultiplierRollDieConfig(state, 1),
+      getMultiplierRollDieConfig(state, 2)
+    ]
+  };
+}
+
+// Controls how many multiplier dice are active
+function getMultiplierRollCount(state) {
+  let count = 0;
+
+  if (hasUpgrade(state, "PRES10004", "castingUpgrades")) count = 1;
+  if (hasUpgrade(state, "PRES10104", "castingUpgrades")) count = 2;
+  if (hasUpgrade(state, "PRES10204", "castingUpgrades")) count = 3;
+
+  return count;
+}
+
+// Returns the range for one multiplier die
+function getMultiplierRollDieConfig(state, dieIndex) {
+  return getMultiplierRollDieConfigFromLevel(getMultiplierRollDieLevel(state, dieIndex));
+}
+
+// Stores ranges for getMultiplierRollDieConfig
+// "flat" means random integer from min to max
+// "exponent" means random BigNum from 10^minExp to 10^maxExp
+export function getMultiplierRollDieConfigFromLevel(level) {
+  if (level <= 0) {
+    return {
+      mode: "flat",
+      min: 1,
+      max: 10
+    };
+  }
+
+  if (level === 1) {
+    return { mode: "flat", min: 1, max: 100 };
+  }
+
+  if (level === 2) {
+    return { mode: "flat", min: 10, max: 1000 };
+  }
+
+  if (level === 3) {
+    return { mode: "flat", min: 100, max: 100000 };
+  }
+
+  const maxExp = 3 + 5 * (level - 3);
+  return {
+    mode: "exponent",
+    minExp: 1,
+    maxExp
+  };
+}
+
+// Reads the upgrade level for each individual multiplier die
+function getMultiplierRollDieLevel(state, dieIndex) {
+  const ids = [
+    "PRES10005",
+    "PRES10105",
+    "PRES10205"
+  ];
+
+  return getUpgradeLevel(state, ids[dieIndex], "castingUpgrades");
+}
+
+export function getMultiplierRollDieRangeText(state, dieIndex, levelOverride = null) {
+  const config = getMultiplierRollDieConfigFromLevel(levelOverride ?? getMultiplierRollDieLevel(state, dieIndex));
+
+  if (config.mode === "exponent") {
+    return `×10^${config.minExp} to ×10^${config.maxExp}`;
+  }
+
+  return `×${config.min} to ×${config.max}`;
+}
+
+export function getShardMitosisPerSecond(state) {
+  if (!hasUpgrade(state, "PRES00103", "castingUpgrades")) {
+    return zeroBigNum();
+  }
+
+  return divideBigNumByNumber(state.stats.bestShardsPerCast ?? zeroBigNum(), 5000);
 }
 
 export function PRES00100Multiplier(state) {

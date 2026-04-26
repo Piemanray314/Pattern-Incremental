@@ -134,6 +134,13 @@ export function multiplyBigNum(a, b) {
   });
 }
 
+export function divideBigNumByNumber(value, divisor) {
+  if (!Number.isFinite(divisor) || divisor === 0) return zeroBigNum();
+
+  const big = toBigNum(value);
+  return makeBigNum(big.mantissa / divisor, big.exponent);
+}
+
 export function powerBigNum(a, n) {
   const left = toBigNum(a);
 

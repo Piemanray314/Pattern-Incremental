@@ -31,7 +31,8 @@ export function saveTreeViewPosition(viewStateKey, position) {
       treeViewKey(viewStateKey),
       JSON.stringify({
         scrollLeft: position?.scrollLeft ?? 0,
-        scrollTop: position?.scrollTop ?? 0
+        scrollTop: position?.scrollTop ?? 0,
+        zoom: position?.zoom ?? 0
       })
     );
   } catch {
@@ -47,7 +48,8 @@ export function loadTreeViewPosition(viewStateKey) {
     const parsed = JSON.parse(raw);
     return {
       scrollLeft: parsed?.scrollLeft ?? 0,
-      scrollTop: parsed?.scrollTop ?? 0
+      scrollTop: parsed?.scrollTop ?? 0,
+      zoom: parsed?.zoom ?? 0
     };
   } catch {
     return null;
@@ -72,5 +74,16 @@ export function loadSubtab(subtabStateKey) {
     return sessionStorage.getItem(subtabKey(subtabStateKey));
   } catch {
     return null;
+  }
+}
+
+export function resetAllTreeViewPositions(state) {
+  const resetView = { scrollLeft: 0, scrollTop: 0, zoom: 1 };
+
+  for (const key of Object.keys(state.ui)) {
+    if (!key.includes("TreeView")) continue;
+
+    state.ui[key] = { ...resetView };
+    saveTreeViewPosition(key, resetView);
   }
 }

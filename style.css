@@ -147,11 +147,18 @@ button:disabled {
   flex-wrap: wrap;
 }
 
-.current-roll-big {
+.roll-main {
   font-size: 40px;
   font-weight: bold;
   letter-spacing: 3px;
   margin: 8px 0 0;
+}
+
+.roll-multiplier {
+  font-size: 24px;
+  opacity: 0.5;
+  margin-left: 16px;
+  letter-spacing: 0.5px;
 }
 
 .file-save {
@@ -227,6 +234,12 @@ button:disabled {
   position: relative;
   min-width: 1200px;
   min-height: 900px;
+}
+
+.upgrade-tree-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .upgrade-connector-layer {

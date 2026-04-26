@@ -44,12 +44,21 @@ export function renderRollTab(state, setState) {
       createElement("div", { className: "muted", text: "No roll yet." })
     );
   } else {
-    currentRollPanel.append(
-      createElement("div", {
-        className: "current-roll-big",
-        text: displayedRoll.raw
-      })
-    );
+    // Main roll display
+    const rollText = createElement("div", { className: "roll-text" });
+
+    const mainRoll = createElement("span", {
+      className: "roll-main",
+      text: displayedRoll.raw
+    });
+
+    const diceText = createElement("span", {
+      className: "roll-multiplier",
+      text: formatMultiplierDiceText(displayedRoll)
+    });
+
+    rollText.append(mainRoll, diceText);
+    currentRollPanel.append(rollText);
 
     const summary = createElement("div", { className: "roll-summary" });
 
@@ -61,6 +70,11 @@ export function renderRollTab(state, setState) {
     if (state.progression.castingUnlocked) {
       summary.append(
         summaryPill(`Casting Multiplier: ${formatMultiplier(state.currentRoll.castingMultiplier ?? 1)}`)
+      );
+    }
+    if ((displayedRoll.multiplierRolls ?? []).length > 0) {
+      summary.append(
+        summaryPill(`Multiplier Rolls: ${formatMultiplier(displayedRoll.multiplierRollTotal ?? 1)}`)
       );
     }
     summary.append(
@@ -137,4 +151,11 @@ function buildAutomationStatusText(state, automationConfig) {
 
 function summaryPill(text) {
   return createElement("div", { className: "summary-pill", text });
+}
+
+function formatMultiplierDiceText(roll) {
+  const dice = roll.multiplierRolls ?? [];
+  if (dice.length === 0) return "";
+
+  return " " + dice.map(die => `x${formatNumber(die.multiplier)}`).join(" ");
 }

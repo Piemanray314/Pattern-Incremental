@@ -1,6 +1,7 @@
 import { makeUpgradeDefinition } from "../../core/helpers/definitionHelpers.js";
 import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
 import { getAutomationMinIntervalMs } from "../../core/helpers/automationHelpers.js"
+import { multiplyBigNum, powerBigNum } from "../../utils/bigNum.js";
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 
@@ -50,6 +51,19 @@ export const AUTOMATION_UPGRADES = [
     }
   }),
 
+  makeUpgradeDefinition("AUTO", 6, 1, 3, {
+    title: "Interval Subdivisions",
+    description: "Reduces the minimum allowed auto-roll interval by 10 ms per level.",
+    cost: (level) => ({ patterns: multiplyBigNum({ mantissa: 7.5, exponent: 8 }, powerBigNum(2, level)) }),
+    maxLevel: 30,
+    parents: ["AUTO030102", "AUTO060601"],
+    visibleWhen: (state) => hasUpgrade(state, "AUTO050501", "automationUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "AUTO060601", "automationUpgrades"),
+    onBuy(state) {
+      state.automation.intervalMs = getAutomationMinIntervalMs(state);
+    }
+  }),
+
   makeUpgradeDefinition("AUTO", 3, 2, 1, {
     title: "Auto 2-Digit Routing",
     description: "Allows automation to roll up to 2 digits",
@@ -87,6 +101,17 @@ export const AUTOMATION_UPGRADES = [
     title: "Auto 5-Digit Routing",
     description: "Allows automation to roll up to 5 digits",
     cost: { points: { mantissa: 1, exponent: 33 }, patterns: 30000 },
+    maxLevel: 1,
+    parents: ["AUTO040401"],
+    visibleWhen: (state) => hasUpgrade(state, "AUTO040401", "automationUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "AUTO040401", "automationUpgrades") && hasUpgrade(state, "DIG05"),
+    onBuy() {}
+  }),
+
+  makeUpgradeDefinition("AUTO", 6, 6, 1, {
+    title: "Auto 6-Digit Routing",
+    description: "Allows automation to roll up to 6 digits",
+    cost: { points: { mantissa: 1, exponent: 120 }, patterns: { mantissa: 2.147, exponent: 9 } },
     maxLevel: 1,
     parents: ["AUTO040401"],
     visibleWhen: (state) => hasUpgrade(state, "AUTO040401", "automationUpgrades"),

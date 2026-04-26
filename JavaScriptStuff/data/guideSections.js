@@ -1,4 +1,5 @@
 import { hasUpgrade } from "../core/helpers/upgradeHelpers.js";
+import { compareBigNum, fromNumber } from "../utils/bigNum.js";
 
 export const GUIDE_SECTIONS = [
   {
@@ -52,8 +53,13 @@ export const GUIDE_SECTIONS = [
     visibleWhen: (state) => state.progression.castingUnlocked
   },
   {
+    id: "linear",
+    label: "Linear Tier",
+    visibleWhen: (state) => hasUpgrade(state, "UNL049999")
+  },
+  {
     id: "challenges",
     label: "Challenges",
-    visibleWhen: (state) => state.progression.castingUnlocked
+    visibleWhen: (state) => (state.stats.totalCasts >= 10)
   }
 ];

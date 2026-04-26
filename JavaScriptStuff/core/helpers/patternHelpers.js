@@ -131,8 +131,11 @@ export function getMiniSandwichIndices(rollString) {
   const out = [];
 
   for (let i = 0; i <= rollString.length - 3; i++) {
-    if (rollString[i] === rollString[i + 2] && rollString[i] !== rollString[i + 1]) {
-      out.push(i, i + 1, i + 2);
+    if (
+      rollString[i] === rollString[i + 2] &&
+      rollString[i] !== rollString[i + 1]
+    ) {
+      out.push(i, i + 2);
     }
   }
 
@@ -146,9 +149,7 @@ export function getSandwichIndices(rollString, minGap = 2) {
   for (let i = 0; i < rollString.length; i++) {
     for (let j = i + minGap + 1; j < rollString.length; j++) {
       if (rollString[i] === rollString[j]) {
-        for (let k = i; k <= j; k++) {
-          out.push(k);
-        }
+        out.push(i, j);
       }
     }
   }
@@ -162,4 +163,62 @@ export function allDigitsWithinSpan(rollString, span) {
   const min = Math.min(...digits);
   const max = Math.max(...digits);
   return max - min <= span;
+}
+
+// Average of adjacent digits
+export function averageAdjacentDifference(rollString) {
+  const digits = getDigits(rollString);
+  if (digits.length < 2) return 0;
+
+  let total = 0;
+  for (let i = 1; i < digits.length; i++) {
+    total += Math.abs(digits[i] - digits[i - 1]);
+  }
+
+  return total / (digits.length - 1);
+}
+
+// For unique and all even/odd
+export function hasUniqueParityDigits(rollString, parity) {
+  const digits = getDigits(rollString);
+  const seen = new Set();
+
+  for (const digit of digits) {
+    if (digit % 2 !== parity) return false;
+    if (seen.has(digit)) return false;
+    seen.add(digit);
+  }
+
+  return true;
+}
+
+// Checks if a digit is at least X away from all others
+export function hasOutlierDigit(rollString, minDifference) {
+  const digits = getDigits(rollString);
+
+  for (let i = 0; i < digits.length; i++) {
+    let works = true;
+
+    for (let j = 0; j < digits.length; j++) {
+      if (i === j) continue;
+
+      if (Math.abs(digits[i] - digits[j]) < minDifference) {
+        works = false;
+        break;
+      }
+    }
+
+    if (works) return i;
+  }
+
+  return -1;
+}
+
+// Highlights all digits with X digits
+export function getIndicesWithCount(rollString, targetCount) {
+  const counts = getDigitCounts(rollString);
+
+  return [...rollString]
+    .map((digit, index) => counts[digit] === targetCount ? index : null)
+    .filter((index) => index !== null);
 }

@@ -497,18 +497,18 @@ export const PATTERNS_T2 = [
 
   {
     id: "PAT040502",
-    name: "Satanic",
-    description: "Roll contains 19",
+    name: "Twenty One",
+    description: "Roll contains 21",
     requiredDigits: 3,
     baseMultiplier: () => 19,
     patternCurrencyReward: () => 19,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if (!rollString.includes("19")) return null;
+      if (!rollString.includes("21")) return null;
 
       return {
-        highlightedIndices: getSubstringIndices(rollString, "19"),
+        highlightedIndices: getSubstringIndices(rollString, "21"),
         baseMultiplier: this.baseMultiplier()
       };
     }
@@ -593,14 +593,14 @@ export const PATTERNS_T2 = [
   {
     id: "PAT040602",
     name: "IT'S OVER 9000!!!",
-    description: "Roll value exceeds 9000",
+    description: "Roll value exceeds 90...00 (scales with digits)",
     requiredDigits: 4,
     baseMultiplier: () => 9,
     patternCurrencyReward: () => 9,
     visibleWhen: () => true,
     unlockedWhen(state) { return Boolean(state.upgrades[this.id]); },
     evaluate(rollString, state) {
-      if (Number(rollString) <= 9000) return null;
+      if (Number(rollString) <= Math.pow(10, rollString.length) * 0.9) return null;
 
       return {
         highlightedIndices: highlightAll(rollString),

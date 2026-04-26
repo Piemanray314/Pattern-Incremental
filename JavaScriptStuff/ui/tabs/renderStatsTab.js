@@ -90,6 +90,7 @@ function renderStoredRollSummary(roll, showCasting) {
         `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
         `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
         `Casting ${formatMultiplier(roll.castingMultiplier ?? 1)} | ` +
+        `Dice ${formatMultiplier(roll.multiplierRollTotal ?? 1)} | ` +
         `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
         `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
         (roll.outdated ? " | Outdated roll - may not be accurate" : "")
@@ -102,6 +103,8 @@ function renderStoredRollSummary(roll, showCasting) {
         `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
         `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
         `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+        `Casting ${formatMultiplier(roll.castingMultiplier ?? 1)} | ` +
+        `Dice ${formatMultiplier(roll.multiplierRollTotal ?? 1)} | ` +
         `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
         `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
         (roll.outdated ? " | Outdated roll - may not be accurate" : "")

@@ -1,8 +1,9 @@
 import { addBigNum, compareBigNum, fromNumber, multiplyBigNum, oneBigNum, toBigNum, zeroBigNum, powerBigNum, maxBigNum, safeLog10BigNum } from "../../utils/bigNum.js";
 import { createInitialState } from "../../state/initialState.js";
 import { grantUpgradeLevel, hasUpgrade } from "./upgradeHelpers.js";
-import { getCastingUpgradeConfig } from "./castingUpgradeHelpers.js";
+import { getCastingUpgradeConfig, getShardMitosisPerSecond } from "./castingUpgradeHelpers.js";
 import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
+import { resetAllTreeViewPositions } from "../../state/uiState.js";
 
 // Returns the rewards the player would get if they recast
 export function getCastingRewards(state) {
@@ -46,7 +47,7 @@ export function performCast(state) {
   ? Object.fromEntries(
       Object.entries(state.automationUpgrades ?? {}).filter(([id]) => {
         // Remove automation digit-cap unlocks, keep everything else
-        return !["AUTO030201", "AUTO030301", "AUTO040401", "AUTO050501", "AUTO040402"].includes(id);
+        return !["AUTO030201", "AUTO030301", "AUTO040401", "AUTO050501", "AUTO040402", "AUTO60103"].includes(id);
       })
     )
   : {};
@@ -100,15 +101,17 @@ export function performCast(state) {
   state.stats.patternsThisCast = zeroBigNum();
   state.stats.castStartTime = Date.now();
 
+  state.stats.bestShardsPerCast = maxBigNum(
+    state.stats.bestShardsPerCast ?? zeroBigNum(),
+    rewards.shards
+  );
+
   state.progression.castingUnlocked = true;
 
   state.ui.activeTab = "casting";
   state.ui.castingSubtab = "recast";
 
-  state.ui.upgradeTreeView_main = { scrollLeft: 0, scrollTop: 0 };
-  state.ui.upgradeTreeView_4 = { scrollLeft: 0, scrollTop: 0 };
-  state.ui.upgradeTreeView_5 = { scrollLeft: 0, scrollTop: 0 };
-  state.ui.automationTreeView = { scrollLeft: 0, scrollTop: 0 };
+  resetAllTreeViewPositions(state);
 
   if (hasUpgrade(state, "PRES00004", "castingUpgrades")) {
     grantAllUpgradesInSource(state, UPGRADES_MAIN, "upgrades", { runOnBuy: true });

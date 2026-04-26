@@ -4,7 +4,7 @@ import { pushBestRoll, pushRollHistory } from "./helpers/statsHelpers.js";
 import { getUpgradeConfig } from "./helpers/upgradeHelpers.js";
 import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
 import { getAutomationConfig, shouldDisplayAutoRoll } from "./helpers/automationHelpers.js";
-import { getCastingUpgradeConfig } from "./helpers/castingUpgradeHelpers.js";
+import { getCastingUpgradeConfig, getMultiplierRollConfig } from "./helpers/castingUpgradeHelpers.js";
 
 // Main function to perform a loop. Returns the roll and saves it into state
 // { source = "manual" } = {} is a fancy way to write "If there's no second argument, or it's empty, return manual"
@@ -16,7 +16,8 @@ export function performRoll(state, { source = "manual" } = {}) {
     source,
     includeGlobal: true,
     includePostMultiplierFlatBonus: true,
-    includePatternCurrency: true
+    includePatternCurrency: true,
+    includeMultiplierRolls: true
   });
 
   applyRollResult(state, rollResult, { source });
@@ -31,7 +32,8 @@ export function evaluateRollString(
     source = "manual",
     includeGlobal = true,
     includePostMultiplierFlatBonus = true,
-    includePatternCurrency = true
+    includePatternCurrency = true,
+    includeMultiplierRolls = true
   } = {}
 ) {
   const digitCount = raw.length;
@@ -138,14 +140,27 @@ export function evaluateRollString(
 
   const castingMultiplier = toBigNum(castingConfig.pointMultiplier);
 
-  // General calculation of roll value is given by
-  // totalGain = (((preMultFlat + rollValue) x patternMult x globalMult) + postMultFlat) × Casting Multiplier
+  let multiplierRolls = [];
+  let multiplierRollTotal = oneBigNum();
+
+  if (includeMultiplierRolls) {
+    const rolled = rollMultiplierDice(state);
+    multiplierRolls = rolled.multiplierRolls;
+    multiplierRollTotal = rolled.multiplierRollTotal;
+  }
+
   const preCastingMultiplier = roundMultiplierBigNum(
     multiplyBigNum(patternMultiplier, globalMultiplier)
   );
-  const totalMultiplier = roundMultiplierBigNum(
+
+  const preMultiplierRollMultiplier = roundMultiplierBigNum(
     multiplyBigNum(preCastingMultiplier, castingMultiplier)
   );
+
+  const totalMultiplier = roundMultiplierBigNum(
+    multiplyBigNum(preMultiplierRollMultiplier, multiplierRollTotal)
+  );
+
   const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
   const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
   // const totalGain = makeBigNum(3.26, 1533453348); // Piemanray314
@@ -167,7 +182,11 @@ export function evaluateRollString(
 
     patternMultiplier,
     globalMultiplier,
+    preCastingMultiplier,
     castingMultiplier,
+    preMultiplierRollMultiplier,
+    multiplierRolls,
+    multiplierRollTotal,
     totalMultiplier,
 
     postMultiplierFlatBonus,
@@ -278,6 +297,49 @@ function generateRollString(digitCount, source = "manual") {
   }
 
   return result;
+}
+
+// Rolls all active multiplier dice, returning both individual dice and total multiplier
+function rollMultiplierDice(state) {
+  const config = getMultiplierRollConfig(state);
+
+  const rolls = [];
+  let total = oneBigNum();
+
+  for (let i = 0; i < config.count; i++) {
+    const dieConfig = config.dice[i];
+    const multiplier = rollSingleMultiplierDie(dieConfig);
+
+    rolls.push({
+      index: i,
+      label: `Multiplier ${i + 1}`,
+      multiplier
+    });
+
+    total = multiplyBigNum(total, multiplier);
+  }
+
+  return {
+    multiplierRolls: rolls,
+    multiplierRollTotal: total
+  };
+}
+
+// Rolls one multiplier die (flat and exponential)
+function rollSingleMultiplierDie(config) {
+  if (!config) return oneBigNum();
+
+  if (config.mode === "exponent") {
+    const minExp = Math.floor(config.minExp ?? 1);
+    const maxExp = Math.floor(config.maxExp ?? minExp);
+    const exponent = randomInt(minExp, maxExp);
+
+    return makeBigNum(1, exponent);
+  }
+
+  const min = Math.floor(config.min ?? 1);
+  const max = Math.floor(config.max ?? min);
+  return toBigNum(randomInt(min, max));
 }
 
 // Generates a random integer betweein min and max inclusive OBVIOUSLY

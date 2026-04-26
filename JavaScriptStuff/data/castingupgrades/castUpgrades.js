@@ -1,8 +1,8 @@
 import { makePrestigeUpgradeDefinition, makeUpgradePatternDefinition } from "../../core/helpers/definitionHelpers.js";
 import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
 import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../../utils/bigNum.js";
-import { formatMultiplier } from "../../utils/format.js";
-import { PRES00100Multiplier, PRES00101Multiplier } from "../../core/helpers/castingUpgradeHelpers.js";
+import { formatMultiplier, formatNumber } from "../../utils/format.js";
+import { getShardMitosisPerSecond, grantPreviousTierUpgrades, PRES00100Multiplier, PRES00101Multiplier } from "../../core/helpers/castingUpgradeHelpers.js";
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 
@@ -72,9 +72,7 @@ export const PRESTIGE_CAST = [
     parents: ["PRES00004"],
     visibleWhen: () => true,
     canBuyWhen: (state) => hasUpgrade(state, "PRES00004", "castingUpgrades"),
-    onBuy() {
-      grantPreviousTierUpgrades(state, "Only a singular level for you plebians who can't afford the higher level muahaha");
-    }
+    onBuy() {}
   }),
 
   makePrestigeUpgradeDefinition("PRES", 0, 0, 6, {
@@ -85,9 +83,7 @@ export const PRESTIGE_CAST = [
     parents: ["PRES00005"],
     visibleWhen: () => true,
     canBuyWhen: (state) => hasUpgrade(state, "PRES00005", "castingUpgrades"),
-    onBuy() {
-      grantPreviousTierUpgrades(state, "max");
-    }
+    onBuy() {}
   }),
 
   makePrestigeUpgradeDefinition("PRES", 0, 1, 0, {
@@ -127,5 +123,19 @@ export const PRESTIGE_CAST = [
     visibleWhen: () => true,
     canBuyWhen: () => true,
     onBuy() {}
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 0, 1, 3, {
+    title: "Shard Mitosis??",
+    description: "Gain shards passively at your best shards/cast divided by 5000 per second",
+    cost: { casts: 100 },
+    maxLevel: 1,
+    parents: [],
+    visibleWhen: () => true,
+    canBuyWhen: () => true,
+    onBuy() {},
+    effectText(state) {
+      return `${formatNumber(getShardMitosisPerSecond(state))}/sec`;
+    }
   })
 ];

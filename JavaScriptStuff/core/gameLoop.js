@@ -1,5 +1,8 @@
 import { performRoll } from "./rollEngine.js";
 import { getAutomationConfig } from "../core/helpers/automationHelpers.js";
+import { hasUpgrade } from "./helpers/upgradeHelpers.js";
+import { getShardMitosisPerSecond, grantPreviousTierUpgrades } from "./helpers/castingUpgradeHelpers.js";
+import { addBigNum, multiplyBigNumByNumber } from "../utils/bigNum.js";
 
 // Main game loop
 export function updateGame(state, deltaMs) {
@@ -12,6 +15,7 @@ export function updateGame(state, deltaMs) {
   };
 
   state.timers.uiRefreshAccumulatorMs += deltaMs;
+  state.timers.effectTextRefreshAccumulatorMs += deltaMs;
 
   const automationConfig = getAutomationConfig(state);
 
@@ -34,6 +38,15 @@ export function updateGame(state, deltaMs) {
         instructions.content = true;
       }
     }
+  }
+
+  // Passive shard gain
+  const shardMitosisPerSecond = getShardMitosisPerSecond(state);
+
+  if (shardMitosisPerSecond.mantissa !== 0) {
+    const gain = multiplyBigNumByNumber(shardMitosisPerSecond, deltaMs / 1000);
+    state.currencies.shards = addBigNum(state.currencies.shards, gain);
+    instructions.topbar = true;
   }
 
   // Refreshes the UI at most 4 times a second

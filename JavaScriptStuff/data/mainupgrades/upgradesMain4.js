@@ -294,36 +294,6 @@ export const UPGRADES_MAIN_4 = [
     onBuy() {}
   }),
   
-  makeUpgradeDefinition("UNL", 4, 2, 7, {
-    title: "Casting",
-    description: "Unlocks Casting",
-    cost: { points: { mantissa: 1, exponent: 21 } },
-    maxLevel: 1,
-    parents: ["PAT040307", "PAT040107"],
-    visibleWhen: (state) =>
-      hasUpgrade(state, "PAT040307") || 
-      hasUpgrade(state, "PAT040107"),
-    canBuyWhen: (state) => 
-      hasUpgrade(state, "PAT040307") && 
-      hasUpgrade(state, "PAT040107"),
-    onBuy(state) {
-      state.progression.castingUnlocked = true;
-    }
-  }),
-  
-  makeUpgradeDefinition("UNL", 4, 99, 99, {
-    title: "Tier Up",
-    description: "Unlocks the Linear Tier",
-    cost: { points: { mantissa: 1, exponent: 28 } },
-    maxLevel: 1,
-    x: 8,
-    y: 2,
-    parents: ["UNL040207"],
-    visibleWhen: (state) => hasUpgrade(state, "UNL040207"),
-    canBuyWhen: (state) => hasUpgrade(state, "UNL040207"),
-    onBuy() {}
-  }),
-  
   makeUpgradePatternDefinition("PAT", 4, 5, 0, "Six Seven", {
     cost: { points: { mantissa: 6.7, exponent: 9 } },
     maxLevel: 1,
@@ -501,6 +471,36 @@ export const UPGRADES_MAIN_4 = [
     parents: ["UNL040402"],
     visibleWhen: (state) => hasUpgrade(state, "UNL040402"),
     canBuyWhen: (state) => hasUpgrade(state, "UNL040402"),
+    onBuy() {}
+  }),
+  
+  makeUpgradeDefinition("UNL", 4, 2, 7, {
+    title: "Casting",
+    description: "Unlocks Casting",
+    cost: { points: { mantissa: 1, exponent: 21 } },
+    maxLevel: 1,
+    parents: ["PAT040307", "PAT040107"],
+    visibleWhen: (state) =>
+      hasUpgrade(state, "PAT040307") || 
+      hasUpgrade(state, "PAT040107"),
+    canBuyWhen: (state) => 
+      hasUpgrade(state, "PAT040307") && 
+      hasUpgrade(state, "PAT040107"),
+    onBuy(state) {
+      state.progression.castingUnlocked = true;
+    }
+  }),
+  
+  makeUpgradeDefinition("UNL", 4, 99, 99, {
+    title: "Tier Up",
+    description: "Unlocks the Linear Tier",
+    cost: { points: { mantissa: 1, exponent: 28 } },
+    maxLevel: 1,
+    x: 8,
+    y: 2,
+    parents: ["UNL040207"],
+    visibleWhen: (state) => hasUpgrade(state, "UNL040207"),
+    canBuyWhen: (state) => hasUpgrade(state, "UNL040207"),
     onBuy() {}
   })
 ];

@@ -1,5 +1,5 @@
 import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
-import { compareBigNum, subtractBigNum, toBigNum, addBigNum, multiplyBigNumByNumber, oneBigNum, zeroBigNum, roundMultiplierBigNum } from "../../utils/bigNum.js";
+import { compareBigNum, subtractBigNum, toBigNum, addBigNum, multiplyBigNumByNumber, oneBigNum, zeroBigNum, roundMultiplierBigNum, safeLog10BigNum, powerBigNum, multiplyBigNum } from "../../utils/bigNum.js";
 
 // Current state keys are "upgrades" and "automationUpgrades"
 
@@ -37,15 +37,19 @@ export function getGlobalMultiplier(state) {
   let multiplier = oneBigNum();
 
   multiplier = addBigNum(
-    multiplier,
-    multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT030301"))
+    multiplier, multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT030301"))
   );
 
   multiplier = addBigNum(
-    multiplier,
-    multiplyBigNumByNumber(oneBigNum(), 0.5 * getUpgradeLevel(state, "MULT040201"))
+    multiplier, multiplyBigNumByNumber(oneBigNum(), 0.5 * getUpgradeLevel(state, "MULT040201"))
   );
 
+  if (hasUpgrade(state, "MULT050002")) {
+    multiplier = multiplyBigNum(multiplier, MULT050002Multiplier(state));
+  }
+  if (hasUpgrade(state, "MULT050100")) {
+    multiplier = multiplyBigNum(multiplier, MULT050100Multiplier(state));
+  }
 
   return roundMultiplierBigNum(multiplier);
 }
@@ -55,13 +59,11 @@ export function getPostMultiplierFlatBonus(state) {
   let bonus = zeroBigNum();
 
   bonus = addBigNum(
-    bonus,
-    multiplyBigNumByNumber(oneBigNum(), 10000 * getUpgradeLevel(state, "MULT030403"))
+    bonus, multiplyBigNumByNumber(oneBigNum(), 10000 * getUpgradeLevel(state, "MULT030403"))
   );
 
   bonus = addBigNum(
-    bonus,
-    multiplyBigNumByNumber(oneBigNum(), 50000 * getUpgradeLevel(state, "MULT030404"))
+    bonus, multiplyBigNumByNumber(oneBigNum(), 50000 * getUpgradeLevel(state, "MULT030404"))
   );
 
   return bonus;
@@ -72,8 +74,7 @@ export function getPatternMultiplierFactor(state) {
   let multiplier = oneBigNum();
 
   multiplier = addBigNum(
-    multiplier,
-    multiplyBigNumByNumber(oneBigNum(), 0.04 * getUpgradeLevel(state, "MULT040100"))
+    multiplier, multiplyBigNumByNumber(oneBigNum(), 0.04 * getUpgradeLevel(state, "MULT040100"))
   );
 
   return multiplier;
@@ -84,9 +85,10 @@ export function getPatternCurrencyFactor(state) {
   let multiplier = oneBigNum();
 
   multiplier = addBigNum(
-    multiplier,
-    multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT040300"))
+    multiplier, multiplyBigNumByNumber(oneBigNum(), 0.2 * getUpgradeLevel(state, "MULT040300"))
   );
+
+  multiplier = multiplyBigNumByNumber(multiplier, 1 + 0.5 * getUpgradeLevel(state, "MULT050200"));
 
   return multiplier;
 }
@@ -246,13 +248,11 @@ export function grantUpgradeLevel(
 
   if (!state[stateKey]) state[stateKey] = {};
 
-  // Nothing to do
   if (clampedTargetLevel <= currentLevel) return false;
 
   state[stateKey][upgradeId] = clampedTargetLevel;
 
-  // Run onBuy once for each granted level if requested.
-  // This is safest if onBuy has level-based effects.
+  // Run onBuy once for each granted level if requested
   if (runOnBuy && typeof upgrade.onBuy === "function") {
     for (let level = currentLevel + 1; level <= clampedTargetLevel; level++) {
       upgrade.onBuy(state, level);
@@ -260,4 +260,12 @@ export function grantUpgradeLevel(
   }
 
   return true;
+}
+
+export function MULT050002Multiplier(state) {
+  return toBigNum(Math.max(1, (Date.now() - (state.stats.castStartTime ?? Date.now())) / 5000));
+}
+
+export function MULT050100Multiplier(state) {
+  return toBigNum(multiplyBigNum(safeLog10BigNum(state.currencies.patterns), powerBigNum(state.currencies.patterns, 1/3)));
 }

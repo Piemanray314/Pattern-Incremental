@@ -9,6 +9,9 @@ const GRID_X = 320;
 const GRID_Y = 220;
 const START_X = 40;
 const START_Y = 40;
+const MIN_ZOOM = 0.4;
+const MAX_ZOOM = 1.5;
+const ZOOM_STEP = 0.1;
 
 let treePurchaseLocked = false;
 
@@ -32,13 +35,51 @@ export function renderTreeView({
       setState((draft) => {
         draft.ui[viewStateKey] = {
           scrollLeft: 0,
-          scrollTop: 0
+          scrollTop: 0,
+          zoom: 1
         };
+      }, { topbar: false, content: true, sidebar: false });
+
+      saveTreeViewPosition(viewStateKey, resetView);
+    }
+  });
+
+  const zoomOutButton = createElement("button", {
+  text: "-",
+  onClick: () => {
+    setState((draft) => {
+      const current = draft.ui[viewStateKey] ?? {};
+      const newView = {
+        ...current,
+        zoom: clampZoom((current.zoom ?? 1) - ZOOM_STEP)
+      };
+
+      draft.ui[viewStateKey] = newView;
+      saveTreeViewPosition(viewStateKey, newView);
+    }, { topbar: false, content: true, sidebar: false });
+  }
+  });
+
+  const zoomInButton = createElement("button", {
+    text: "+",
+    onClick: () => {
+      setState((draft) => {
+        const current = draft.ui[viewStateKey] ?? {};
+        const newView = {
+          ...current,
+          zoom: clampZoom((current.zoom ?? 1) + ZOOM_STEP)
+        };
+
+        draft.ui[viewStateKey] = newView;
+        saveTreeViewPosition(viewStateKey, newView);
       }, { topbar: false, content: true, sidebar: false });
     }
   });
 
-  headerRow.append(titleElement, resetViewButton);
+  const treeControls = createElement("div", { className: "upgrade-tree-controls" });
+  treeControls.append(zoomOutButton, resetViewButton, zoomInButton);
+
+  headerRow.append(titleElement, treeControls);
   panel.append(headerRow);
 
   // Main container
@@ -99,12 +140,26 @@ export function renderTreeView({
     );
   }
 
-  scrollHost.appendChild(canvas);
+  // transform changes visual size not layout size without wrapper 
+  const viewState = state.ui[viewStateKey] ?? {};
+  const zoom = clampZoom(viewState.zoom ?? 1);
+
+  const scaledContent = createElement("div", { className: "upgrade-tree-scaled-content" });
+  scaledContent.style.width = `${bounds.width * zoom}px`;
+  scaledContent.style.height = `${bounds.height * zoom}px`;
+  scaledContent.style.position = "relative";
+
+  canvas.style.transform = `scale(${zoom})`;
+  canvas.style.transformOrigin = "top left";
+
+  scaledContent.appendChild(canvas);
+  scrollHost.appendChild(scaledContent);
   panel.append(scrollHost);
 
   restoreScrollPosition(scrollHost, state, viewStateKey);
   persistScrollPosition(scrollHost, state, viewStateKey);
   enableDragPan(scrollHost, state, viewStateKey);
+  enableWheelZoom(scrollHost, state, setState, viewStateKey);
 
   return panel;
 }
@@ -148,7 +203,7 @@ function renderTreeCard({
 
   const top = createElement("div");
   // Piemanray314, Card information
-  const devView = true;
+  const devView = false;
   if (devView) {
     top.append(
       createElement("div", { className: "upgrade-title", text: `${item.title}, ${item.id}` }),
@@ -188,9 +243,14 @@ function renderTreeCard({
       if (treePurchaseLocked) return;
       treePurchaseLocked = true;
 
+      const currentPosition = getCurrentTreeViewPosition(scrollHost, state, viewStateKey);
+
       setState((draft) => {
+        draft.ui[viewStateKey] = currentPosition;
         buyUpgrade(draft, item.id, definitions, stateKey);
       }, { topbar: true, content: true, sidebar: true });
+
+      saveTreeViewPosition(viewStateKey, currentPosition);
 
       requestAnimationFrame(() => {
         treePurchaseLocked = false;
@@ -200,12 +260,10 @@ function renderTreeCard({
 
   // Buy max handler
   card.addEventListener("contextmenu", (event) => {
+    // preventDefault cancels the right click context(?) bar from appearing
     event.preventDefault();
 
-    const currentPosition = {
-      scrollLeft: scrollHost.scrollLeft,
-      scrollTop: scrollHost.scrollTop
-    };
+    const currentPosition = getCurrentTreeViewPosition(scrollHost, state, viewStateKey);
 
     setState((draft) => {
       draft.ui[viewStateKey] = currentPosition;
@@ -298,7 +356,7 @@ function getNodeCenterY(item, offsetY) {
 
 // Restores the scroll position (in case of a page refresh or something)
 function restoreScrollPosition(scrollHost, state, viewStateKey) {
-  const savedView = state.ui[viewStateKey] ?? { scrollLeft: 0, scrollTop: 0 };
+  const savedView = state.ui[viewStateKey] ?? { scrollLeft: 0, scrollTop: 0, zoom: 1 };
 
   requestAnimationFrame(() => {
     scrollHost.scrollLeft = savedView.scrollLeft ?? 0;
@@ -317,7 +375,8 @@ function persistScrollPosition(scrollHost, state, viewStateKey) {
       const position = {
         ...(state.ui[viewStateKey] ?? {}),
         scrollLeft: scrollHost.scrollLeft,
-        scrollTop: scrollHost.scrollTop
+        scrollTop: scrollHost.scrollTop,
+        zoom: state.ui[viewStateKey]?.zoom ?? 1
       };
 
       state.ui[viewStateKey] = position;
@@ -344,6 +403,14 @@ function enableDragPan(scrollHost, state, viewStateKey) {
     startY = event.clientY;
     startScrollLeft = scrollHost.scrollLeft;
     startScrollTop = scrollHost.scrollTop;
+    state.ui[viewStateKey] = {
+      ...(state.ui[viewStateKey] ?? {}),
+      scrollLeft: scrollHost.scrollLeft,
+      scrollTop: scrollHost.scrollTop,
+      zoom: state.ui[viewStateKey]?.zoom ?? 1
+    };
+
+    saveTreeViewPosition(viewStateKey, state.ui[viewStateKey]);
 
     scrollHost.style.cursor = "grabbing";
     scrollHost.setPointerCapture(event.pointerId);
@@ -362,11 +429,7 @@ function enableDragPan(scrollHost, state, viewStateKey) {
     scrollHost.scrollLeft = startScrollLeft - dx;
     scrollHost.scrollTop = startScrollTop - dy;
 
-    state.ui[viewStateKey] = {
-      ...(state.ui[viewStateKey] ?? {}),
-      scrollLeft: scrollHost.scrollLeft,
-      scrollTop: scrollHost.scrollTop
-    };
+    state.ui[viewStateKey] = getCurrentTreeViewPosition(scrollHost, state, viewStateKey);
 
     saveTreeViewPosition(viewStateKey, state.ui[viewStateKey]);
   });
@@ -425,4 +488,52 @@ function buyUpgradeMax(state, item, definitions, stateKey) {
   }
 
   return boughtAny;
+}
+
+// Mouse Wheel!!
+function enableWheelZoom(scrollHost, state, setState, viewStateKey) {
+  scrollHost.addEventListener("wheel", (event) => {
+    event.preventDefault();
+
+    const currentView = state.ui[viewStateKey] ?? {};
+    const oldZoom = clampZoom(currentView.zoom ?? 1);
+
+    const direction = event.deltaY > 0 ? -1 : 1;
+    const newZoom = clampZoom(oldZoom + direction * ZOOM_STEP);
+
+    if (newZoom === oldZoom) return;
+
+    const rect = scrollHost.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const mouseY = event.clientY - rect.top;
+
+    const treeX = (scrollHost.scrollLeft + mouseX) / oldZoom;
+    const treeY = (scrollHost.scrollTop + mouseY) / oldZoom;
+
+    const newPosition = {
+      ...currentView,
+      zoom: newZoom,
+      scrollLeft: treeX * newZoom - mouseX,
+      scrollTop: treeY * newZoom - mouseY
+    };
+
+    setState((draft) => {
+      draft.ui[viewStateKey] = newPosition;
+    }, { topbar: false, content: true, sidebar: false });
+
+    saveTreeViewPosition(viewStateKey, newPosition);
+  }, { passive: false, capture: true });
+}
+
+function clampZoom(value) {
+  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+}
+
+function getCurrentTreeViewPosition(scrollHost, state, viewStateKey) {
+  return {
+    ...(state.ui[viewStateKey] ?? {}),
+    scrollLeft: scrollHost.scrollLeft,
+    scrollTop: scrollHost.scrollTop,
+    zoom: state.ui[viewStateKey]?.zoom ?? 1
+  };
 }

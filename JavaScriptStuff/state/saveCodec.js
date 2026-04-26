@@ -2,9 +2,9 @@ import { createInitialState } from "./initialState.js";
 import { UPGRADE_TREE_GROUPS } from "../data/mainupgrades/upgradeTreeGroups.js";
 import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTreeGroups.js";
 import { PATTERNS } from "../data/patterns/patterns.js";
-import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa } from "../utils/bigNum.js";
+import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa, multiplyBigNum, oneBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.61"; // Main version control
+let CURRENT_SAVE_VERSION = "0.7"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
@@ -80,7 +80,8 @@ function buildCompactState(state) {
       pointsThisCast: state.stats.pointsThisCast,
       patternsThisCast: state.stats.patternsThisCast,
       castStartTime: state.stats.castStartTime,
-      previousCasts: state.stats.previousCasts ?? []
+      previousCasts: state.stats.previousCasts ?? [],
+      bestShardsPerCast: state.stats.bestShardsPerCast,
     },
 
     automation: {
@@ -122,6 +123,13 @@ function compactRollSnapshot(roll) {
     multipliedGain: compactValue(roll.multipliedGain),
     totalGain: compactValue(roll.totalGain),
     totalPatternCurrencyGain: compactValue(roll.totalPatternCurrencyGain),
+
+    preMultiplierRollMultiplier: compactValue(roll.preMultiplierRollMultiplier),
+    multiplierRollTotal: compactValue(roll.multiplierRollTotal),
+    multiplierRolls: (roll.multiplierRolls ?? []).map((die) => [
+      die.index,
+      compactValue(die.multiplier)
+    ]),
 
     matches: (roll.matches ?? []).map((match) => [
       match.patternId,
@@ -244,6 +252,7 @@ function normalizeBigNumFields(state) {
   state.stats.bestGain = deserializeBigNum(state.stats.bestGain ?? zeroBigNum());
   state.stats.pointsThisCast = deserializeBigNum(state.stats.pointsThisCast ?? zeroBigNum());
   state.stats.patternsThisCast = deserializeBigNum(state.stats.patternsThisCast ?? zeroBigNum());
+  state.stats.bestShardsPerCast = deserializeBigNum(state.stats.bestShardsPerCast ?? zeroBigNum());
 
   state.stats.previousCasts = (state.stats.previousCasts ?? []).map((cast) => ({
     ...cast,
@@ -277,6 +286,35 @@ function normalizeCompactRoll(roll) {
   roll.multipliedGain = deserializeBigNum(roll.multipliedGain);
   roll.totalGain = deserializeBigNum(roll.totalGain ?? roll.gain);
   roll.totalPatternCurrencyGain = deserializeBigNum(roll.totalPatternCurrencyGain ?? 0);
+
+  roll.preMultiplierRollMultiplier = deserializeBigNum(roll.preMultiplierRollMultiplier ?? roll.totalMultiplier ?? 1);
+  roll.multiplierRollTotal = deserializeBigNum(roll.multiplierRollTotal ?? 1);
+
+  roll.multiplierRolls = (roll.multiplierRolls ?? []).map((die) => {
+    if (Array.isArray(die)) {
+      return {
+        index: die[0],
+        label: `Multiplier ${Number(die[0] ?? 0) + 1}`,
+        multiplier: deserializeBigNum(die[1] ?? 1)
+      };
+    }
+
+    return {
+      index: die.index ?? 0,
+      label: die.label ?? `Multiplier ${(die.index ?? 0) + 1}`,
+      multiplier: deserializeBigNum(die.multiplier ?? 1)
+    };
+  });
+
+  if (
+    (!roll.multiplierRollTotal || roll.multiplierRollTotal.mantissa === 1 && roll.multiplierRollTotal.exponent === 0) &&
+    (roll.multiplierRolls ?? []).length > 0
+  ) {
+    roll.multiplierRollTotal = roll.multiplierRolls.reduce(
+      (total, die) => multiplyBigNum(total, die.multiplier),
+      oneBigNum()
+    );
+  }
 
   roll.matches = (roll.matches ?? []).map((match) => {
     // 0.61+ Format
@@ -431,6 +469,7 @@ const SAVE_KEY_MAP = {
   previousRolls: "ph",
   bestRolls: "br",
   selectedBestRollIndex: "sbi",
+  bestShardsPerCast: "bpc",
 
   automation: "a",
   enabled: "e",
@@ -462,6 +501,13 @@ const SAVE_KEY_MAP = {
   totalGain: "tg",
   totalPatternCurrencyGain: "tpc",
   matches: "mt",
+
+  preMultiplierRollMultiplier: "pmr",
+  multiplierRolls: "mr",
+  multiplierRollTotal: "mrt",
+  index: "ix",
+  multiplier: "mu",
+  label: "lb",
 
   patternId: "pid",
   highlightedIndices: "hi",

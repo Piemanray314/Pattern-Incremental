@@ -1,30 +1,37 @@
 /**
  * Ideas to implement:
- * Prestige obviously (nested layers similar to Leaf Blower Revolution)
  * Challenges obviously
+ * Offline Progress
  * 
- * Reduce save file size (import/export) by calculating highlighted indexes defaulting to all indexes highlighted
- * Encode/decode save files to save space and also prevent the easiest cheats of all time
+ * Potentially encoding save files for space (and security I guess but like the code is public)
  * Easter eggs?
  * Achivements with buffs similar to Antimatter Dimensions
  * More interactive rolls -> SFX, types of rolls, hotkeys, etc.
  * 
- * Debuff patterns. These reduce the multiplier or nullify it completely
- * Use "pies" to decrease debuffs or disable these multipliers
+ * Pick-your-path upgrades (consistent/RNG points. Fast/slow runs. Cast/Shards. etc.)
+ * 
+ * Leaderboard...?
+ * 
  * Pattern mastery? Idea similar to Scrap Clicker II
  */
 
 export const changeLog = [
   {
-    version: "0.62",
-    title: "Small QoL update",
+    version: "0.7",
+    title: "Linear Update",
     entries: [
+      "Added a lot of the Linear Tier (a little bit left to go)",
+      "Added more patterns (101 total)",
+      "Added more casting upgrades and multiplier dies",
+      "Added zooming functionality on upgrade trees. Mousewheel on web, but buttons are also available.",
+      "Fixed certain patterns being too lenient + their indices",
       "Refreshing the page not properly saving fixed",
+      "Some balancing changes. Thank you to all playtesters, especially glixh_hunt3r!",
     ]
   },
   {
     version: "0.61",
-    title: "Small QoL update",
+    title: "Small QoL Update",
     entries: [
       "Save files are now much smaller (though not encrypted yet cause bugtesting would be a pain peko",
       "Save files can now be downloaded/uploaded",

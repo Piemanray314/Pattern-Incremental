@@ -1,9 +1,10 @@
 import { createInitialState } from "./state/initialState.js";
 import { loadGame, saveGame } from "./state/save.js";
 import { updateGame } from "./core/gameLoop.js";
-import { initializeAppShell, renderTopbarInto, renderContentInto, refreshSidebarActiveState, renderModalInto, renderSidebarInto, refreshActiveTabLiveContent } from "./ui/renderApp.js";
+import { initializeAppShell, renderTopbarInto, renderContentInto, refreshSidebarActiveState, renderModalInto, renderSidebarInto, refreshActiveEffectTexts } from "./ui/renderApp.js";
 import { setNumberFormatMode } from "./utils/format.js";
 import { deserializeSave, serializeSave } from "./state/saveCodec.js";
+import { refreshUpgradeEffectTexts } from "./ui/renderTreeView.js";
 
 let saveLoadFailed = false;
 
@@ -66,11 +67,7 @@ function tick(now) {
   }
 
   if (renderInstructions.effectText) {
-    refreshActiveUpgradeEffectTexts(state);
-  }
-
-  if (state.ui.activeTab === "casting") {
-    refreshActiveTabLiveContent(state);
+    refreshActiveEffectTexts(state);
   }
 
   requestAnimationFrame(tick);

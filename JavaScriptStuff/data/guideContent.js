@@ -110,6 +110,16 @@ export function getGuideContent(sectionId, state) {
         ]
       };
 
+    case "linear":
+      return {
+        title: "Linear Tier",
+        paragraphs: [
+          "You're probably feeling the perils of RNG at this moment. That's pretty normal. I'm glad to tell you that it'll only get more crazy from here :)",
+          "This is the point of the game where everything starts scaling HARD. It's okay for things to take longer, and for those of you who are autoclicker clanker carried, please be patient! Make sure you bought all of the upgrades available to you.",
+          "It's also at this point where you can personalize your gameplay experience a bit more. Starting from here, they'll be more active and passive routes to proceed.",
+        ]
+      };
+
     case "challenges":
       return {
         title: "Challenges",

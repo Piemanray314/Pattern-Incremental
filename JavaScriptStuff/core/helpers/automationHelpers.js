@@ -55,5 +55,6 @@ export function shouldDisplayAutoRoll(state, rollResult) {
 // Calculates automation minimal interview with upgrades
 export function getAutomationMinIntervalMs(state) {
   const intervalReductionLevels = getUpgradeLevel(state, "AUTO030102", AUTO_STATE_KEY);
-  return Math.max(500, 10000 - intervalReductionLevels * 500);
+  const intervalreductionLevelsBUTMORE = getUpgradeLevel(state, "AUTO060103", AUTO_STATE_KEY);
+  return Math.max(500, 10000 - intervalReductionLevels * 500 - intervalreductionLevelsBUTMORE * 10);
 }

@@ -12,6 +12,10 @@ import { renderChangeLogModal } from "./renderChangeLogModal.js";
 import { saveActiveTab } from "../state/uiState.js";
 import { renderGuideTab } from "./tabs/renderGuideTab.js";
 import { renderCastingTab, refreshCastingTabLiveContent } from "./tabs/renderCastingTab.js";
+import { refreshUpgradeEffectTexts } from "./renderTreeView.js";
+import { UPGRADE_TREE_GROUPS } from "../data/mainupgrades/upgradeTreeGroups.js";
+import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTreeGroups.js";
+import { CASTING_TREE_GROUPS } from "../data/castingupgrades/castingTreeGroups.js";
 
 let shell = null;
 
@@ -172,10 +176,51 @@ function ensureShellExists() {
   }
 }
 
-export function refreshActiveTabLiveContent(state) {
-  ensureShellExists();
+export function refreshActiveEffectTexts(state) {
+  if (state.ui.activeTab === "upgrades") {
+    const group = UPGRADE_TREE_GROUPS.find(
+      (group) => group.id === state.ui.upgradesSubtab
+    );
+
+    if (!group) return;
+
+    refreshUpgradeEffectTexts(
+      state,
+      group.definitions,
+      group.stateKey ?? "upgrades"
+    );
+
+    return;
+  }
+
+  if (state.ui.activeTab === "automation") {
+    const group = AUTOMATION_TREE_GROUPS.find(
+      (group) => group.id === state.ui.automationSubtab
+    );
+
+    if (!group) return;
+
+    refreshUpgradeEffectTexts(
+      state,
+      group.definitions,
+      group.stateKey ?? "automationUpgrades"
+    );
+
+    return;
+  }
 
   if (state.ui.activeTab === "casting") {
-    refreshCastingTabLiveContent(state);
+    const group = CASTING_TREE_GROUPS.find(
+      (group) => group.id === state.ui.castingSubtab
+    );
+
+    if (!group) return;
+
+    refreshUpgradeEffectTexts(
+      state,
+      group.definitions,
+      group.stateKey ?? "castingUpgrades"
+    );
   }
 }
+

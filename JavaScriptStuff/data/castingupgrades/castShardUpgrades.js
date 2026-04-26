@@ -1,8 +1,8 @@
 import { makePrestigeUpgradeDefinition, makeUpgradePatternDefinition } from "../../core/helpers/definitionHelpers.js";
 import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
-import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum } from "../../utils/bigNum.js";
+import { compareBigNum, fromNumber, toBigNum, powerBigNum, multiplyBigNum, makeBigNum } from "../../utils/bigNum.js";
 import { formatMultiplier } from "../../utils/format.js";
-import { PRES1000XMultiplier, PRES10200Multiplier, PRES10201Multiplier } from "../../core/helpers/castingUpgradeHelpers.js";
+import { getMultiplierRollDieRangeText, PRES1000XMultiplier, PRES10200Multiplier, PRES10201Multiplier } from "../../core/helpers/castingUpgradeHelpers.js";
 
 // For specifications regarding upgrade format, refer to upgradesMain.js
 
@@ -25,7 +25,7 @@ export const PRESTIGE_CAST_SHARD = [
   
   makePrestigeUpgradeDefinition("PRES", 1, 0, 1, {
     title: "Refined Shards",
-    description: "Improves shard-point multiplier gain to current number of shards^(1/3)",
+    description: "Improves point multiplier gain to current number of shards^(1/3)",
     cost: { shards: 5 },
     maxLevel: 1,
     parents: ["PRES10000"],
@@ -39,7 +39,7 @@ export const PRESTIGE_CAST_SHARD = [
   
   makePrestigeUpgradeDefinition("PRES", 1, 0, 2, {
     title: "Reinforced Shards",
-    description: "Improves shard-point multiplier gain to current number of shards^(1/2)",
+    description: "Improves point multiplier gain to current number of shards^(1/2)",
     cost: { shards: 25 },
     maxLevel: 1,
     parents: ["PRES10001"],
@@ -53,7 +53,7 @@ export const PRESTIGE_CAST_SHARD = [
   
   makePrestigeUpgradeDefinition("PRES", 1, 0, 3, {
     title: "Awoken Shards",
-    description: "Improves shard-point multiplier gain to current number of shards",
+    description: "Improves point multiplier gain to current number of shards",
     cost: { shards: 125 },
     maxLevel: 1,
     parents: ["PRES10002"],
@@ -157,5 +157,80 @@ export const PRESTIGE_CAST_SHARD = [
     visibleWhen: () => true,
     canBuyWhen: (state) => hasUpgrade(state, "PRES10202", "castingUpgrades"),
     onBuy() {}
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 1, 0, 4, {
+    title: "Weighted Rolls",
+    description: "Adds a multiplier dice rolled alongside rolls",
+    cost: { shards: 10000 },
+    maxLevel: 1,
+    parents: ["PRES10003"],
+    visibleWhen: (state) => hasUpgrade(state, "PRES10001", "castingUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "PRES10003", "castingUpgrades"),
+    onBuy() {}
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 1, 1, 4, {
+    title: "Heavily Weighted Rolls",
+    description: "Adds a second multiplier dice",
+    cost: { shards: 30000 },
+    maxLevel: 1,
+    parents: ["PRES10004"],
+    visibleWhen: (state) => hasUpgrade(state, "PRES10003", "castingUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "PRES10004", "castingUpgrades"),
+    onBuy() {}
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 1, 2, 4, {
+    title: "We Need to Stop Weighing Rolls...",
+    description: "Adds a third multiplier dice",
+    cost: { shards: 75000 },
+    maxLevel: 1,
+    parents: ["PRES10104"],
+    visibleWhen: (state) => hasUpgrade(state, "PRES10004", "castingUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "PRES10104", "castingUpgrades"),
+    onBuy() {}
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 1, 0, 5, {
+    title: "Multiplier Die I Scaling",
+    description: "Improves the range of the first multiplier dice",
+    cost: (level) => ({ shards: makeBigNum(5, 4 + 2 * level) }),
+    maxLevel: 10,
+    parents: ["PRES10004"],
+    visibleWhen: (state) => hasUpgrade(state, "PRES10003", "castingUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "PRES10004", "castingUpgrades"),
+    onBuy() {},
+    effectText(state, level) {
+      return getMultiplierRollDieRangeText(state, 0, level);
+    }
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 1, 1, 5, {
+    title: "Multiplier Die II Scaling",
+    description: "Improves the range of the second multiplier dice",
+    cost: (level) => ({ shards: makeBigNum(5, 5 + 3 * level) }),
+    maxLevel: 10,
+    parents: ["PRES10104"],
+    visibleWhen: (state) => hasUpgrade(state, "PRES10104", "castingUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "PRES10104", "castingUpgrades"),
+    onBuy() {},
+    effectText(state, level) {
+      return getMultiplierRollDieRangeText(state, 1, level);
+    }
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 1, 2, 5, {
+    title: "Multiplier Die III Scaling",
+    description: "Improves the range of the third multiplier dice",
+    cost: (level) => ({ shards: makeBigNum(5, 6 + 5 * level) }),
+    maxLevel: 10,
+    parents: ["PRES10204"],
+    visibleWhen: (state) => hasUpgrade(state, "PRES10204", "castingUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "PRES10204", "castingUpgrades"),
+    onBuy() {},
+    effectText(state, level) {
+      return getMultiplierRollDieRangeText(state, 1, level);
+    }
   })
 ];

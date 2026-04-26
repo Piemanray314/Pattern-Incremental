@@ -70,6 +70,10 @@ function makeRollSnapshot(rollResult) {
       currentPatternCurrencyReward: match.currentPatternCurrencyReward
     })),
 
+    preMultiplierRollMultiplier: rollResult.preMultiplierRollMultiplier,
+    multiplierRollTotal: rollResult.multiplierRollTotal,
+    multiplierRolls: rollResult.multiplierRolls ?? [],
+
     // Backward compatability
     gain: rollResult.totalGain,
     multiplier: rollResult.totalMultiplier
