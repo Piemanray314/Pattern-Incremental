@@ -42,7 +42,7 @@ export function renderBestRollsTab(state, setState) {
     }
     if ((selectedRoll.multiplierRolls ?? []).length > 0) {
       summary.append(
-        summaryPill(`Multiplier Rolls: ${formatMultiplier(selectedRoll.multiplierRollTotal ?? 1)}`)
+        summaryPill(`Dice Rolls: ${formatMultiplier(selectedRoll.multiplierRollTotal ?? 1)}`)
       );
     }
     summary.append(summaryPill(`Final Value: ${formatNumber(selectedRoll.totalGain)}`));

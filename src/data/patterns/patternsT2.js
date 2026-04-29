@@ -130,7 +130,7 @@ export const PATTERNS_T2 = [
   {
     id: "PAT040304",
     name: "Sandwich",
-    description: "Two equal digits with exactly one different digit between them",
+    description: "Two equal digits with at least one different digit between them",
     requiredDigits: 3,
     baseMultiplier: () => 5,
     patternCurrencyReward: () => 5,

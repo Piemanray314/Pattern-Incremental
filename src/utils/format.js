@@ -58,6 +58,10 @@ function formatBigNum(value, mode) {
   if (big.mantissa === 0) return "0";
 
   if (mode === "scientific") {
+    if (big.exponent < 3) {
+      const raw = big.mantissa * Math.pow(10, big.exponent);
+      return formatNumber(raw, "standard");
+    }
     return bigNumToScientificString(big, 2);
   }
 

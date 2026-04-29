@@ -4,7 +4,6 @@ import { grantUpgradeLevel, hasUpgrade } from "./upgradeHelpers.js";
 import { getCastingUpgradeConfig, getShardMitosisPerSecond, getShardPerSecond } from "./castingUpgradeHelpers.js";
 import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
 import { UPGRADES_MAIN_4 } from "../../data/mainupgrades/upgradesMain4.js";
-import { resetAllTreeViewPositions } from "../../state/uiState.js";
 
 const TARGETED_RECAST_AUTOMATION_WHITELIST = new Set([
   "AUTO030100", // Global Recovery
@@ -67,7 +66,15 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   const rewards = getCastingRewards(state);
   const fresh = createInitialState();
   const preCastStartTime = state.stats.castStartTime ?? Date.now();
+  const preCastElapsedMs = state.stats.castElapsedMs ?? 0;
   const previousCastsHistory = [...(state.stats.previousCasts ?? [])];
+  const keptOfflineProgress = state.ui?.offlineProgress
+    ? {
+      ...state.ui.offlineProgress,
+      before: state.ui.offlineProgress.before ? { ...state.ui.offlineProgress.before } : null,
+      after: state.ui.offlineProgress.after ? { ...state.ui.offlineProgress.after } : null
+    }
+    : null;
 
   // Save casting-layer progress before reset
   const keptCastingCurrencies = {
@@ -133,6 +140,9 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
 
   state.settings.numberFormatMode = keepSettings.numberFormatMode;
   state.challenges.completions = keptChallengeCompletions;
+  if (keptOfflineProgress) {
+    state.ui.offlineProgress = keptOfflineProgress;
+  }
 
   state.stats.totalCasts = keepTotalCasts + 1;
   state.stats.previousCasts = [previousCastEntry, ...previousCastsHistory].slice(0, 10);
@@ -141,7 +151,8 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   state.stats.pointsThisCast = zeroBigNum();
   state.stats.patternsThisCast = zeroBigNum();
 
-  const castDurationSeconds = Math.max(1, (Date.now() - preCastStartTime) / 1000);
+  const fallbackElapsedMs = Math.max(0, Date.now() - preCastStartTime);
+  const castDurationSeconds = Math.max(1, Math.max(preCastElapsedMs, fallbackElapsedMs) / 1000);
 
   const shardsPerSecondThisCast = divideBigNumByNumber(
     rewards.shards ?? zeroBigNum(),
@@ -159,6 +170,7 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   );
   
   state.stats.castStartTime = Date.now();
+  state.stats.castElapsedMs = 0;
 
   state.progression.castingUnlocked = true;
 
@@ -166,8 +178,6 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
     state.ui.activeTab = "casting";
     state.ui.castingSubtab = "recast";
   }
-
-  resetAllTreeViewPositions(state);
 
   if (hasUpgrade(state, "PRES00004", "castingUpgrades")) {
     grantAllUpgradesInSource(state, UPGRADES_MAIN, "upgrades", { runOnBuy: true });
@@ -265,7 +275,7 @@ export function shouldTriggerAutomaticRecast(state) {
   }
 
   if (condition === AUTO_RECAST_CONDITIONS.timeElapsed) {
-    const elapsedSeconds = (Date.now() - (state.stats.castStartTime ?? Date.now())) / 1000;
+    const elapsedSeconds = (state.stats.castElapsedMs ?? 0) / 1000;
     return elapsedSeconds >= target;
   }
 

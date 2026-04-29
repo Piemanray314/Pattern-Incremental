@@ -82,7 +82,7 @@ export const UPGRADES_MAIN = [
     parents: ["DIG02"],
     visibleWhen: (state) =>
       hasUpgrade(state, "DIG02") &&
-      hasAtLeastPointsEarned(state, 5000),
+      (hasAtLeastPointsEarned(state, 5000) || compareBigNum(state.currencies.shards, 0)),
     canBuyWhen: (state) => hasUpgrade(state, "DIG02"),
     onBuy(state) {
       state.progression.maxDigitsUnlocked = Math.max(

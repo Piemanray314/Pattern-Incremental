@@ -335,21 +335,9 @@ function scaleAutomationMultiplier(multiplier, factor) {
 // Generates a random roll string
 function generateRollString(state, digitCount, source = "manual") {
   let result = "";
-  const littleGiantsActive = isLittleGiantsActive(state);
 
   for (let i = 0; i < digitCount; i++) {
-    let digit = randomInt(0, 9);
-
-    if (i === 0) {
-    const shouldDisallowZero =
-      digitCount > 1 ||
-      (digitCount === 1 && source === "auto") ||
-      (digitCount === 1 && source === "manual" && littleGiantsActive);
-
-    if (shouldDisallowZero) {
-      digit = randomInt(1, 9);
-    }
-  }
+    const digit = randomInt(1, 9);
 
     result += String(digit);
   }

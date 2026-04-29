@@ -74,7 +74,7 @@ export const UPGRADES_MAIN_4 = [
     title: "Pattern Inflation",
     description: "Increase the multiplier of ALL patterns by +4%",
     cost: (level) => ({ points: multiplyBigNum({ mantissa: 1, exponent: 12 }, powerBigNum(100, level)) }),
-    maxLevel: (state) => hasUpgrade(state, "PRES00102", "castingUpgrades") ? 100 : 10,
+    maxLevel: (state) => hasUpgrade(state, "PRES00102", "castingUpgrades") ? 40 : 10,
     parents: ["MULT040200"],
     visibleWhen: (state) => hasUpgrade(state, "MULT040200"),
     canBuyWhen: (state) => hasUpgrade(state, "MULT040200"),

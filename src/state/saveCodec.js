@@ -4,7 +4,7 @@ import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTre
 import { PATTERNS } from "../data/patterns/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa, multiplyBigNum, oneBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.8"; // Main version control
+let CURRENT_SAVE_VERSION = "0.81"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
@@ -90,6 +90,7 @@ function buildCompactState(state) {
       pointsThisCast: state.stats.pointsThisCast,
       patternsThisCast: state.stats.patternsThisCast,
       castStartTime: state.stats.castStartTime,
+      castElapsedMs: state.stats.castElapsedMs ?? 0,
       previousCasts: state.stats.previousCasts ?? [],
       bestShardsPerCast: state.stats.bestShardsPerCast,
       bestShardsPerCastPerSecond: state.stats.bestShardsPerCastPerSecond,
@@ -488,6 +489,7 @@ const SAVE_KEY_MAP = {
   totalRolls: "tr",
   totalTimeStartedAt: "tts",
   castStartTime: "cst",
+  castElapsedMs: "cems",
   lifetimePointsGained: "lpg",
   lifetimePatternCurrency: "lpc",
   rollsThisCast: "rtc",
@@ -501,6 +503,7 @@ const SAVE_KEY_MAP = {
   bestRolls: "br",
   selectedBestRollIndex: "sbi",
   bestShardsPerCast: "bpc",
+  bestShardsPerCastPerSecond: "bpcs",
 
   automation: "a",
   enabled: "e",

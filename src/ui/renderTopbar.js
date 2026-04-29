@@ -58,9 +58,9 @@ function topbarLink(text, href) {
 
 export function refreshTopbarCurrencies(state) {
   updateCurrencyPill("points", `Points: ${formatNumber(state.currencies.points)}`);
-  updateCurrencyPill("patterns", `Patterns: ${formatNumber(state.currencies.patterns)}`);
-  updateCurrencyPill("casts", `Casts: ${formatNumber(state.currencies.casts)}`);
-  updateCurrencyPill("shards", `Shards: ${formatNumber(state.currencies.shards)}`);
+  updateCurrencyPill("patterns", `Patterns: ${formatNumber(roundSmallToWholeMantissa(state.currencies.patterns))}`);
+  updateCurrencyPill("casts", `Casts: ${formatNumber(roundSmallToWholeMantissa(state.currencies.casts))}`);
+  updateCurrencyPill("shards", `Shards: ${formatNumber(roundSmallToWholeMantissa(state.currencies.shards))}`);
   updateCurrencyPill("pies", `Pies: ${formatNumber(state.currencies.pies)}`);
 }
 

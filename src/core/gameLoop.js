@@ -6,7 +6,7 @@ import { addBigNum, multiplyBigNumByNumber } from "../utils/bigNum.js";
 import { performCast, shouldTriggerAutomaticRecast } from "./helpers/castingHelpers.js";
 import { isAutoRollBlockedByChallenge, updateChallengeRuntime } from "./helpers/challengeHelpers.js";
 
-const AUTO_RECAST_MIN_INTERVAL_MS = 1000;
+const AUTO_RECAST_MIN_INTERVAL_MS = 200;
 
 // Main game loop
 export function updateGame(state, deltaMs) {
@@ -22,6 +22,7 @@ export function updateGame(state, deltaMs) {
   state.timers.uiRefreshAccumulatorMs += deltaMs;
   state.timers.effectTextRefreshAccumulatorMs += deltaMs;
   state.timers.topbarLiveRefreshAccumulatorMs += deltaMs;
+  state.stats.castElapsedMs = Math.max(0, (state.stats.castElapsedMs ?? 0) + deltaMs);
   state.timers.autoRecastCooldownMs = Math.max(
     0,
     (state.timers.autoRecastCooldownMs ?? 0) - deltaMs

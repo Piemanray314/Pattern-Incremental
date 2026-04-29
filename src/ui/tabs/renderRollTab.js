@@ -43,8 +43,6 @@ export function renderRollTab(state, setState) {
   actions.append(rollButton);
 
   if (hasUpgrade(state, "PRES00202", "castingUpgrades")) {
-    const canRecastNow = canCast(state) && compareBigNum(state.currencies.points, ROLL_RECAST_POINT_REQUIREMENT) >= 0;
-
     const recastButton = createElement("button", {
       text: "Recast",
       onClick: () => {
@@ -58,16 +56,11 @@ export function renderRollTab(state, setState) {
           return;
         }
 
-        const confirmed = window.confirm("Perform a recast? This will reset most base progress.");
-        if (!confirmed) return;
-
         setState((draft) => {
           performCast(draft, { switchToCastingTab: false });
         }, { topbar: true, content: true, sidebar: true });
       }
     });
-
-    recastButton.disabled = !canRecastNow;
     actions.append(recastButton);
   }
 
@@ -225,7 +218,7 @@ function renderCurrentRollInto(host, state) {
   }
   if ((displayedRoll.multiplierRolls ?? []).length > 0) {
     summary.append(
-      summaryPill(`Multiplier Rolls: ${formatMultiplier(displayedRoll.multiplierRollTotal ?? 1)}`)
+      summaryPill(`Dice Rolls: ${formatMultiplier(displayedRoll.multiplierRollTotal ?? 1)}`)
     );
   }
   summary.append(

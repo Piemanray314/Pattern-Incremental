@@ -5,6 +5,7 @@ import { evaluateRollString } from "../../core/rollEngine.js";
 import { getPatternMultiplicationFactor } from "../../core/helpers/automationHelpers.js";
 import { getPatternMultiplierFactor, getManualPatternMultiplierFactor } from "../../core/helpers/upgradeHelpers.js";
 import { multiplyBigNum, toBigNum } from "../../utils/bigNum.js";
+import { isNakedChallengeActive } from "../../core/helpers/challengeHelpers.js";
 
 // Main renderer for the patterns tab
 // Renders the preview UI and pattern list
@@ -113,12 +114,15 @@ export function renderPatternsTab(state, setState) {
     if (isUnlocked) {
       const previewMultipliers = getPatternPreviewMultipliers(state, pattern, "1".repeat(state.progression.maxDigitsUnlocked));
 
-      let factor = getPatternMultiplierFactor(state)
+      let factor = toBigNum(1);
+      if (!isNakedChallengeActive(state)) {
+        factor = getPatternMultiplierFactor(state);
 
-      if(state.ui.patternPreviewIncludeAutomation) {
-        factor = multiplyBigNum(factor, toBigNum(getPatternMultiplicationFactor(state)));
-      } else {
-        factor = multiplyBigNum(factor, getManualPatternMultiplierFactor(state));
+        if (state.ui.patternPreviewIncludeAutomation) {
+          factor = multiplyBigNum(factor, toBigNum(getPatternMultiplicationFactor(state)));
+        } else {
+          factor = multiplyBigNum(factor, getManualPatternMultiplierFactor(state));
+        }
       }
 
       baseMultiplierText = formatMultiplier(previewMultipliers.baseMultiplier);
@@ -149,7 +153,7 @@ function renderPreviewResultInto(host, state) {
   const previewResult = evaluatePatternPreview(
     state,
     state.ui.patternPreviewInput ?? "",
-    state.ui.patternPreviewIncludeGlobal ?? false,
+    state.ui.patternPreviewIncludeGlobal ?? true,
     state.ui.patternPreviewIncludeAutomation ?? false
   );
 
@@ -175,7 +179,7 @@ function renderPreviewResultInto(host, state) {
     summary.append(summaryPill(`Casting Multiplier: ${formatMultiplier(previewResult.castingMultiplier ?? 1)}`));
   }
   if ((previewResult.multiplierRolls ?? []).length > 0) {
-    summary.append(summaryPill(`Multiplier Rolls: ${formatMultiplier(previewResult.multiplierRollTotal ?? 1)}`));
+    summary.append(summaryPill(`Dice Rolls: ${formatMultiplier(previewResult.multiplierRollTotal ?? 1)}`));
   }
   summary.append(summaryPill(`Final Value: ${formatNumber(previewResult.totalGain)}`));
 

@@ -33,7 +33,8 @@ if (offlineElapsedMs >= MIN_OFFLINE_MS) {
   requestAnimationFrame(runOfflineLoop);
 }
 
-let lastFrameTime = performance.now();
+let lastFrameRealTimeMs = Date.now();
+let hiddenStartedRealTimeMs = null;
 
 async function runOfflineLoop() {
   if (!state.ui.offlineProgress?.active || state.ui.offlineProgress.complete) {
@@ -80,11 +81,30 @@ function setState(mutator, renderOptions = {}) {
   renderModalInto(state, setState);
 }
 
-function tick(now) {
-  const deltaMs = Math.max(0, now - lastFrameTime);
-  lastFrameTime = now;
+function tick() {
+  if (document.hidden) {
+    if (hiddenStartedRealTimeMs === null) {
+      hiddenStartedRealTimeMs = Date.now();
+    }
+    requestAnimationFrame(tick);
+    return;
+  }
+
+  const nowRealTimeMs = Date.now();
+  const deltaMs = Math.max(0, nowRealTimeMs - lastFrameRealTimeMs);
+  lastFrameRealTimeMs = nowRealTimeMs;
 
   if (state.ui.offlineProgress?.active && !state.ui.offlineProgress.complete) {
+    requestAnimationFrame(tick);
+    return;
+  }
+
+  if (deltaMs >= MIN_OFFLINE_MS) {
+    setState((draft) => {
+      beginOfflineProgress(draft, deltaMs);
+    }, { topbar: true, content: false, sidebar: false });
+
+    requestAnimationFrame(runOfflineLoop);
     requestAnimationFrame(tick);
     return;
   }
@@ -115,8 +135,36 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 
+window.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    hiddenStartedRealTimeMs = Date.now();
+    return;
+  }
+
+  const nowRealTimeMs = Date.now();
+  const hiddenElapsedMs = hiddenStartedRealTimeMs === null
+    ? Math.max(0, nowRealTimeMs - lastFrameRealTimeMs)
+    : Math.max(0, nowRealTimeMs - hiddenStartedRealTimeMs);
+
+  hiddenStartedRealTimeMs = null;
+  lastFrameRealTimeMs = nowRealTimeMs;
+
+  if (state.ui.offlineProgress?.active && !state.ui.offlineProgress.complete) {
+    return;
+  }
+
+  if (hiddenElapsedMs >= MIN_OFFLINE_MS) {
+    setState((draft) => {
+      beginOfflineProgress(draft, hiddenElapsedMs);
+    }, { topbar: true, content: false, sidebar: false });
+
+    requestAnimationFrame(runOfflineLoop);
+  }
+});
+
 setInterval(() => {
   if (saveLoadFailed) return;
+  if (document.hidden) return;
   saveGame(state);
 }, 15000);
 

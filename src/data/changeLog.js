@@ -16,6 +16,15 @@
 
 export const changeLog = [
   {
+    version: "0.81",
+    title: "Small hotfix",
+    entries: [
+      "Fixed offline calculation bugs, auto-recast bugs, and a few general bugs",
+      "Changed some UI elements",
+      "Pattern Inflation now maxes out at 40",
+    ]
+  },
+  {
     version: "0.8",
     title: "Challenges!",
     entries: [

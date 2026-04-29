@@ -170,6 +170,18 @@ function renderAutomaticRecastSettingsPanel(state, setState) {
   controls.append(activeToggleButton, conditionToggleButton, targetInput, confirmTargetButton);
   panel.append(createElement("div", { className: "section-spacer" }));
   panel.append(controls);
+  panel.append(createElement("div", { className: "section-spacer" }));
+
+  const currentTarget = String(recastSettings.targetValue ?? "").trim();
+  panel.append(
+    createElement("div", {
+      className: "muted",
+      text:
+        `Current recast setting: ${recastSettings.enabled ? "ON" : "OFF"} | ` +
+        `Condition: ${activeCondition.label} | ` +
+        `Target: ${currentTarget.length > 0 ? currentTarget : "(empty)"}`
+    })
+  );
 
   return panel;
 }

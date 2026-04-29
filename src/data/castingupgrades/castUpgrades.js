@@ -68,7 +68,7 @@ export const PRESTIGE_CAST = [
 
   makePrestigeUpgradeDefinition("PRES", 0, 0, 5, {
     title: "Any% Glitched TAS",
-    description: "Unlocking X tier will autobuy all upgrades from the tier before to level 1",
+    description: "Unlocking X tier will autobuy all upgrades from the previous tier to level 1",
     cost: { casts: 100 },
     maxLevel: 1,
     parents: ["PRES00004"],
@@ -79,8 +79,8 @@ export const PRESTIGE_CAST = [
 
   makePrestigeUpgradeDefinition("PRES", 0, 0, 6, {
     title: "100% Glitched TAS",
-    description: "Unlocking X tier will autobuy all upgrades from the tier before to max level",
-    cost: { casts: { mantissa: 1, exponent: 10 }},
+    description: "Unlocking X tier will autobuy all upgrades from the previous tier to max level",
+    cost: { casts: { mantissa: 4, exponent: 6 }},
     maxLevel: 1,
     parents: ["PRES00005"],
     visibleWhen: () => true,
@@ -118,7 +118,7 @@ export const PRESTIGE_CAST = [
 
   makePrestigeUpgradeDefinition("PRES", 0, 1, 2, {
     title: "Deeper Casting",
-    description: "Increases the max level of \"Pattern Inflation\" to 100",
+    description: "Increases the max level of \"Pattern Inflation\" to 40",
     cost: { casts: 10 },
     maxLevel: 1,
     parents: [],
@@ -173,7 +173,7 @@ export const PRESTIGE_CAST = [
 
   makePrestigeUpgradeDefinition("PRES", 0, 2, 2, {
     title: "Automatic Recasts",
-    description: "Unlock the Casting path at the start of each cast and enable automatic recast controls",
+    description: "Unlock the Casting upgrade path at the start of each cast and enable automatic recast controls",
     cost: { casts: 250 },
     maxLevel: 1,
     parents: [],

@@ -210,13 +210,13 @@ export function getShardMitosisPerSecond(state) {
 }
 
 export function getShardPerSecond(state) {
-  const seconds = Math.max(1, (Date.now() - (state.stats.castStartTime ?? Date.now())) / 1000);
+  const seconds = Math.max(1, (state.stats.castElapsedMs ?? 0) / 1000);
 
   return divideBigNumByNumber(getCastingRewards(state).shards ?? zeroBigNum(), seconds);
 }
 
 export function PRES00100Multiplier(state) {
-  return powerBigNum(toBigNum(Math.max(1, (Date.now() - (state.stats.castStartTime ?? Date.now())) / 10000)), 0.2);
+  return powerBigNum(toBigNum(Math.max(1, (state.stats.castElapsedMs ?? 0) / 10000)), 0.2);
 }
 
 export function PRES00101Multiplier(state) {

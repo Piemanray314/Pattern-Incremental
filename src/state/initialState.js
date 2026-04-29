@@ -38,6 +38,7 @@ export function createInitialState() {
       pointsThisCast: zeroBigNum(),
       patternsThisCast: zeroBigNum(),
       castStartTime: Date.now(),
+      castElapsedMs: 0,
       previousCasts: [],
       bestShardsPerCast: zeroBigNum(),bestShardsPerCastPerSecond: zeroBigNum()
     },
@@ -83,7 +84,7 @@ export function createInitialState() {
     ui: {
       activeTab: loadActiveTab() ?? "roll",
       patternPreviewInput: "",
-      patternPreviewIncludeGlobal: false,
+      patternPreviewIncludeGlobal: true,
       patternPreviewIncludeAutomation: false,
 
       upgradesSubtab: loadSubtab("upgradesSubtab") ?? "main",
@@ -116,7 +117,7 @@ export function createInitialState() {
     },
 
     meta: {
-      saveVersion: 0.8,
+      saveVersion: 0.81,
       lastSavedAt: Date.now()
     }
   };
