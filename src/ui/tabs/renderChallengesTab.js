@@ -60,9 +60,9 @@ export function renderChallengesTab(state, setState) {
 
   const gridPanel = createElement("section", { className: "panel" });
   gridPanel.append(
-    createElement("div", {
-      className: "muted",
-      text: "Select a challenge to start. Runtime envelope is active; individual challenge rules/rewards are next."
+    createElement("h2", {
+      className: "panel-title",
+      text: "Challenge Grid"
     })
   );
   gridPanel.append(createElement("div", { className: "section-spacer" }));

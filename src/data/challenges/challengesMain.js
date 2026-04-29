@@ -43,7 +43,7 @@ export const CHALLENGES_MAIN = [
   createChallenge({
     id: "CHAL00100",
     title: "Little Giants",
-    description: "Reach the goal in at most 10 rolls. Upon completion, every manual roll will also roll adjacent numbers. Check previous rolls in statistics to view other rolls.",
+    description: "Reach the goal in at most 10 rolls (Automation disabled). Upon completion, every manual roll will also roll adjacent numbers. Check previous rolls in statistics to view other rolls.",
     x: 0,
     y: 0,
     goalPointsByCompletion: [
