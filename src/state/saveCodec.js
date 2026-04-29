@@ -4,7 +4,7 @@ import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTre
 import { PATTERNS } from "../data/patterns/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa, multiplyBigNum, oneBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.75"; // Main version control
+let CURRENT_SAVE_VERSION = "0.8"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
@@ -61,6 +61,16 @@ function buildCompactState(state) {
     upgrades: state.upgrades,
     automationUpgrades: state.automationUpgrades,
     castingUpgrades: state.castingUpgrades,
+    challenges: {
+      activeChallengeId: state.challenges?.activeChallengeId ?? null,
+      claimableChallengeId: state.challenges?.claimableChallengeId ?? null,
+      startedAtMs: state.challenges?.startedAtMs ?? null,
+      challengeElapsedMs: state.challenges?.challengeElapsedMs ?? 0,
+      manualRollClicksThisRun: state.challenges?.manualRollClicksThisRun ?? 0,
+      autoExitOnComplete: state.challenges?.autoExitOnComplete ?? false,
+      phase: state.challenges?.phase ?? "idle",
+      completions: state.challenges?.completions ?? {}
+    },
 
     currentRoll: compactRollSnapshot(state.currentRoll),
     latestRoll: compactRollSnapshot(state.latestRoll),
@@ -192,6 +202,11 @@ function hydrateAgainstInitialState(loadedState) {
     castingUpgrades: {
       ...fresh.castingUpgrades,
       ...loadedState.castingUpgrades
+    },
+
+    challenges: {
+      ...fresh.challenges,
+      ...loadedState.challenges
     },
 
     stats: {
@@ -456,6 +471,15 @@ const SAVE_KEY_MAP = {
   upgrades: "u",
   automationUpgrades: "au",
   castingUpgrades: "cu2",
+  challenges: "ch",
+  activeChallengeId: "acid",
+  claimableChallengeId: "ccid",
+  startedAtMs: "stm",
+  challengeElapsedMs: "cem",
+  manualRollClicksThisRun: "mrc",
+  autoExitOnComplete: "aeoc",
+  phase: "phs",
+  completions: "comp",
 
   currentRoll: "cr",
   latestRoll: "lr",

@@ -19,3 +19,5 @@ I have years of experience in Java though (less in other languages), so it's not
 Also first time like actually using GitHub!!
 
 ChatGPT was used to help build the front end + learning good JS practices. I did talk with ChatGPT quite a bit regarding the initial project structure and how to go about it. Thank you ChatGPT for making this possible!! I didn't really use it past version 0.3 since I know have a good enough understanding to code by myself :) Only really for non-CSS front-end things cause I cannot be bothered to learn UI stuff :D 
+
+Okay ngl after finding out about agents, I've used Codex quite a bit for UI and bug-fixing (~v0.8). It's really good for saving time, but the code it writes is kinda weird spamming constants everywhere? Maybe that's normal. Anyway, I still do most of the work, but it is a very convenient tool to have when things go kaput!

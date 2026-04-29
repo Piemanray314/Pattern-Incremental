@@ -142,7 +142,7 @@ function renderRecastSummaryInto(host, state) {
       createElement("div", {
         className: "muted",
         text:
-          `Recasting resets most pre-cast progress in exchange for new upgreades, casts, and shards. Gain is dependent on your total accumulated number of points and patterns. `
+          `Recasting resets most pre-cast progress in exchange for new upgrades, casts, and shards. Gain is dependent on your total accumulated number of points and patterns. `
       }),
       createElement("div", { className: "section-spacer" }),
       createElement("div", {

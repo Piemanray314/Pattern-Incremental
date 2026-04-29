@@ -46,7 +46,11 @@ export function createInitialState() {
       uiRefreshAccumulatorMs: 0,
       topbarLiveRefreshAccumulatorMs: 0,
       autoRollAccumulatorMs: 0,
-      effectTextRefreshAccumulatorMs: 0
+      effectTextRefreshAccumulatorMs: 0,
+      autoRecastCooldownMs: 0,
+      speedrunAutoRollBurstAccumulatorMs: 0,
+      speedrunAutoRollBurstRemainingMs: 0,
+      speedrunAutoRollBurstIntervalMs: 100
     },
 
     automation: {
@@ -64,6 +68,17 @@ export function createInitialState() {
     automationUpgrades: {},
     
     castingUpgrades: {},
+
+    challenges: {
+      activeChallengeId: null,
+      claimableChallengeId: null,
+      startedAtMs: null,
+      challengeElapsedMs: 0,
+      manualRollClicksThisRun: 0,
+      autoExitOnComplete: false,
+      phase: "idle",
+      completions: {}
+    },
 
     ui: {
       activeTab: loadActiveTab() ?? "roll",
@@ -101,7 +116,7 @@ export function createInitialState() {
     },
 
     meta: {
-      saveVersion: 0.75,
+      saveVersion: 0.8,
       lastSavedAt: Date.now()
     }
   };

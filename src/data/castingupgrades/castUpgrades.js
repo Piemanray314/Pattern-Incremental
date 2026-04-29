@@ -80,7 +80,7 @@ export const PRESTIGE_CAST = [
   makePrestigeUpgradeDefinition("PRES", 0, 0, 6, {
     title: "100% Glitched TAS",
     description: "Unlocking X tier will autobuy all upgrades from the tier before to max level",
-    cost: { casts: 1000000 },
+    cost: { casts: { mantissa: 1, exponent: 10 }},
     maxLevel: 1,
     parents: ["PRES00005"],
     visibleWhen: () => true,
@@ -147,9 +147,10 @@ export const PRESTIGE_CAST = [
     cost: [
       { casts: 25 },
       { casts: 125 },
-      { casts: 750 }
+      { casts: 750 },
+      { casts: 10000 }
     ],
-    maxLevel: 3,
+    maxLevel: 4,
     parents: [],
     visibleWhen: () => true,
     canBuyWhen: () => true,
@@ -178,6 +179,22 @@ export const PRESTIGE_CAST = [
     parents: [],
     visibleWhen: () => true,
     canBuyWhen: () => true,
+    onBuy(state) {
+      grantAutomaticRecastUnlockPath(state);
+    }
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 0, 2, 3, {
+    title: "Challenges",
+    description: "Unlocks challenges",
+    cost: { casts: 1000 },
+    maxLevel: 1,
+    parents: ["PRES00005", "PRES00103", "PRES00202"],
+    visibleWhen: () => true,
+    canBuyWhen: (state) => 
+      hasUpgrade(state, "PRES00005", "castingUpgrades") &&
+      hasUpgrade(state, "PRES00103", "castingUpgrades") &&
+      hasUpgrade(state, "PRES00202", "castingUpgrades"),
     onBuy(state) {
       grantAutomaticRecastUnlockPath(state);
     }

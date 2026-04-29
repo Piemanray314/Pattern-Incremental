@@ -133,7 +133,7 @@ export const PRESTIGE_CAST_SHARD = [
     canBuyWhen: (state) => hasUpgrade(state, "PRES10200", "castingUpgrades"),
     onBuy() {},
     effectText(state, level) {
-      return formatMultiplier(state.stats.bestShardsPerCastPerSecond);
+      return formatMultiplier(PRES10201Multiplier(state));
     }
   }),
   

@@ -27,6 +27,11 @@ export const TABS = [
     visibleWhen: (state) => hasUpgrade(state, "DIG03")
   },
   {
+    id: "challenges",
+    label: "Challenges",
+    visibleWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades")
+  },
+  {
     id: "patterns",
     label: "Patterns",
     visibleWhen: () => true

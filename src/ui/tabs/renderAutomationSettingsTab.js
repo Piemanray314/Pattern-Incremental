@@ -7,7 +7,7 @@ const AUTO_RECAST_CONDITIONS = [
   { id: "casts", label: "X casts achieved" },
   { id: "shardsPerSecond", label: "X shards/sec achieved" },
   { id: "points", label: "X points achieved" },
-  { id: "timeElapsed", label: "X time elapsed" }
+  { id: "timeElapsed", label: "X seconds elapsed" }
 ];
 
 export function renderAutomationSettingsTab(state, setState) {

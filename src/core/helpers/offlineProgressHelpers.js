@@ -21,7 +21,7 @@ export function getCappedOfflineElapsedMs(state, elapsedMs) {
 
 // Calculates and returns the max offline time away
 export function getMaxOfflineMs(state) {
-  const level = getUpgradeLevel(state, "PRES020000", "castingUpgrades") ?? 0;
+  const level = getUpgradeLevel(state, "PRES00200", "castingUpgrades") ?? 0;
 
   if (level >= 4) return Number.POSITIVE_INFINITY;
   if (level === 3) return 24 * 60 * 60 * 1000;

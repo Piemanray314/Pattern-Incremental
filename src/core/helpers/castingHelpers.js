@@ -32,6 +32,9 @@ const AUTO_RECAST_CONDITIONS = {
   timeElapsed: "timeElapsed"
 };
 
+const SPEEDRUN_BURST_INTERVALS_MS = [100, 80, 70, 60, 50];
+const SPEEDRUN_BURST_DURATIONS_MS = [5000, 6000, 7000, 8000, 10000];
+
 // Returns the rewards the player would get if they recast
 export function getCastingRewards(state) {
   const config = getCastingUpgradeConfig(state);
@@ -59,7 +62,7 @@ export function canCast(state) {
 
 // Performs the first prestige layer reset
 // Keeps casting currencies/upgrades and wipes only base-layer progress
-export function performCast(state) {
+export function performCast(state, { switchToCastingTab = true } = {}) {
   const progress = getCurrentCastProgress(state);
   const rewards = getCastingRewards(state);
   const fresh = createInitialState();
@@ -84,6 +87,7 @@ export function performCast(state) {
   const keepBestShardsPerCast = state.stats.bestShardsPerCast ?? zeroBigNum();
   const keepBestShardsPerCastPerSecond = state.stats.bestShardsPerCastPerSecond ?? zeroBigNum();
   const keptCastingUpgrades = { ...(state.castingUpgrades ?? {}) };
+  const keptChallengeCompletions = { ...(state.challenges?.completions ?? {}) };
 
   const keptAutomationDisplay = {
     enabled: state.automation.enabled,
@@ -128,6 +132,7 @@ export function performCast(state) {
   state.automation.recastSettings = { ...keptAutomationDisplay.recastSettings };
 
   state.settings.numberFormatMode = keepSettings.numberFormatMode;
+  state.challenges.completions = keptChallengeCompletions;
 
   state.stats.totalCasts = keepTotalCasts + 1;
   state.stats.previousCasts = [previousCastEntry, ...previousCastsHistory].slice(0, 10);
@@ -157,8 +162,10 @@ export function performCast(state) {
 
   state.progression.castingUnlocked = true;
 
-  state.ui.activeTab = "casting";
-  state.ui.castingSubtab = "recast";
+  if (switchToCastingTab) {
+    state.ui.activeTab = "casting";
+    state.ui.castingSubtab = "recast";
+  }
 
   resetAllTreeViewPositions(state);
 
@@ -174,6 +181,8 @@ export function performCast(state) {
   if (hasUpgrade(state, "PRES00202", "castingUpgrades")) {
     grantAutomaticRecastUnlockPath(state);
   }
+
+  applySpeedrunAutoRollBurst(state);
 }
 
 // Use lifetime gains instead of current cast on first cast
@@ -266,8 +275,22 @@ export function shouldTriggerAutomaticRecast(state) {
 // Parses inputs to be numbers and stuff yeah awesome cool
 function parseAutoRecastTarget(value) {
   if (value === null || value === undefined) return null;
-  const parsed = Number(String(value).trim());
+  const text = String(value).trim();
+  if (text.length === 0) return null;
+
+  const parsed = Number(text);
   if (!Number.isFinite(parsed)) return null;
   if (parsed < 0) return null;
   return parsed;
+}
+
+// Applies the Speedrun cast-start auto-roll burst reward
+function applySpeedrunAutoRollBurst(state) {
+  const completions = state.challenges?.completions?.["CHAL00101"] ?? 0;
+  if (completions <= 0) return;
+
+  const index = Math.max(0, Math.min(completions - 1, SPEEDRUN_BURST_INTERVALS_MS.length - 1));
+  state.timers.speedrunAutoRollBurstAccumulatorMs = 0;
+  state.timers.speedrunAutoRollBurstRemainingMs = SPEEDRUN_BURST_DURATIONS_MS[index];
+  state.timers.speedrunAutoRollBurstIntervalMs = SPEEDRUN_BURST_INTERVALS_MS[index];
 }

@@ -60,6 +60,6 @@ export const GUIDE_SECTIONS = [
   {
     id: "challenges",
     label: "Challenges",
-    visibleWhen: (state) => (state.stats.totalCasts >= 10)
+    visibleWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades")
   }
 ];

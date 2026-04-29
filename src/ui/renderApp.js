@@ -8,6 +8,8 @@ import { renderStatsTab } from "./tabs/renderStatsTab.js";
 import { renderBestRollsTab } from "./tabs/renderBestRollsTab.js";
 import { renderSettingsTab } from "./tabs/renderSettingsTab.js";
 import { renderAutomationSettingsTab } from "./tabs/renderAutomationSettingsTab.js";
+import { renderChallengesTab } from "./tabs/renderChallengesTab.js";
+import { refreshChallengesTabLiveContent } from "./tabs/renderChallengesTab.js";
 import { createElement } from "../utils/dom.js";
 import { renderChangeLogModal } from "./renderChangeLogModal.js";
 import { saveActiveTab } from "../state/uiState.js";
@@ -127,6 +129,9 @@ export function renderContentInto(state, setState) {
     case "automationSettings":
       shell.content.append(renderAutomationSettingsTab(state, setState));
       break;
+    case "challenges":
+      shell.content.append(renderChallengesTab(state, setState));
+      break;
     case "bestRolls":
       shell.content.append(renderBestRollsTab(state, setState));
       break;
@@ -240,4 +245,5 @@ export function refreshTopbarLiveContent(state) {
   refreshTopbarCurrencies(state);
   refreshCastingTabLiveContent(state);
   refreshRollTabLiveContent(state);
+  refreshChallengesTabLiveContent(state);
 }

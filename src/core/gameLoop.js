@@ -4,6 +4,9 @@ import { hasUpgrade } from "./helpers/upgradeHelpers.js";
 import { getShardMitosisPerSecond, grantPreviousTierUpgrades } from "./helpers/castingUpgradeHelpers.js";
 import { addBigNum, multiplyBigNumByNumber } from "../utils/bigNum.js";
 import { performCast, shouldTriggerAutomaticRecast } from "./helpers/castingHelpers.js";
+import { isAutoRollBlockedByChallenge, updateChallengeRuntime } from "./helpers/challengeHelpers.js";
+
+const AUTO_RECAST_MIN_INTERVAL_MS = 1000;
 
 // Main game loop
 export function updateGame(state, deltaMs) {
@@ -19,10 +22,16 @@ export function updateGame(state, deltaMs) {
   state.timers.uiRefreshAccumulatorMs += deltaMs;
   state.timers.effectTextRefreshAccumulatorMs += deltaMs;
   state.timers.topbarLiveRefreshAccumulatorMs += deltaMs;
+  state.timers.autoRecastCooldownMs = Math.max(
+    0,
+    (state.timers.autoRecastCooldownMs ?? 0) - deltaMs
+  );
 
   const automationConfig = getAutomationConfig(state);
+  updateChallengeRuntime(state, deltaMs);
+  runSpeedrunAutoRollBurst(state, deltaMs, instructions);
 
-  if (automationConfig.unlocked && state.automation.enabled) {
+  if (automationConfig.unlocked && state.automation.enabled && !isAutoRollBlockedByChallenge(state)) {
     state.automation.accumulatorMs += deltaMs;
 
     const effectiveIntervalMs = automationConfig.effectiveIntervalMs;
@@ -47,11 +56,12 @@ export function updateGame(state, deltaMs) {
     state.currencies.shards = addBigNum(state.currencies.shards, gain);
   }
 
-  if (shouldTriggerAutomaticRecast(state)) {
-    performCast(state);
+  if (state.timers.autoRecastCooldownMs <= 0 && shouldTriggerAutomaticRecast(state)) {
+    performCast(state, { switchToCastingTab: false });
+    state.timers.autoRecastCooldownMs = AUTO_RECAST_MIN_INTERVAL_MS;
     instructions.topbar = true;
-    instructions.content = true;
-    instructions.sidebar = true;
+    instructions.content = state.ui.activeTab === "casting";
+    instructions.sidebar = false;
     instructions.topbarLive = true;
   }
 
@@ -72,4 +82,26 @@ export function updateGame(state, deltaMs) {
   }
 
   return instructions;
+}
+
+// Runs Speedrun reward auto-roll burst at cast start
+function runSpeedrunAutoRollBurst(state, deltaMs, instructions) {
+  const remainingMs = state.timers.speedrunAutoRollBurstRemainingMs ?? 0;
+  if (remainingMs <= 0) return;
+  if (isAutoRollBlockedByChallenge(state)) return;
+
+  const intervalMs = Math.max(1, state.timers.speedrunAutoRollBurstIntervalMs ?? 100);
+  state.timers.speedrunAutoRollBurstRemainingMs = Math.max(0, remainingMs - deltaMs);
+  state.timers.speedrunAutoRollBurstAccumulatorMs =
+    (state.timers.speedrunAutoRollBurstAccumulatorMs ?? 0) + deltaMs;
+
+  while (state.timers.speedrunAutoRollBurstAccumulatorMs >= intervalMs) {
+    state.timers.speedrunAutoRollBurstAccumulatorMs -= intervalMs;
+    performRoll(state, { source: "auto" });
+    instructions.topbarLive = true;
+
+    if (state.ui.activeTab === "stats" || state.ui.activeTab === "bestRolls") {
+      instructions.content = true;
+    }
+  }
 }

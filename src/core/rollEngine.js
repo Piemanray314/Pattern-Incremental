@@ -2,15 +2,27 @@ import { PATTERNS } from "../data/patterns/patterns.js";
 import { numberStringToValue } from "./helpers/patternHelpers.js";
 import { pushBestRoll, pushRollHistory } from "./helpers/statsHelpers.js";
 import { getUpgradeConfig } from "./helpers/upgradeHelpers.js";
-import { addBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
+import { addBigNum, compareBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
 import { getAutomationConfig, shouldDisplayAutoRoll } from "./helpers/automationHelpers.js";
 import { getCastingUpgradeConfig, getMultiplierRollConfig } from "./helpers/castingUpgradeHelpers.js";
+import { getNakedPatternCurrencyMultiplier, isNakedChallengeActive } from "./helpers/challengeHelpers.js";
 
 // Main function to perform a loop. Returns the roll and saves it into state
 // { source = "manual" } = {} is a fancy way to write "If there's no second argument, or it's empty, return manual"
 export function performRoll(state, { source = "manual" } = {}) {
+  if (source === "manual" && state.challenges?.activeChallengeId === "CHAL00100") {
+    state.challenges.manualRollClicksThisRun = (state.challenges.manualRollClicksThisRun ?? 0) + 1;
+  }
+
   const digitCount = getRollDigitCount(state, source);
-  const raw = generateRollString(digitCount, source);
+  const raw = generateRollString(state, digitCount, source);
+
+  if (source === "manual") {
+    const radius = getLittleGiantsAdjacencyRadius(state);
+    if (radius > 0) {
+      return performManualAdjacentRolls(state, raw, radius);
+    }
+  }
 
   const rollResult = evaluateRollString(state, raw, {
     source,
@@ -22,6 +34,42 @@ export function performRoll(state, { source = "manual" } = {}) {
 
   applyRollResult(state, rollResult, { source });
   return rollResult;
+}
+
+// Handles Little Giants adjacent roll reward for manual rolls
+function performManualAdjacentRolls(state, baseRaw, radius) {
+  const baseValue = numberStringToValue(baseRaw);
+  const seenRaw = new Set();
+  let bestResult = null;
+
+  for (let offset = -radius; offset <= radius; offset++) {
+    const value = baseValue + offset;
+    if (value < 0) continue;
+
+    const raw = String(value);
+    if (seenRaw.has(raw)) continue;
+    seenRaw.add(raw);
+
+    const rollResult = evaluateRollString(state, raw, {
+      source: "manual",
+      includeGlobal: true,
+      includePostMultiplierFlatBonus: true,
+      includePatternCurrency: true,
+      includeMultiplierRolls: true
+    });
+
+    applyRollResult(state, rollResult, { source: "manual" });
+
+    if (!bestResult || compareBigNum(rollResult.totalGain, bestResult.totalGain) > 0) {
+      bestResult = rollResult;
+    }
+  }
+
+  if (bestResult) {
+    state.currentRoll = bestResult;
+  }
+
+  return bestResult ?? state.currentRoll;
 }
 
 // Main roll calculation. Checks for patterns, evaluates value after all multipliers, then returns a roll object
@@ -40,6 +88,7 @@ export function evaluateRollString(
   const value = numberStringToValue(raw);
   const automationConfig = getAutomationConfig(state);
   const castingConfig = getCastingUpgradeConfig(state);
+  const nakedChallengeActive = isNakedChallengeActive(state);
 
   // Keeps track of pattern matches
   const matches = [];
@@ -79,10 +128,14 @@ export function evaluateRollString(
     currentPatternCurrencyReward = addBigNum(currentPatternCurrencyReward, toBigNum(castingConfig.patternFlat));
     currentPatternCurrencyReward = multiplyBigNum(currentPatternCurrencyReward, castingConfig.patternMultiplier);
 
-    currentMultiplier = multiplyBigNum(currentMultiplier, upgradeConfig.patternMultiplierFactor);
+    if (nakedChallengeActive) {
+      currentMultiplier = roundMultiplierBigNum(toBigNum(result.baseMultiplier));
+    } else {
+      currentMultiplier = multiplyBigNum(currentMultiplier, upgradeConfig.patternMultiplierFactor);
+    }
     currentPatternCurrencyReward = multiplyBigNum(currentPatternCurrencyReward, upgradeConfig.patternCurrencyFactor);
 
-    if (source === "auto") {
+    if (!nakedChallengeActive && source === "auto") {
       currentMultiplier = scaleAutomationMultiplier(
         currentMultiplier,
         automationConfig.patternMultiplierFactor
@@ -91,7 +144,7 @@ export function evaluateRollString(
         currentPatternCurrencyReward,
         automationConfig.patternCurrencyFactor
       );
-    } else if (source === "manual") {
+    } else if (!nakedChallengeActive && source === "manual") {
       currentMultiplier = multiplyBigNum(
         currentMultiplier,
         upgradeConfig.manualPatternMultiplierFactor
@@ -165,8 +218,9 @@ export function evaluateRollString(
   const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
   // const totalGain = makeBigNum(3.26, 1533453348); // Piemanray314
 
+  const nakedRewardMultiplier = getNakedPatternCurrencyMultiplier(state);
   const totalPatternCurrencyGain = includePatternCurrency
-    ? getTotalPatternCurrencyGain(matches)
+    ? multiplyBigNumByNumber(getTotalPatternCurrencyGain(matches), nakedRewardMultiplier)
     : zeroBigNum();
 
   return {
@@ -279,14 +333,18 @@ function scaleAutomationMultiplier(multiplier, factor) {
 }
 
 // Generates a random roll string
-function generateRollString(digitCount, source = "manual") {
+function generateRollString(state, digitCount, source = "manual") {
   let result = "";
+  const littleGiantsActive = isLittleGiantsActive(state);
 
   for (let i = 0; i < digitCount; i++) {
     let digit = randomInt(0, 9);
 
     if (i === 0) {
-    const shouldDisallowZero = digitCount > 1 || (digitCount === 1 && source === "auto");
+    const shouldDisallowZero =
+      digitCount > 1 ||
+      (digitCount === 1 && source === "auto") ||
+      (digitCount === 1 && source === "manual" && littleGiantsActive);
 
     if (shouldDisallowZero) {
       digit = randomInt(1, 9);
@@ -297,6 +355,18 @@ function generateRollString(digitCount, source = "manual") {
   }
 
   return result;
+}
+
+// Returns Little Giants adjacency radius from completions
+function getLittleGiantsAdjacencyRadius(state) {
+  const completions = state.challenges?.completions?.["CHAL00100"] ?? 0;
+  if (completions <= 0) return 0;
+  return Math.min(2, completions);
+}
+
+// Returns true when Little Giants is currently active
+function isLittleGiantsActive(state) {
+  return state?.challenges?.activeChallengeId === "CHAL00100";
 }
 
 // Rolls all active multiplier dice, returning both individual dice and total multiplier

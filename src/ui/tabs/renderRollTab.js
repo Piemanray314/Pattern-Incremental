@@ -5,9 +5,11 @@ import { getAutomationConfig } from "../../core/helpers/automationHelpers.js";
 import { canCast, performCast } from "../../core/helpers/castingHelpers.js";
 import { compareBigNum, fromNumber } from "../../utils/bigNum.js";
 import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
+import { getActiveChallenge, getActiveChallengeRestrictionText } from "../../core/helpers/challengeHelpers.js";
 
 const ROLL_RECAST_POINT_REQUIREMENT = fromNumber(1e21);
 let rollStatusHost = null;
+let rollChallengeStatusHost = null;
 let rollCurrentRollHost = null;
 let rollMatchListHost = null;
 
@@ -60,7 +62,7 @@ export function renderRollTab(state, setState) {
         if (!confirmed) return;
 
         setState((draft) => {
-          performCast(draft);
+          performCast(draft, { switchToCastingTab: false });
         }, { topbar: true, content: true, sidebar: true });
       }
     });
@@ -75,6 +77,14 @@ export function renderRollTab(state, setState) {
   statusText.style.marginTop = "12px";
   actionsPanel.append(statusText);
   rollStatusHost = statusText;
+
+  const challengeStatusText = createElement("div", {
+    className: "roll-challenge-status",
+    text: ""
+  });
+  challengeStatusText.style.marginTop = "6px";
+  actionsPanel.append(challengeStatusText);
+  rollChallengeStatusHost = challengeStatusText;
 
   const currentRollPanel = createElement("section", { className: "panel" });
   currentRollPanel.append(
@@ -103,6 +113,19 @@ export function renderRollTab(state, setState) {
 export function refreshRollTabLiveContent(state) {
   if (rollStatusHost) {
     rollStatusHost.textContent = buildAutomationStatusText(state, getAutomationConfig(state));
+  }
+
+  if (rollChallengeStatusHost) {
+    const challengesUnlocked = hasUpgrade(state, "PRES00203", "castingUpgrades");
+    const activeChallenge = getActiveChallenge(state);
+
+    if (!challengesUnlocked) {
+      rollChallengeStatusHost.textContent = "";
+    } else if (activeChallenge) {
+      rollChallengeStatusHost.textContent = getActiveChallengeRestrictionText(state);
+    } else {
+      rollChallengeStatusHost.textContent = "Challenge not active";
+    }
   }
 
   if (rollCurrentRollHost) {
@@ -150,7 +173,6 @@ function buildAutomationStatusText(state, automationConfig) {
   }
 
   const enabledText = state.automation.enabled ? "ON" : "OFF";
-
   return `Automation ${enabledText} | Effective interval ${automationConfig.effectiveIntervalMs} ms | Display mode: ${state.automation.displayMode}`;
 }
 

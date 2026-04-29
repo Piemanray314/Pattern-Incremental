@@ -168,6 +168,11 @@ function groupIndexToLetters(groupIndex) {
 
 // Deals with time in standard format
 export function formatElapsedTime(ms) {
+  if (ms === null || ms === undefined) return "How did you manage to error this";
+  if (ms.length === 0) return "How did you manage to error this";
+  
+  if (!Number.isFinite(ms)) return "Infinite";
+
   const totalSeconds = Math.floor(ms / 1000);
 
   const years = Math.floor(totalSeconds / 31536000);

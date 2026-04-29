@@ -124,7 +124,12 @@ export function getGuideContent(sectionId, state) {
       return {
         title: "Challenges",
         paragraphs: [
-          "Will be added in a future version :)"
+          "Welcome to the realm of challenges. This is the next big progression checkpoint, and you'll be stuck here for a while.",
+          "Every challenge will introduce some constraints and some win condition. It is your goal to reach the win condition while following the constraint. Starting a challenge performs a recast, and you can start/exit a challenge at any time.",
+          ".",
+          ".",
+          ".",
+          "Good luck!"
         ]
       };
 

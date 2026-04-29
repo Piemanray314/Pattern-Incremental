@@ -62,8 +62,7 @@ export const UPGRADES_MAIN = [
     y: 1,
     parents: ["DIG01"],
     visibleWhen: (state) =>
-      hasUpgrade(state, "DIG01") &&
-      state.stats.totalRolls >= 10,
+      hasUpgrade(state, "DIG01"),
     canBuyWhen: (state) => hasUpgrade(state, "DIG01"),
     onBuy(state) {
       state.progression.maxDigitsUnlocked = Math.max(
