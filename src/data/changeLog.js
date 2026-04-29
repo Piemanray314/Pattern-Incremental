@@ -16,6 +16,17 @@
 
 export const changeLog = [
   {
+    version: "0.8",
+    title: "Challenges!",
+    entries: [
+      "Added Challenges!",
+      "New tab for challenges + unique challenges",
+      "Mostly a soft release for playtesting and balancing. Expect way more challenges in the planned 0.81 update",
+      "Main softlock bug with auto casting fixed",
+      "Some other minor bug fixes too",
+    ]
+  },
+  {
     version: "0.75",
     title: "Lots of preparation for 0.8 :)",
     entries: [
