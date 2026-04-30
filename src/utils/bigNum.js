@@ -180,6 +180,8 @@ export function compareBigNum(a, b) {
   const right = toBigNum(b);
 
   if (left.mantissa === 0 && right.mantissa === 0) return 0;
+  if (left.mantissa === 0) return -1;
+  if (right.mantissa === 0) return 1;
 
   if (left.exponent !== right.exponent) {
     return left.exponent > right.exponent ? 1 : -1;

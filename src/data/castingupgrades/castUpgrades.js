@@ -198,5 +198,16 @@ export const PRESTIGE_CAST = [
     onBuy(state) {
       grantAutomaticRecastUnlockPath(state);
     }
+  }),
+
+  makePrestigeUpgradeDefinition("PRES", 0, 2, 4, {
+    title: "9th Dimension",
+    description: "Unlock the power of the pies",
+    cost: { casts: { mantissa: 5, exponent: 7 } },
+    maxLevel: 1,
+    parents: ["PRES00203"],
+    visibleWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades"),
+    canBuyWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades"),
+    onBuy() {}
   })
 ];

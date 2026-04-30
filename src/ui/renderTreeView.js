@@ -91,6 +91,7 @@ export function renderTreeView({
   scrollHost.style.maxHeight = "calc(100vh - 220px)";
   scrollHost.style.cursor = "grab";
   scrollHost.style.userSelect = "none";
+  scrollHost.style.visibility = "hidden";
 
   const visibleDefs = definitions.filter((item) => item.visibleWhen(state));
 
@@ -359,10 +360,13 @@ function getNodeCenterY(item, offsetY) {
 // Restores the scroll position (in case of a page refresh or something)
 function restoreScrollPosition(scrollHost, state, viewStateKey) {
   const savedView = state.ui[viewStateKey] ?? { scrollLeft: 0, scrollTop: 0, zoom: 1 };
+  scrollHost.scrollLeft = savedView.scrollLeft ?? 0;
+  scrollHost.scrollTop = savedView.scrollTop ?? 0;
 
   requestAnimationFrame(() => {
     scrollHost.scrollLeft = savedView.scrollLeft ?? 0;
     scrollHost.scrollTop = savedView.scrollTop ?? 0;
+    scrollHost.style.visibility = "visible";
   });
 }
 

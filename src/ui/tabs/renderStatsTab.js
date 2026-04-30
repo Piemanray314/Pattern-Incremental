@@ -1,10 +1,13 @@
 import { getShardMitosisPerSecond } from "../../core/helpers/castingUpgradeHelpers.js";
 import { createElement } from "../../utils/dom.js";
 import { formatMultiplier, formatNumber, formatElapsedTime } from "../../utils/format.js";
+import { getCastedPiePointMultiplier, isPieFactoryUnlocked } from "../../core/helpers/pieFactoryHelpers.js";
+import { roundSmallToWholeMantissa, zeroBigNum } from "../../utils/bigNum.js";
 
 export function renderStatsTab(state) {
   const fragment = document.createDocumentFragment();
   const showCasting = state.progression.castingUnlocked;
+  const showPieMultiplier = isPieFactoryUnlocked(state);
 
   const generalPanel = createElement("section", { className: "panel" });
   generalPanel.append(createElement("h2", { className: "panel-title", text: "Statistics" }));
@@ -19,8 +22,15 @@ export function renderStatsTab(state) {
     statRow("Best Gain", formatNumber(state.stats.bestGain)),
     statRow("Lifetime Points Gained", formatNumber(state.stats.lifetimePointsGained)),
     statRow("Lifetime Patterns Gained", formatNumber(state.stats.lifetimePatternCurrency)),
+    statRow("Current Pies", formatNumber(roundSmallToWholeMantissa(state.currencies.pies ?? zeroBigNum()))),
+    statRow("Lifetime Pies", formatNumber(roundSmallToWholeMantissa(state.stats.lifetimePies ?? zeroBigNum()))),
+    statRow("Current Casted Pies", formatNumber(roundSmallToWholeMantissa(state.pieFactory?.castedPies ?? zeroBigNum()))),
+    statRow("Lifetime Total Casted Pies", formatNumber(roundSmallToWholeMantissa(state.stats.lifetimeTotalCastedPies ?? zeroBigNum()))),
     statRow("Time Elapsed", formatElapsedTime(elapsedMs))
   );
+  if (showPieMultiplier) {
+    statsList.append(statRow("Pie Multiplier", formatMultiplier(getCastedPiePointMultiplier(state))));
+  }
 
   if (showCasting) {
     statsList.append(
@@ -45,7 +55,7 @@ export function renderStatsTab(state) {
     historyList.append(createElement("div", { className: "muted", text: "No history yet." }));
   } else {
     for (const roll of state.stats.previousRolls) {
-      historyList.append(renderStoredRollSummary(roll, showCasting));
+      historyList.append(renderStoredRollSummary(roll, showCasting, showPieMultiplier));
     }
   }
 
@@ -83,7 +93,7 @@ export function renderStatsTab(state) {
   return fragment;
 }
 
-function renderStoredRollSummary(roll, showCasting) {
+function renderStoredRollSummary(roll, showCasting, showPieMultiplier) {
   if (showCasting) {
     return createElement("div", {
       className: "history-item",
@@ -92,6 +102,7 @@ function renderStoredRollSummary(roll, showCasting) {
         `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
         `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
         `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+        (showPieMultiplier ? `Pie ${formatMultiplier(roll.piePointMultiplier ?? 1)} | ` : "") +
         `Casting ${formatMultiplier(roll.castingMultiplier ?? 1)} | ` +
         `Dice ${formatMultiplier(roll.multiplierRollTotal ?? 1)} | ` +
         `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
@@ -106,6 +117,7 @@ function renderStoredRollSummary(roll, showCasting) {
         `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
         `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
         `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+        (showPieMultiplier ? `Pie ${formatMultiplier(roll.piePointMultiplier ?? 1)} | ` : "") +
         `Casting ${formatMultiplier(roll.castingMultiplier ?? 1)} | ` +
         `Dice ${formatMultiplier(roll.multiplierRollTotal ?? 1)} | ` +
         `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +

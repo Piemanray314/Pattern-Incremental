@@ -1,4 +1,6 @@
 import { compareBigNum, toBigNum } from "../../utils/bigNum.js";
+import { CHAL00101BurstConfig, CHAL00102Multiplier, CHAL00103Multiplier, CHAL00104Multiplier, CHAL00105Multiplier } from "../../core/helpers/challengeUpgradeHelpers.js";
+import { formatMultiplier } from "../../utils/format.js";
 
 // Returns the current goal points for a challenge based on completion count
 function getGoalPointsByCompletion(challenge, completionCount) {
@@ -39,6 +41,8 @@ function getValueByCompletion(list, completionCount) {
   return list[clampedIndex];
 }
 
+// Challenge IDs are in the form CHAL N XXYY, where N is the type of challenge (main challenges are 0), and XXYY is the position
+// Main challenge list
 export const CHALLENGES_MAIN = [
   createChallenge({
     id: "CHAL00100",
@@ -47,11 +51,11 @@ export const CHALLENGES_MAIN = [
     x: 0,
     y: 0,
     goalPointsByCompletion: [
-      { mantissa: 1, exponent: 24 },
+      { mantissa: 1, exponent: 28 },
       { mantissa: 1, exponent: 40 },
-      { mantissa: 1, exponent: 100 },
-      { mantissa: 1, exponent: 250 },
-      { mantissa: 1, exponent: 1250 }
+      { mantissa: 1, exponent: 70 },
+      { mantissa: 1, exponent: 120 },
+      { mantissa: 1, exponent: 250 }
     ],
     maxRolls: 10,
     disableAutomationRolls: true,
@@ -76,7 +80,7 @@ export const CHALLENGES_MAIN = [
     y: 0,
     goalPointsByCompletion: [
       { mantissa: 1, exponent: 40 },
-      { mantissa: 1, exponent: 100 },
+      { mantissa: 1, exponent: 85 },
       { mantissa: 1, exponent: 314 },
       { mantissa: 1, exponent: 727 },
       { mantissa: 1, exponent: 1000 }
@@ -90,13 +94,11 @@ export const CHALLENGES_MAIN = [
     },
     effectText(state, completions) {
       if (completions <= 0) {
-        return "Cast-start burst: none";
+        return "No cast-start burst";
       }
 
-      const intervalsMs = [100, 80, 70, 60, 50];
-      const durationsSeconds = [5, 6, 7, 8, 10];
-      const index = Math.max(0, Math.min(completions - 1, intervalsMs.length - 1));
-      return `Cast-start burst: ${intervalsMs[index]}ms for ${durationsSeconds[index]}s`;
+      const burst = CHAL00101BurstConfig(completions);
+      return `${burst.intervalMs}ms for ${burst.durationSeconds}s cast-burst start`;
     }
   }),
 
@@ -109,16 +111,72 @@ export const CHALLENGES_MAIN = [
     goalPointsByCompletion: [
       { mantissa: 1, exponent: 35 },
       { mantissa: 1, exponent: 50 },
-      { mantissa: 1, exponent: 70 },
+      { mantissa: 1, exponent: 75 },
       { mantissa: 1, exponent: 100 },
       { mantissa: 1, exponent: 150 }
     ],
     maxCompletions: 5,
     effectText(state, completions) {
-      const multipliers = [2, 5, 25, 250, 7500];
-      if (completions <= 0) return "Pattern currency multiplier: x1";
-      const index = Math.max(0, Math.min(completions - 1, multipliers.length - 1));
-      return `Pattern currency multiplier: x${multipliers[index]}`;
+      return `${formatMultiplier(CHAL00102Multiplier(completions))} Pattern currency multiplier`;
+    }
+  }),
+
+  createChallenge({
+    id: "CHAL00103",
+    title: "D9",
+    description: "Regardless of unlocked digits, rolls are always between 1 and 9 during the challenge. Upon completion, gain a non-stacking global multiplier boost.",
+    x: 0,
+    y: 1,
+    goalPointsByCompletion: [
+      { mantissa: 1, exponent: 40 },
+      { mantissa: 1, exponent: 70 },
+      { mantissa: 1, exponent: 180 },
+      { mantissa: 1, exponent: 270 },
+      { mantissa: 1, exponent: 500 }
+    ],
+    maxCompletions: 5,
+    effectText(state, completions) {
+      const multiplier = CHAL00103Multiplier(completions);
+      if (multiplier.exponent === 0) return "No global multiplier boost";
+      return `${formatMultiplier(multiplier)} Global multiplier boost`;
+    }
+  }),
+
+  createChallenge({
+    id: "CHAL00104",
+    title: "Carpal Tunnel",
+    description: "Manual rolls are disabled. Reach the goal using automation only. Upon completion, automation gains pattern currency multipliers at cast start until your first manual roll.",
+    x: 1,
+    y: 1,
+    goalPointsByCompletion: [
+      { mantissa: 1, exponent: 70 },
+      { mantissa: 1, exponent: 90 },
+      { mantissa: 1, exponent: 120 },
+      { mantissa: 1, exponent: 180 },
+      { mantissa: 1, exponent: 300 }
+    ],
+    maxCompletions: 5,
+    effectText(state, completions) {
+      return `${formatMultiplier(CHAL00104Multiplier(completions))} Automation pattern currency multiplier until first manual roll`;
+    }
+  }),
+
+  createChallenge({
+    id: "CHAL00105",
+    title: "Amnesia",
+    description: "Every roll replaces your current points and patterns with that roll's gains. Upon completion, gain a cast multiplier boost.",
+    x: 2,
+    y: 1,
+    goalPointsByCompletion: [
+      { mantissa: 1, exponent: 70 },
+      { mantissa: 1, exponent: 100 },
+      { mantissa: 1, exponent: 150 },
+      { mantissa: 1, exponent: 220 },
+      { mantissa: 1, exponent: 400 }
+    ],
+    maxCompletions: 5,
+    effectText(state, completions) {
+      return `${formatMultiplier(CHAL00105Multiplier(completions))} Cast multiplier`;
     }
   })
 ];

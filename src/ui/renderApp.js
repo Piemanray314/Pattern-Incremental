@@ -4,6 +4,7 @@ import { renderRollTab } from "./tabs/renderRollTab.js";
 import { renderUpgradesTab } from "./tabs/renderUpgradesTab.js";
 import { renderAutomationTab } from "./tabs/renderAutomationTab.js";
 import { renderPatternsTab } from "./tabs/renderPatternsTab.js";
+import { refreshPatternsTabLiveContent } from "./tabs/renderPatternsTab.js";
 import { renderStatsTab } from "./tabs/renderStatsTab.js";
 import { renderBestRollsTab } from "./tabs/renderBestRollsTab.js";
 import { renderSettingsTab } from "./tabs/renderSettingsTab.js";
@@ -16,6 +17,8 @@ import { saveActiveTab } from "../state/uiState.js";
 import { renderGuideTab } from "./tabs/renderGuideTab.js";
 import { renderCastingTab, refreshCastingTabLiveContent } from "./tabs/renderCastingTab.js";
 import { refreshRollTabLiveContent } from "./tabs/renderRollTab.js";
+import { renderPieFactoryTab } from "./tabs/renderPieFactoryTab.js";
+import { refreshPieFactoryTabLiveContent } from "./tabs/renderPieFactoryTab.js";
 import { refreshUpgradeEffectTexts } from "./renderTreeView.js";
 import { UPGRADE_TREE_GROUPS } from "../data/mainupgrades/upgradeTreeGroups.js";
 import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTreeGroups.js";
@@ -40,7 +43,7 @@ export function initializeAppShell(state, setState) {
 
   for (const tab of visibleTabs) {
     const button = createElement("button", {
-      className: "sidebar-tab",
+      className: `sidebar-tab${tab.isPrimaryGameplay ? " sidebar-tab-primary" : ""}`,
       text: tab.label,
       onClick: () => {
         if (state.ui.activeTab === tab.id) return;
@@ -126,11 +129,11 @@ export function renderContentInto(state, setState) {
     case "automation":
       shell.content.append(renderAutomationTab(state, setState));
       break;
-    case "automationSettings":
-      shell.content.append(renderAutomationSettingsTab(state, setState));
-      break;
     case "challenges":
       shell.content.append(renderChallengesTab(state, setState));
+      break;
+    case "pieFactory":
+      shell.content.append(renderPieFactoryTab(state, setState));
       break;
     case "bestRolls":
       shell.content.append(renderBestRollsTab(state, setState));
@@ -140,6 +143,9 @@ export function renderContentInto(state, setState) {
       break;
     case "guide":
       shell.content.append(renderGuideTab(state, setState));
+      break;
+    case "automationSettings":
+      shell.content.append(renderAutomationSettingsTab(state, setState));
       break;
     case "settings":
       shell.content.append(renderSettingsTab(state, setState));
@@ -159,7 +165,7 @@ export function renderSidebarInto(state, setState) {
 
   for (const tab of visibleTabs) {
     const button = createElement("button", {
-      className: "sidebar-tab",
+      className: `sidebar-tab${tab.isPrimaryGameplay ? " sidebar-tab-primary" : ""}`,
       text: tab.label,
       onClick: () => {
         if (state.ui.activeTab === tab.id) return;
@@ -246,4 +252,6 @@ export function refreshTopbarLiveContent(state) {
   refreshCastingTabLiveContent(state);
   refreshRollTabLiveContent(state);
   refreshChallengesTabLiveContent(state);
+  refreshPatternsTabLiveContent(state);
+  refreshPieFactoryTabLiveContent(state);
 }

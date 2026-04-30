@@ -6,6 +6,11 @@ import { getPatternMultiplicationFactor } from "../../core/helpers/automationHel
 import { getPatternMultiplierFactor, getManualPatternMultiplierFactor } from "../../core/helpers/upgradeHelpers.js";
 import { multiplyBigNum, toBigNum } from "../../utils/bigNum.js";
 import { isNakedChallengeActive } from "../../core/helpers/challengeHelpers.js";
+import { isPieFactoryUnlocked } from "../../core/helpers/pieFactoryHelpers.js";
+
+let patternsPreviewResultHost = null;
+let patternsTableHost = null;
+let patternsTitleHost = null;
 
 // Main renderer for the patterns tab
 // Renders the preview UI and pattern list
@@ -64,6 +69,7 @@ export function renderPatternsTab(state, setState) {
   });
 
   const previewResultHost = createElement("div");
+  patternsPreviewResultHost = previewResultHost;
 
   input.addEventListener("input", (event) => {
     const rawValue = event.target.value.replace(/\D/g, "");
@@ -85,14 +91,15 @@ export function renderPatternsTab(state, setState) {
   const totalCount = PATTERNS.length;
 
   const listPanel = createElement("section", { className: "panel" });
-  listPanel.append(
-    createElement("h2", {
-      className: "panel-title",
-      text: unlockedCount > 0 ? `Patterns (${unlockedCount}/${totalCount})` : "Patterns"
-    })
-  );
+  const titleHost = createElement("h2", {
+    className: "panel-title",
+    text: unlockedCount > 0 ? `Patterns (${unlockedCount}/${totalCount})` : "Patterns"
+  });
+  patternsTitleHost = titleHost;
+  listPanel.append(titleHost);
 
   const table = createElement("div", { className: "pattern-table" });
+  patternsTableHost = table;
   
   const patternHeader = createElement("div", { className: "pattern-header" });
   patternHeader.append(
@@ -102,48 +109,32 @@ export function renderPatternsTab(state, setState) {
   )
   table.append(patternHeader);
   
-  for (const pattern of PATTERNS) {
-    const isUnlocked = pattern.unlockedWhen(state);
-
-    const name = isUnlocked ? pattern.name : "???";
-    const description = isUnlocked ? pattern.description : "???";
-
-    let baseMultiplierText = "???";
-    let currentMultiplierText = "???";
-
-    if (isUnlocked) {
-      const previewMultipliers = getPatternPreviewMultipliers(state, pattern, "1".repeat(state.progression.maxDigitsUnlocked));
-
-      let factor = toBigNum(1);
-      if (!isNakedChallengeActive(state)) {
-        factor = getPatternMultiplierFactor(state);
-
-        if (state.ui.patternPreviewIncludeAutomation) {
-          factor = multiplyBigNum(factor, toBigNum(getPatternMultiplicationFactor(state)));
-        } else {
-          factor = multiplyBigNum(factor, getManualPatternMultiplierFactor(state));
-        }
-      }
-
-      baseMultiplierText = formatMultiplier(previewMultipliers.baseMultiplier);
-      currentMultiplierText = formatMultiplier(multiplyBigNum(previewMultipliers.currentMultiplier, factor));
-    }
-
-    const row = createElement("div", { className: "pattern-row" });
-    const multiplierText = baseMultiplierText === currentMultiplierText ? `${baseMultiplierText}` : `${baseMultiplierText} (${currentMultiplierText})`;
-    row.append(
-      createElement("div", { text: name }),
-      createElement("div", { text: description }),
-      createElement("div", { text: multiplierText})
-    );
-
-    table.append(row);
-  }
+  renderPatternRowsInto(table, state);
 
   listPanel.append(table);
 
   fragment.append(previewPanel, listPanel);
   return fragment;
+}
+
+// Refreshes only patterns tab live content to preserve preview input focus
+export function refreshPatternsTabLiveContent(state) {
+  if (state.ui.activeTab !== "patterns") return;
+
+  if (patternsPreviewResultHost) {
+    renderPreviewResultInto(patternsPreviewResultHost, state);
+  }
+
+  if (patternsTitleHost) {
+    const visiblePatterns = PATTERNS.filter((pattern) => pattern.visibleWhen(state));
+    const unlockedCount = visiblePatterns.filter((pattern) => pattern.unlockedWhen(state)).length;
+    const totalCount = PATTERNS.length;
+    patternsTitleHost.textContent = unlockedCount > 0 ? `Patterns (${unlockedCount}/${totalCount})` : "Patterns";
+  }
+
+  if (patternsTableHost) {
+    renderPatternRowsInto(patternsTableHost, state);
+  }
 }
 
 // Renders preview into a give node
@@ -168,6 +159,7 @@ function renderPreviewResultInto(host, state) {
   }
 
   const summary = createElement("div", { className: "roll-summary" });
+  const showPieMultiplier = isPieFactoryUnlocked(state);
   summary.append(
     summaryPill(`Roll: ${previewResult.raw}`),
     summaryPill(`Pre-Bonus: +${formatNumber(previewResult.preMultiplierFlatBonus)}`),
@@ -175,6 +167,9 @@ function renderPreviewResultInto(host, state) {
     summaryPill(`Pattern Multiplier: ${formatMultiplier(previewResult.patternMultiplier)}`),
     summaryPill(`Global Multiplier: ${formatMultiplier(previewResult.globalMultiplier)}`)
   );
+  if (showPieMultiplier) {
+    summary.append(summaryPill(`Pie Multiplier: ${formatMultiplier(previewResult.piePointMultiplier ?? 1)}`));
+  }
   if (state.progression.castingUnlocked) {
     summary.append(summaryPill(`Casting Multiplier: ${formatMultiplier(previewResult.castingMultiplier ?? 1)}`));
   }
@@ -298,4 +293,50 @@ function renderPreviewMatchRow(rollString, match) {
 // Helper function for roll breakdown
 function summaryPill(text) {
   return createElement("div", { className: "summary-pill", text });
+}
+
+// Renders all pattern rows into the pattern table host
+function renderPatternRowsInto(table, state) {
+  const existingRows = table.querySelectorAll(".pattern-row");
+  for (const row of existingRows) {
+    row.remove();
+  }
+
+  for (const pattern of PATTERNS) {
+    const isUnlocked = pattern.unlockedWhen(state);
+
+    const name = isUnlocked ? pattern.name : "???";
+    const description = isUnlocked ? pattern.description : "???";
+
+    let baseMultiplierText = "???";
+    let currentMultiplierText = "???";
+
+    if (isUnlocked) {
+      const previewMultipliers = getPatternPreviewMultipliers(state, pattern, "1".repeat(state.progression.maxDigitsUnlocked));
+
+      let factor = toBigNum(1);
+      if (!isNakedChallengeActive(state)) {
+        factor = getPatternMultiplierFactor(state);
+
+        if (state.ui.patternPreviewIncludeAutomation) {
+          factor = multiplyBigNum(factor, toBigNum(getPatternMultiplicationFactor(state)));
+        } else {
+          factor = multiplyBigNum(factor, getManualPatternMultiplierFactor(state));
+        }
+      }
+
+      baseMultiplierText = formatMultiplier(previewMultipliers.baseMultiplier);
+      currentMultiplierText = formatMultiplier(multiplyBigNum(previewMultipliers.currentMultiplier, factor));
+    }
+
+    const row = createElement("div", { className: "pattern-row" });
+    const multiplierText = baseMultiplierText === currentMultiplierText ? `${baseMultiplierText}` : `${baseMultiplierText} (${currentMultiplierText})`;
+    row.append(
+      createElement("div", { text: name }),
+      createElement("div", { text: description }),
+      createElement("div", { text: multiplierText })
+    );
+
+    table.append(row);
+  }
 }

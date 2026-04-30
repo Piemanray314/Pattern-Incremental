@@ -4,32 +4,38 @@ export const TABS = [
   {
     id: "roll",
     label: "Roll",
-    visibleWhen: () => true
+    visibleWhen: () => true,
+    isPrimaryGameplay: true
   },
   {
     id: "upgrades",
     label: "Upgrades",
-    visibleWhen: () => true
+    visibleWhen: () => true,
+    isPrimaryGameplay: true
   },
   {
     id: "casting",
     label: "Casting",
-    visibleWhen: (state) => state.progression.castingUnlocked
+    visibleWhen: (state) => state.progression.castingUnlocked,
+    isPrimaryGameplay: true
   },
   {
     id: "automation",
     label: "Automation",
-    visibleWhen: (state) => hasUpgrade(state, "DIG03")
-  },
-  {
-    id: "automationSettings",
-    label: "Automation Settings",
-    visibleWhen: (state) => hasUpgrade(state, "DIG03")
+    visibleWhen: (state) => hasUpgrade(state, "DIG03"),
+    isPrimaryGameplay: true
   },
   {
     id: "challenges",
     label: "Challenges",
-    visibleWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades")
+    visibleWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades"),
+    isPrimaryGameplay: true
+  },
+  {
+    id: "pieFactory",
+    label: "Pies",
+    visibleWhen: (state) => hasUpgrade(state, "PRES00204", "castingUpgrades"),
+    isPrimaryGameplay: true
   },
   {
     id: "patterns",
@@ -50,6 +56,11 @@ export const TABS = [
     id: "guide",
     label: "Guide",
     visibleWhen: () => true
+  },
+  {
+    id: "automationSettings",
+    label: "Automation Settings",
+    visibleWhen: (state) => hasUpgrade(state, "DIG03")
   },
   {
     id: "settings",

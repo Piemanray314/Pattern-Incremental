@@ -9,7 +9,7 @@ import { multiplyBigNum, powerBigNum } from "../../utils/bigNum.js";
 export const AUTOMATION_UPGRADES = [
   makeUpgradeDefinition("AUTO", 3, 1, 1, {
     title: "Automation Core",
-    description: "Unlocks automation controls.",
+    description: "Unlocks automation controls",
     cost: { points: { mantissa: 5, exponent: 5 } },
     maxLevel: 1,
     parents: ["DIG03"],
@@ -53,7 +53,7 @@ export const AUTOMATION_UPGRADES = [
 
   makeUpgradeDefinition("AUTO", 6, 1, 3, {
     title: "Interval Subdivisions",
-    description: "Reduces the minimum allowed auto-roll interval by 10 ms per level.",
+    description: "Reduces the minimum allowed auto-roll interval by 10 ms per level",
     cost: (level) => ({ patterns: multiplyBigNum({ mantissa: 7.5, exponent: 8 }, powerBigNum(2, level)) }),
     maxLevel: 30,
     parents: ["AUTO030102", "AUTO060601"],

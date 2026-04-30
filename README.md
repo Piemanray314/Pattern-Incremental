@@ -1,5 +1,5 @@
 # Pattern Incremental
-Current version: 0.81 [Challenge Update]
+Current version: 0.9 [Pie Update]
 
 Inspired by Idle Dice, https://www.rngdle.com/, and Antimatter Dimensions (￣▽￣)
 
@@ -21,3 +21,6 @@ Also first time like actually using GitHub!!
 ChatGPT was used to help build the front end + learning good JS practices. I did talk with ChatGPT quite a bit regarding the initial project structure and how to go about it. Thank you ChatGPT for making this possible!! I didn't really use it past version 0.3 since I know have a good enough understanding to code by myself :) Only really for non-CSS front-end things cause I cannot be bothered to learn UI stuff :D 
 
 Okay ngl after finding out about agents, I've used Codex quite a bit for UI and bug-fixing (~v0.8). It's really good for saving time, but the code it writes is kinda weird spamming constants everywhere? Maybe that's normal. Anyway, I still do most of the backend work, but it is a very convenient tool to have when things go kaput!
+
+Yeah so now I'm lazy after finding out about Codex and now v0.9 Codex did a lot more :D
+It's still a buggy bum to work with but it saves sooooo much time (at the cost of having to go back over everything it wrote later to understand it gweahhh)

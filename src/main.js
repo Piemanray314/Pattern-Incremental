@@ -90,8 +90,10 @@ function tick() {
     return;
   }
 
+  // Piemanray314 [Devmode, 5x speed]
+  const devMode = false;
   const nowRealTimeMs = Date.now();
-  const deltaMs = Math.max(0, nowRealTimeMs - lastFrameRealTimeMs);
+  const deltaMs = devMode ? 5 * Math.max(0, nowRealTimeMs - lastFrameRealTimeMs) :  Math.max(0, nowRealTimeMs - lastFrameRealTimeMs);
   lastFrameRealTimeMs = nowRealTimeMs;
 
   if (state.ui.offlineProgress?.active && !state.ui.offlineProgress.complete) {

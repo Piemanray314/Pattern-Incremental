@@ -12,7 +12,7 @@ export function renderTopbar(state, setState) {
   const patternsPill = currencyPill("patterns", `Patterns: ${formatNumber(roundSmallToWholeMantissa(state.currencies.patterns))}`);
   const castsPill = currencyPill("casts", `Casts: ${formatNumber(roundSmallToWholeMantissa(state.currencies.casts))}`);
   const shardsPill = currencyPill("shards", `Shards: ${formatNumber(roundSmallToWholeMantissa(state.currencies.shards))}`);
-  const piesPill = currencyPill("pies", `Pies: ${formatNumber(state.currencies.pies)}`);
+  const piesPill = currencyPill("pies", `Pies: ${formatNumber(roundSmallToWholeMantissa(state.currencies.pies))}`);
   pointsPill.dataset.currencyKey = "points";
   patternsPill.dataset.currencyKey = "patterns";
   castsPill.dataset.currencyKey = "casts";
@@ -61,7 +61,7 @@ export function refreshTopbarCurrencies(state) {
   updateCurrencyPill("patterns", `Patterns: ${formatNumber(roundSmallToWholeMantissa(state.currencies.patterns))}`);
   updateCurrencyPill("casts", `Casts: ${formatNumber(roundSmallToWholeMantissa(state.currencies.casts))}`);
   updateCurrencyPill("shards", `Shards: ${formatNumber(roundSmallToWholeMantissa(state.currencies.shards))}`);
-  updateCurrencyPill("pies", `Pies: ${formatNumber(state.currencies.pies)}`);
+  updateCurrencyPill("pies", `Pies: ${formatNumber(roundSmallToWholeMantissa(state.currencies.pies))}`);
 }
 
 function updateCurrencyPill(key, text) {

@@ -133,6 +133,17 @@ export function getGuideContent(sectionId, state) {
         ]
       };
 
+    case "pies":
+      return {
+        title: "Pies",
+        paragraphs: [
+          "While searching for a way back, you stumble across a forbidden 9th dimension... the pie dimension!",
+          "Everything here works a bit different. The main currency is pies. There are different tiers you can purchase to earn pies. Only the first tier (piemen) will directly produce pies. Other tiers will produce the tier below it instead.",
+          "At the bottom, there are three prestige-like options available to boost your pie production or your point values.",
+          "This is very heavily inspired by one of my favorite incremental games, Antimatter Dimensions! Hooray for Antimatter Dimensions!! :D",
+        ]
+      };
+
     default:
       return {
         title: "Guide",

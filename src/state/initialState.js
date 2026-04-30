@@ -28,6 +28,8 @@ export function createInitialState() {
       totalTimeStartedAt: Date.now(),
       lifetimePointsGained: zeroBigNum(),
       lifetimePatternCurrency: zeroBigNum(),
+      lifetimePies: zeroBigNum(),
+      lifetimeTotalCastedPies: zeroBigNum(),
       bestRollValue: 0,
       bestGain: zeroBigNum(),
       previousRolls: [],
@@ -35,20 +37,25 @@ export function createInitialState() {
       selectedBestRollIndex: 0,
       totalCasts: 0,
       rollsThisCast: 0,
+      hasManualRollThisCast: false,
       pointsThisCast: zeroBigNum(),
       patternsThisCast: zeroBigNum(),
       castStartTime: Date.now(),
       castElapsedMs: 0,
       previousCasts: [],
-      bestShardsPerCast: zeroBigNum(),bestShardsPerCastPerSecond: zeroBigNum()
+      bestShardsPerCast: zeroBigNum(),
+      bestShardsPerCastPerSecond: zeroBigNum()
     },
 
     timers: {
       uiRefreshAccumulatorMs: 0,
       topbarLiveRefreshAccumulatorMs: 0,
+      pieFactoryLiveRefreshAccumulatorMs: 0,
+      pieFactoryRuntimeAccumulatorMs: 0,
       autoRollAccumulatorMs: 0,
       effectTextRefreshAccumulatorMs: 0,
       autoRecastCooldownMs: 0,
+      autoRecastTreeRefreshCooldownMs: 0,
       speedrunAutoRollBurstAccumulatorMs: 0,
       speedrunAutoRollBurstRemainingMs: 0,
       speedrunAutoRollBurstIntervalMs: 100
@@ -81,6 +88,53 @@ export function createInitialState() {
       completions: {}
     },
 
+    pieFactory: {
+      tiers: {
+        piemen: {
+          count: { mantissa: 1, exponent: 0 },
+          level: 1,
+          progressBuffer: 0,
+          purchases: 0
+        },
+        pieFactory: {
+          count: zeroBigNum(),
+          level: 0,
+          progressBuffer: 0,
+          purchases: 0
+        },
+        piePlanet: {
+          count: zeroBigNum(),
+          level: 0,
+          progressBuffer: 0,
+          purchases: 0
+        },
+        pieGalaxy: {
+          count: zeroBigNum(),
+          level: 0,
+          progressBuffer: 0,
+          purchases: 0
+        },
+        pieUniverse: {
+          count: zeroBigNum(),
+          level: 0,
+          progressBuffer: 0,
+          purchases: 0
+        },
+        pieDimension: {
+          count: zeroBigNum(),
+          level: 0,
+          progressBuffer: 0,
+          purchases: 0
+        }
+      },
+      castedPies: zeroBigNum(),
+      investedCastedPiesLifetime: zeroBigNum(),
+      globalProductionMultiplier: { mantissa: 1, exponent: 0 },
+      accumulatedPiesThisTierBoost: zeroBigNum(),
+      rebakeTierMultiplier: { mantissa: 1, exponent: 0 },
+      rebakeAffectedTierCount: 1
+    },
+
     ui: {
       activeTab: loadActiveTab() ?? "roll",
       patternPreviewInput: "",
@@ -91,6 +145,7 @@ export function createInitialState() {
       automationSubtab: loadSubtab("automationSubtab") ?? "main",
       guideSubtab: loadSubtab("guideSubtab") ?? "rolls",
       castingSubtab: loadSubtab("castingSubtab") ?? "recast",
+      pieFactorySubtab: loadSubtab("pieFactorySubtab") ?? "overview",
       upgradeTreeView_main: loadTreeViewPosition("upgradeTreeView_main") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
       upgradeTreeView_4: loadTreeViewPosition("upgradeTreeView_4") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
       upgradeTreeView_5: loadTreeViewPosition("upgradeTreeView_5") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
@@ -113,11 +168,13 @@ export function createInitialState() {
     },
     
     settings: {
-      numberFormatMode: "standard"
+      numberFormatMode: "standard",
+      manualRollPopAnimationEnabled: true,
+      autoRollPopAnimationEnabled: true
     },
 
     meta: {
-      saveVersion: 0.81,
+      saveVersion: 0.9,
       lastSavedAt: Date.now()
     }
   };

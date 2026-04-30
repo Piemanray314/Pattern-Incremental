@@ -61,5 +61,10 @@ export const GUIDE_SECTIONS = [
     id: "challenges",
     label: "Challenges",
     visibleWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades")
+  },
+  {
+    id: "pies",
+    label: "Pies",
+    visibleWhen: (state) => hasUpgrade(state, "PRES00204", "castingUpgrades")
   }
 ];

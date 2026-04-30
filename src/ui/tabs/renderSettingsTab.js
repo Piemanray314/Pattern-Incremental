@@ -9,10 +9,49 @@ export function renderSettingsTab(state, setState) {
   const fragment = document.createDocumentFragment();
 
   fragment.append(renderNumberSettingsPanel(state, setState));
+  fragment.append(renderRollAnimationSettingsPanel(state, setState));
   fragment.append(renderResetPanel(setState));
   fragment.append(renderImportExportPanel(state, setState));
 
   return fragment;
+}
+
+function renderRollAnimationSettingsPanel(state, setState) {
+  const panel = createElement("section", { className: "panel" });
+  panel.append(createElement("h2", { className: "panel-title", text: "Roll Animations" }));
+
+  panel.append(
+    createElement("div", {
+      className: "muted",
+      text: "Toggle flying roll text animations for manual and automatic rolls."
+    })
+  );
+
+  const actions = createElement("div", { className: "roll-actions" });
+
+  const manualToggle = createElement("button", {
+    text: state.settings.manualRollPopAnimationEnabled ? "Manual Roll Animation: ON" : "Manual Roll Animation: OFF",
+    onClick: () => {
+      setState((draft) => {
+        draft.settings.manualRollPopAnimationEnabled = !draft.settings.manualRollPopAnimationEnabled;
+      }, { topbar: false, content: true, sidebar: false });
+    }
+  });
+
+  const autoToggle = createElement("button", {
+    text: state.settings.autoRollPopAnimationEnabled ? "Auto Roll Animation: ON" : "Auto Roll Animation: OFF",
+    onClick: () => {
+      setState((draft) => {
+        draft.settings.autoRollPopAnimationEnabled = !draft.settings.autoRollPopAnimationEnabled;
+      }, { topbar: false, content: true, sidebar: false });
+    }
+  });
+
+  actions.append(manualToggle, autoToggle);
+  panel.append(createElement("div", { className: "section-spacer" }));
+  panel.append(actions);
+
+  return panel;
 }
 
 function renderNumberSettingsPanel(state, setState) {

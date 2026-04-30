@@ -4,7 +4,7 @@ import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTre
 import { PATTERNS } from "../data/patterns/patterns.js";
 import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa, multiplyBigNum, oneBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.81"; // Main version control
+let CURRENT_SAVE_VERSION = "0.9"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
@@ -71,6 +71,25 @@ function buildCompactState(state) {
       phase: state.challenges?.phase ?? "idle",
       completions: state.challenges?.completions ?? {}
     },
+    pieFactory: {
+      tiers: Object.fromEntries(
+        Object.entries(state.pieFactory?.tiers ?? {}).map(([tierId, tier]) => [
+          tierId,
+          {
+            count: tier?.count ?? zeroBigNum(),
+            level: tier?.level ?? 0,
+            progressBuffer: tier?.progressBuffer ?? 0,
+            purchases: tier?.purchases ?? 0
+          }
+        ])
+      ),
+      castedPies: state.pieFactory?.castedPies ?? zeroBigNum(),
+      investedCastedPiesLifetime: state.pieFactory?.investedCastedPiesLifetime ?? zeroBigNum(),
+      globalProductionMultiplier: state.pieFactory?.globalProductionMultiplier ?? oneBigNum(),
+      accumulatedPiesThisTierBoost: state.pieFactory?.accumulatedPiesThisTierBoost ?? zeroBigNum(),
+      rebakeTierMultiplier: state.pieFactory?.rebakeTierMultiplier ?? oneBigNum(),
+      rebakeAffectedTierCount: state.pieFactory?.rebakeAffectedTierCount ?? 1
+    },
 
     currentRoll: compactRollSnapshot(state.currentRoll),
     latestRoll: compactRollSnapshot(state.latestRoll),
@@ -80,6 +99,8 @@ function buildCompactState(state) {
       totalTimeStartedAt: state.stats.totalTimeStartedAt,
       lifetimePointsGained: state.stats.lifetimePointsGained,
       lifetimePatternCurrency: state.stats.lifetimePatternCurrency,
+      lifetimePies: state.stats.lifetimePies,
+      lifetimeTotalCastedPies: state.stats.lifetimeTotalCastedPies,
       bestRollValue: state.stats.bestRollValue,
       bestGain: state.stats.bestGain,
       previousRolls: (state.stats.previousRolls ?? []).map(compactRollSnapshot),
@@ -87,11 +108,12 @@ function buildCompactState(state) {
       selectedBestRollIndex: state.stats.selectedBestRollIndex ?? 0,
       totalCasts: state.stats.totalCasts,
       rollsThisCast: state.stats.rollsThisCast,
+      hasManualRollThisCast: state.stats.hasManualRollThisCast ?? false,
       pointsThisCast: state.stats.pointsThisCast,
       patternsThisCast: state.stats.patternsThisCast,
       castStartTime: state.stats.castStartTime,
       castElapsedMs: state.stats.castElapsedMs ?? 0,
-      previousCasts: state.stats.previousCasts ?? [],
+      previousCasts: (state.stats.previousCasts ?? []).map(compactCastSnapshot),
       bestShardsPerCast: state.stats.bestShardsPerCast,
       bestShardsPerCastPerSecond: state.stats.bestShardsPerCastPerSecond,
     },
@@ -110,7 +132,9 @@ function buildCompactState(state) {
     },
 
     settings: {
-      numberFormatMode: state.settings.numberFormatMode
+      numberFormatMode: state.settings.numberFormatMode,
+      manualRollPopAnimationEnabled: state.settings.manualRollPopAnimationEnabled ?? true,
+      autoRollPopAnimationEnabled: state.settings.autoRollPopAnimationEnabled ?? true
     },
 
     meta: {
@@ -138,6 +162,7 @@ function compactRollSnapshot(roll) {
     totalMultiplier: compactValue(roll.totalMultiplier),
     postMultiplierFlatBonus: compactValue(roll.postMultiplierFlatBonus),
     multipliedGain: compactValue(roll.multipliedGain),
+    piePointMultiplier: compactValue(roll.piePointMultiplier),
     totalGain: compactValue(roll.totalGain),
     totalPatternCurrencyGain: compactValue(roll.totalPatternCurrencyGain),
 
@@ -155,6 +180,21 @@ function compactRollSnapshot(roll) {
       compactValue(match.currentPatternCurrencyReward)
     ])
   };
+}
+
+// Used for cast history. Stores compact arrays with compacted BigNums
+function compactCastSnapshot(cast) {
+  if (!cast) return null;
+
+  return [
+    cast.rolls ?? 0,
+    compactValue(cast.points ?? zeroBigNum()),
+    compactValue(cast.patterns ?? zeroBigNum()),
+    compactValue(cast.castsGained ?? zeroBigNum()),
+    compactValue(cast.shardsGained ?? zeroBigNum()),
+    Math.max(0, Math.floor(Number(cast.timeElapsedMs ?? cast.timeElapsed ?? 0))),
+    Math.max(0, Math.floor(Number(cast.timestamp ?? 0)))
+  ];
 }
 
 // Main import function. Converts loaded save data into the current state format and fills in any missing fields
@@ -225,6 +265,23 @@ function hydrateAgainstInitialState(loadedState) {
       ...loadedState.ui
     },
 
+    pieFactory: {
+      ...fresh.pieFactory,
+      ...loadedState.pieFactory,
+      tiers: Object.fromEntries(
+        Object.entries({
+          ...(fresh.pieFactory?.tiers ?? {}),
+          ...(loadedState.pieFactory?.tiers ?? {})
+        }).map(([tierId, tier]) => [
+          tierId,
+          {
+            ...(fresh.pieFactory?.tiers?.[tierId] ?? {}),
+            ...(tier ?? {})
+          }
+        ])
+      )
+    },
+
     settings: {
       ...fresh.settings,
       ...loadedState.settings
@@ -269,21 +326,46 @@ function normalizeBigNumFields(state) {
   state.currencies.shards = deserializeBigNum(state.currencies.shards ?? zeroBigNum());
   state.currencies.pies = deserializeBigNum(state.currencies.pies ?? zeroBigNum());
 
+  state.pieFactory ??= {};
+  state.pieFactory.tiers ??= {};
+
+  for (const [tierId, tier] of Object.entries(state.pieFactory.tiers)) {
+    tier.count = deserializeBigNum(tier.count ?? zeroBigNum());
+    tier.level = Math.max(0, Math.floor(Number(tier.level ?? 0)));
+    tier.progressBuffer = Number.isFinite(tier.progressBuffer) ? tier.progressBuffer : 0;
+    tier.purchases = Math.max(0, Math.floor(Number(tier.purchases ?? 0)));
+    state.pieFactory.tiers[tierId] = tier;
+  }
+
+  state.pieFactory.castedPies = deserializeBigNum(state.pieFactory.castedPies ?? zeroBigNum());
+  state.pieFactory.investedCastedPiesLifetime = deserializeBigNum(
+    state.pieFactory.investedCastedPiesLifetime ?? zeroBigNum()
+  );
+  state.pieFactory.globalProductionMultiplier = deserializeBigNum(
+    state.pieFactory.globalProductionMultiplier ?? oneBigNum()
+  );
+  state.pieFactory.accumulatedPiesThisTierBoost = deserializeBigNum(
+    state.pieFactory.accumulatedPiesThisTierBoost ?? zeroBigNum()
+  );
+  state.pieFactory.rebakeTierMultiplier = deserializeBigNum(
+    state.pieFactory.rebakeTierMultiplier ?? oneBigNum()
+  );
+  state.pieFactory.rebakeAffectedTierCount = Math.max(
+    1,
+    Math.floor(Number(state.pieFactory.rebakeAffectedTierCount ?? 1))
+  );
+
   state.stats.lifetimePointsGained = deserializeBigNum(state.stats.lifetimePointsGained ?? zeroBigNum());
   state.stats.lifetimePatternCurrency = deserializeBigNum(state.stats.lifetimePatternCurrency ?? zeroBigNum());
+  state.stats.lifetimePies = deserializeBigNum(state.stats.lifetimePies ?? zeroBigNum());
+  state.stats.lifetimeTotalCastedPies = deserializeBigNum(state.stats.lifetimeTotalCastedPies ?? zeroBigNum());
   state.stats.bestGain = deserializeBigNum(state.stats.bestGain ?? zeroBigNum());
   state.stats.pointsThisCast = deserializeBigNum(state.stats.pointsThisCast ?? zeroBigNum());
   state.stats.patternsThisCast = deserializeBigNum(state.stats.patternsThisCast ?? zeroBigNum());
   state.stats.bestShardsPerCast = deserializeBigNum(state.stats.bestShardsPerCast ?? zeroBigNum());
   state.stats.bestShardsPerCastPerSecond = deserializeBigNum(state.stats.bestShardsPerCastPerSecond ?? zeroBigNum());
 
-  state.stats.previousCasts = (state.stats.previousCasts ?? []).map((cast) => ({
-    ...cast,
-    points: deserializeBigNum(cast.points ?? zeroBigNum()),
-    patterns: deserializeBigNum(cast.patterns ?? zeroBigNum()),
-    castsGained: deserializeBigNum(cast.castsGained ?? zeroBigNum()),
-    shardsGained: deserializeBigNum(cast.shardsGained ?? zeroBigNum())
-  }));
+  state.stats.previousCasts = (state.stats.previousCasts ?? []).map(normalizeCompactCastSnapshot);
 
   if (state.currentRoll) normalizeCompactRoll(state.currentRoll ?? []);
   if (state.latestRoll) normalizeCompactRoll(state.latestRoll ?? []);
@@ -307,6 +389,7 @@ function normalizeCompactRoll(roll) {
   roll.totalMultiplier = deserializeBigNum(roll.totalMultiplier ?? roll.multiplier);
   roll.postMultiplierFlatBonus = deserializeBigNum(roll.postMultiplierFlatBonus);
   roll.multipliedGain = deserializeBigNum(roll.multipliedGain);
+  roll.piePointMultiplier = deserializeBigNum(roll.piePointMultiplier ?? 1);
   roll.totalGain = deserializeBigNum(roll.totalGain ?? roll.gain);
   roll.totalPatternCurrencyGain = deserializeBigNum(roll.totalPatternCurrencyGain ?? 0);
 
@@ -368,6 +451,36 @@ function normalizeCompactRoll(roll) {
   return roll;
 }
 
+// Restores cast history from compact array format, with object-format backward compatibility
+function normalizeCompactCastSnapshot(cast) {
+  if (!cast) return null;
+
+  // New compact array format
+  if (Array.isArray(cast)) {
+    return {
+      rolls: Number(cast[0] ?? 0),
+      points: deserializeBigNum(cast[1] ?? zeroBigNum()),
+      patterns: deserializeBigNum(cast[2] ?? zeroBigNum()),
+      castsGained: deserializeBigNum(cast[3] ?? zeroBigNum()),
+      shardsGained: deserializeBigNum(cast[4] ?? zeroBigNum()),
+      timeElapsedMs: Number(cast[5] ?? 0),
+      timestamp: Number(cast[6] ?? 0)
+    };
+  }
+
+  // Old object format fallback
+  return {
+    ...cast,
+    rolls: Number(cast.rolls ?? 0),
+    points: deserializeBigNum(cast.points ?? zeroBigNum()),
+    patterns: deserializeBigNum(cast.patterns ?? zeroBigNum()),
+    castsGained: deserializeBigNum(cast.castsGained ?? zeroBigNum()),
+    shardsGained: deserializeBigNum(cast.shardsGained ?? zeroBigNum()),
+    timeElapsedMs: Number(cast.timeElapsedMs ?? cast.timeElapsed ?? 0),
+    timestamp: Number(cast.timestamp ?? 0)
+  };
+}
+
 // Only IDs are saved during saves, so this rebuilds everything else needed
 function rebuildRollSnapshots(state) {
   const patternMap = new Map(PATTERNS.map((pattern) => [pattern.id, pattern]));
@@ -423,7 +536,7 @@ function structuredCloneSafe(value) {
 // If BigNum, rounds it to 12 digits or whatever is specified in bigNum: serializeBigNum
 function compactValue(value) {
   if (isBigNum(value)) {
-    return [roundSmallToWholeMantissa(value).mantissa, value.exponent];
+    return serializeBigNum(roundSmallToWholeMantissa(value), 8);
   }
   return value;
 }
@@ -473,6 +586,7 @@ const SAVE_KEY_MAP = {
   automationUpgrades: "au",
   castingUpgrades: "cu2",
   challenges: "ch",
+  pieFactory: "pfc",
   activeChallengeId: "acid",
   claimableChallengeId: "ccid",
   startedAtMs: "stm",
@@ -481,6 +595,17 @@ const SAVE_KEY_MAP = {
   autoExitOnComplete: "aeoc",
   phase: "phs",
   completions: "comp",
+  tiers: "trs",
+  count: "cnt",
+  level: "lvl",
+  progressBuffer: "pbf",
+  purchases: "pur",
+  castedPies: "cpy",
+  investedCastedPiesLifetime: "icpl",
+  globalProductionMultiplier: "gpm",
+  accumulatedPiesThisTierBoost: "aptb",
+  rebakeTierMultiplier: "rtm",
+  rebakeAffectedTierCount: "ratc",
 
   currentRoll: "cr",
   latestRoll: "lr",
@@ -492,7 +617,10 @@ const SAVE_KEY_MAP = {
   castElapsedMs: "cems",
   lifetimePointsGained: "lpg",
   lifetimePatternCurrency: "lpc",
+  lifetimePies: "lpy",
+  lifetimeTotalCastedPies: "ltcp",
   rollsThisCast: "rtc",
+  hasManualRollThisCast: "hmrc",
   pointsThisCast: "ptc",
   patternsThisCast: "pac",
   totalCasts: "tc",
@@ -516,6 +644,8 @@ const SAVE_KEY_MAP = {
 
   settings: "se",
   numberFormatMode: "nfm",
+  manualRollPopAnimationEnabled: "mrpae",
+  autoRollPopAnimationEnabled: "arpae",
 
   meta: "m",
   saveVersion: "sv",
@@ -535,6 +665,7 @@ const SAVE_KEY_MAP = {
   totalMultiplier: "tm",
   postMultiplierFlatBonus: "po",
   multipliedGain: "mg",
+  piePointMultiplier: "ppm",
   totalGain: "tg",
   totalPatternCurrencyGain: "tpc",
   matches: "mt",

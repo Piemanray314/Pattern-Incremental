@@ -4,6 +4,7 @@ import { grantUpgradeLevel, hasUpgrade } from "./upgradeHelpers.js";
 import { getCastingUpgradeConfig, getShardMitosisPerSecond, getShardPerSecond } from "./castingUpgradeHelpers.js";
 import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
 import { UPGRADES_MAIN_4 } from "../../data/mainupgrades/upgradesMain4.js";
+import { CHAL00101BurstConfig, CHAL00105Multiplier } from "./challengeUpgradeHelpers.js";
 
 const TARGETED_RECAST_AUTOMATION_WHITELIST = new Set([
   "AUTO030100", // Global Recovery
@@ -31,9 +32,6 @@ const AUTO_RECAST_CONDITIONS = {
   timeElapsed: "timeElapsed"
 };
 
-const SPEEDRUN_BURST_INTERVALS_MS = [100, 80, 70, 60, 50];
-const SPEEDRUN_BURST_DURATIONS_MS = [5000, 6000, 7000, 8000, 10000];
-
 // Returns the rewards the player would get if they recast
 export function getCastingRewards(state) {
   const config = getCastingUpgradeConfig(state);
@@ -48,8 +46,14 @@ export function getCastingRewards(state) {
   // Scales on (1/25) * log(points) * (points)^(1/50) * log(patterns)
   const shardValue = multiplyBigNum(toBigNum(0.04), maxBigNum(zeroBigNum, multiplyBigNum(multiplyBigNum(pointsLog, pointsFactor), patternsLog)));
   const finalShards = multiplyBigNum(shardValue, config.shardMultiplier);
+  const amnesiaCompletions = state.challenges?.completions?.["CHAL00105"] ?? 0;
+  const amnesiaCastMultiplier = CHAL00105Multiplier(amnesiaCompletions);
+
   return {
-    casts: multiplyBigNum(oneBigNum(), config.castGain),
+    casts: multiplyBigNum(
+      multiplyBigNum(oneBigNum(), config.castGain),
+      toBigNum(amnesiaCastMultiplier)
+    ),
     shards: finalShards
   };
 }
@@ -69,6 +73,8 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   const preCastElapsedMs = state.stats.castElapsedMs ?? 0;
   const previousCastsHistory = [...(state.stats.previousCasts ?? [])];
   const keptOfflineProgress = state.ui?.offlineProgress ?? null;
+  const keptPieFactoryState = JSON.parse(JSON.stringify(state.pieFactory ?? {}));
+  const keptPieCurrency = toBigNum(state.currencies.pies ?? zeroBigNum());
 
   // Save casting-layer progress before reset
   const keptCastingCurrencies = {
@@ -85,10 +91,13 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   : {};
 
   const keepTotalCasts = state.stats.totalCasts;
+  const keepLifetimePies = state.stats.lifetimePies ?? zeroBigNum();
+  const keepLifetimeTotalCastedPies = state.stats.lifetimeTotalCastedPies ?? zeroBigNum();
   const keepBestShardsPerCast = state.stats.bestShardsPerCast ?? zeroBigNum();
   const keepBestShardsPerCastPerSecond = state.stats.bestShardsPerCastPerSecond ?? zeroBigNum();
   const keptCastingUpgrades = { ...(state.castingUpgrades ?? {}) };
   const keptChallengeCompletions = { ...(state.challenges?.completions ?? {}) };
+  const keptChallengeAutoExitOnComplete = Boolean(state.challenges?.autoExitOnComplete);
 
   const keptAutomationDisplay = {
     enabled: state.automation.enabled,
@@ -104,6 +113,13 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   const keepSettings = {
     numberFormatMode: state.settings.numberFormatMode,
   };
+  const keptAutoRecastTreeRefreshCooldownMs = state.timers?.autoRecastTreeRefreshCooldownMs ?? 0;
+  const keptPatternPreviewUi = {
+    patternPreviewInput: state.ui?.patternPreviewInput ?? "",
+    patternPreviewIncludeGlobal: state.ui?.patternPreviewIncludeGlobal ?? false,
+    patternPreviewIncludeAutomation: state.ui?.patternPreviewIncludeAutomation ?? false
+  };
+  const keptPieFactorySubtab = state.ui?.pieFactorySubtab ?? "overview";
 
   const previousCastEntry = {
     rolls: progress.rolls ?? 0,
@@ -123,6 +139,8 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   // Restore casting-layer progress
   state.currencies.casts = keptCastingCurrencies.casts;
   state.currencies.shards = keptCastingCurrencies.shards;
+  state.currencies.pies = keptPieCurrency;
+  state.pieFactory = keptPieFactoryState;
 
   state.automationUpgrades = keptAutomationUpgrades;
   state.castingUpgrades = keptCastingUpgrades;
@@ -134,11 +152,19 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
 
   state.settings.numberFormatMode = keepSettings.numberFormatMode;
   state.challenges.completions = keptChallengeCompletions;
+  state.challenges.autoExitOnComplete = keptChallengeAutoExitOnComplete;
+  state.timers.autoRecastTreeRefreshCooldownMs = keptAutoRecastTreeRefreshCooldownMs;
+  state.ui.patternPreviewInput = keptPatternPreviewUi.patternPreviewInput;
+  state.ui.patternPreviewIncludeGlobal = keptPatternPreviewUi.patternPreviewIncludeGlobal;
+  state.ui.patternPreviewIncludeAutomation = keptPatternPreviewUi.patternPreviewIncludeAutomation;
+  state.ui.pieFactorySubtab = keptPieFactorySubtab;
   if (keptOfflineProgress) {
     state.ui.offlineProgress = keptOfflineProgress;
   }
 
   state.stats.totalCasts = keepTotalCasts + 1;
+  state.stats.lifetimePies = keepLifetimePies;
+  state.stats.lifetimeTotalCastedPies = keepLifetimeTotalCastedPies;
   state.stats.previousCasts = [previousCastEntry, ...previousCastsHistory].slice(0, 10);
 
   state.stats.rollsThisCast = 0;
@@ -293,8 +319,8 @@ function applySpeedrunAutoRollBurst(state) {
   const completions = state.challenges?.completions?.["CHAL00101"] ?? 0;
   if (completions <= 0) return;
 
-  const index = Math.max(0, Math.min(completions - 1, SPEEDRUN_BURST_INTERVALS_MS.length - 1));
+  const burstConfig = CHAL00101BurstConfig(completions);
   state.timers.speedrunAutoRollBurstAccumulatorMs = 0;
-  state.timers.speedrunAutoRollBurstRemainingMs = SPEEDRUN_BURST_DURATIONS_MS[index];
-  state.timers.speedrunAutoRollBurstIntervalMs = SPEEDRUN_BURST_INTERVALS_MS[index];
+  state.timers.speedrunAutoRollBurstRemainingMs = burstConfig.durationSeconds * 1000;
+  state.timers.speedrunAutoRollBurstIntervalMs = burstConfig.intervalMs;
 }

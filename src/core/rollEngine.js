@@ -5,13 +5,21 @@ import { getUpgradeConfig } from "./helpers/upgradeHelpers.js";
 import { addBigNum, compareBigNum, maxBigNum, multiplyBigNum, multiplyBigNumByNumber, subtractBigNum, toBigNum, zeroBigNum, oneBigNum, roundMultiplierBigNum, makeBigNum } from "../utils/bigNum.js";
 import { getAutomationConfig, shouldDisplayAutoRoll } from "./helpers/automationHelpers.js";
 import { getCastingUpgradeConfig, getMultiplierRollConfig } from "./helpers/castingUpgradeHelpers.js";
-import { getNakedPatternCurrencyMultiplier, isNakedChallengeActive } from "./helpers/challengeHelpers.js";
+import { getCarpalTunnelAutomationPatternCurrencyMultiplier, getNakedPatternCurrencyMultiplier, isAmnesiaChallengeActive, isCarpalTunnelChallengeActive, isD9ChallengeActive, isNakedChallengeActive, isChallengeRunning, updateChallengeRuntime } from "./helpers/challengeHelpers.js";
+import { getCastedPiePointMultiplier } from "./helpers/pieFactoryHelpers.js";
 
 // Main function to perform a loop. Returns the roll and saves it into state
 // { source = "manual" } = {} is a fancy way to write "If there's no second argument, or it's empty, return manual"
 export function performRoll(state, { source = "manual" } = {}) {
+  if (source === "manual" && isCarpalTunnelChallengeActive(state)) {
+    return null;
+  }
+
   if (source === "manual" && state.challenges?.activeChallengeId === "CHAL00100") {
     state.challenges.manualRollClicksThisRun = (state.challenges.manualRollClicksThisRun ?? 0) + 1;
+  }
+  if (source === "manual") {
+    state.stats.hasManualRollThisCast = true;
   }
 
   const digitCount = getRollDigitCount(state, source);
@@ -144,6 +152,12 @@ export function evaluateRollString(
         currentPatternCurrencyReward,
         automationConfig.patternCurrencyFactor
       );
+      if (!(state.stats?.hasManualRollThisCast ?? false)) {
+        currentPatternCurrencyReward = multiplyBigNumByNumber(
+          currentPatternCurrencyReward,
+          getCarpalTunnelAutomationPatternCurrencyMultiplier(state)
+        );
+      }
     } else if (!nakedChallengeActive && source === "manual") {
       currentMultiplier = multiplyBigNum(
         currentMultiplier,
@@ -215,7 +229,11 @@ export function evaluateRollString(
   );
 
   const multipliedGain = multiplyBigNum(modifiedBaseValue, totalMultiplier);
-  const totalGain = addBigNum(multipliedGain, postMultiplierFlatBonus);
+  const piePointMultiplier = getCastedPiePointMultiplier(state);
+  const totalGain = multiplyBigNum(
+    addBigNum(multipliedGain, postMultiplierFlatBonus),
+    piePointMultiplier
+  );
   // const totalGain = makeBigNum(3.26, 1533453348); // Piemanray314
 
   const nakedRewardMultiplier = getNakedPatternCurrencyMultiplier(state);
@@ -245,6 +263,7 @@ export function evaluateRollString(
 
     postMultiplierFlatBonus,
     multipliedGain,
+    piePointMultiplier,
     totalGain,
 
     totalPatternCurrencyGain,
@@ -255,19 +274,26 @@ export function evaluateRollString(
 // Updates the state with the given roll result
 function applyRollResult(state, rollResult, { source }) {
   state.latestRoll = rollResult;
-  state.currencies.points = addBigNum(state.currencies.points, rollResult.totalGain);
-  state.currencies.patterns = addBigNum(state.currencies.patterns, rollResult.totalPatternCurrencyGain);
+  if (isAmnesiaChallengeActive(state)) {
+    state.currencies.points = toBigNum(rollResult.totalGain);
+    state.currencies.patterns = toBigNum(rollResult.totalPatternCurrencyGain);
+    state.stats.pointsThisCast = toBigNum(rollResult.totalGain);
+    state.stats.patternsThisCast = toBigNum(rollResult.totalPatternCurrencyGain);
+  } else {
+    state.currencies.points = addBigNum(state.currencies.points, rollResult.totalGain);
+    state.currencies.patterns = addBigNum(state.currencies.patterns, rollResult.totalPatternCurrencyGain);
+    state.stats.pointsThisCast = addBigNum(
+      state.stats.pointsThisCast,
+      rollResult.totalGain
+    );
+    state.stats.patternsThisCast = addBigNum(
+      state.stats.patternsThisCast,
+      rollResult.totalPatternCurrencyGain
+    );
+  }
 
   state.stats.totalRolls += 1;
   state.stats.rollsThisCast += 1;
-  state.stats.pointsThisCast = addBigNum(
-    state.stats.pointsThisCast,
-    rollResult.totalGain
-  );
-  state.stats.patternsThisCast = addBigNum(
-    state.stats.patternsThisCast,
-    rollResult.totalPatternCurrencyGain
-  );
   state.stats.lifetimePointsGained = addBigNum(
     state.stats.lifetimePointsGained,
     rollResult.totalGain
@@ -291,10 +317,18 @@ function applyRollResult(state, rollResult, { source }) {
   if (source === "auto" && shouldDisplayAutoRoll(state, rollResult)) {
     state.currentRoll = rollResult;
   }
+
+  if (isChallengeRunning(state)) {
+    updateChallengeRuntime(state, 0);
+  }
 }
 
 // Returns the number of digits in the roll
 function getRollDigitCount(state, source) {
+  if (isD9ChallengeActive(state)) {
+    return 1;
+  }
+
   if (source !== "auto") {
     return state.progression.maxDigitsUnlocked;
   }
@@ -347,6 +381,8 @@ function generateRollString(state, digitCount, source = "manual") {
 
 // Returns Little Giants adjacency radius from completions
 function getLittleGiantsAdjacencyRadius(state) {
+  if (isD9ChallengeActive(state)) return 0;
+
   const completions = state.challenges?.completions?.["CHAL00100"] ?? 0;
   if (completions <= 0) return 0;
   return Math.min(2, completions);

@@ -1,5 +1,6 @@
 import { createElement } from "../../utils/dom.js";
 import { formatMultiplier, formatNumber } from "../../utils/format.js";
+import { isPieFactoryUnlocked } from "../../core/helpers/pieFactoryHelpers.js";
 
 export function renderBestRollsTab(state, setState) {
   const fragment = document.createDocumentFragment();
@@ -11,6 +12,7 @@ export function renderBestRollsTab(state, setState) {
   );
 
   const selectedRoll = bestRolls[selectedIndex] ?? null;
+  const showPieMultiplier = isPieFactoryUnlocked(state);
 
   const breakdownPanel = createElement("section", { className: "panel" });
   breakdownPanel.append(
@@ -37,6 +39,9 @@ export function renderBestRollsTab(state, setState) {
       summaryPill(`Pattern Multiplier: ${formatMultiplier(selectedRoll.patternMultiplier)}`),
       summaryPill(`Global Multiplier: ${formatMultiplier(selectedRoll.globalMultiplier)}`)
     );
+    if (showPieMultiplier) {
+      summary.append(summaryPill(`Pie Multiplier: ${formatMultiplier(selectedRoll.piePointMultiplier ?? 1)}`));
+    }
     if (state.progression.castingUnlocked) {
       summary.append(summaryPill(`Casting Multiplier: ${formatMultiplier(selectedRoll.castingMultiplier ?? 1)}`));
     }
@@ -103,8 +108,8 @@ export function renderBestRollsTab(state, setState) {
       button.style.textAlign = "left";
       button.style.width = "100%";
 
-      const prefix = index === selectedIndex ? "▶ " : "";
-      
+      const prefix = index === selectedIndex ? "> " : "";
+
       if (state.progression.castingUnlocked) {
         button.textContent =
           `${prefix}${roll.raw} | ` +
@@ -112,6 +117,7 @@ export function renderBestRollsTab(state, setState) {
           `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
           `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
           `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+          (showPieMultiplier ? `Pie ${formatMultiplier(roll.piePointMultiplier ?? 1)} | ` : "") +
           `Casting ${formatMultiplier(roll.castingMultiplier)} | ` +
           `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
           `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
@@ -123,6 +129,7 @@ export function renderBestRollsTab(state, setState) {
           `Value ${formatNumber(roll.modifiedBaseValue ?? roll.value)} | ` +
           `Pattern ${formatMultiplier(roll.patternMultiplier)} | ` +
           `Global ${formatMultiplier(roll.globalMultiplier)} | ` +
+          (showPieMultiplier ? `Pie ${formatMultiplier(roll.piePointMultiplier ?? 1)} | ` : "") +
           `Total ${formatMultiplier(roll.totalMultiplier ?? roll.multiplier)} | ` +
           `+${formatNumber(roll.totalGain ?? roll.gain)} points` +
           (roll.outdated ? " | Outdated roll - may not be accurate" : "");

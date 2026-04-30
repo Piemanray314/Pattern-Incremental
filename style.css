@@ -108,6 +108,11 @@ button:disabled {
   border-radius: 10px;
 }
 
+.sidebar-tab-primary {
+  background: #27324a;
+  border-color: #425270;
+}
+
 .sidebar-tab.active {
   border-color: var(--accent);
   background: #1b2740;
@@ -236,6 +241,137 @@ button:disabled {
 }
 
 .challenge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.pie-factory-header-panel {
+  text-align: center;
+}
+
+.pie-factory-pies-value {
+  font-size: 44px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.pie-factory-casted-value {
+  margin-top: 6px;
+  font-size: 18px;
+}
+
+.pie-factory-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pie-factory-tier-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.pie-factory-tier-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.pie-factory-tier-topline {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  min-width: 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.pie-factory-tier-namegroup {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 280px;
+  max-width: 280px;
+}
+
+.pie-factory-tier-title {
+  font-weight: bold;
+  font-size: 18px;
+  display: inline-block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pie-factory-tier-level {
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--muted);
+  display: inline-block;
+  min-width: 0;
+}
+
+.pie-factory-tier-actions {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.pie-factory-tier-change,
+.pie-factory-tier-owned,
+.pie-factory-tier-producing {
+  text-align: left;
+  font-size: 14px;
+}
+
+.pie-factory-tier-change {
+  min-width: 120px;
+  text-align: right;
+}
+
+.pie-factory-tier-change,
+.pie-factory-tier-owned {
+  color: var(--muted);
+}
+
+.pie-factory-tier-owned {
+  min-width: 220px;
+  text-align: left;
+}
+
+.pie-factory-tier-cost-column {
+  display: flex;
+  align-items: center;
+  min-width: 280px;
+  margin-left: 54px;
+}
+
+.pie-factory-tier-cost {
+  min-width: 240px;
+  text-align: left;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.pie-factory-tier-cost-affordable {
+  color: var(--text);
+}
+
+.pie-factory-tier-cost-unaffordable {
+  color: #ffc3c0;
+}
+
+.pie-factory-actions-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 10px;

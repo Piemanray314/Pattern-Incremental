@@ -54,6 +54,7 @@ function makeRollSnapshot(rollResult) {
 
     postMultiplierFlatBonus: rollResult.postMultiplierFlatBonus,
     multipliedGain: rollResult.multipliedGain,
+    piePointMultiplier: rollResult.piePointMultiplier,
     totalGain: rollResult.totalGain,
     totalPatternCurrencyGain: rollResult.totalPatternCurrencyGain,
 

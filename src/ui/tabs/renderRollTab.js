@@ -5,13 +5,16 @@ import { getAutomationConfig } from "../../core/helpers/automationHelpers.js";
 import { canCast, performCast } from "../../core/helpers/castingHelpers.js";
 import { compareBigNum, fromNumber } from "../../utils/bigNum.js";
 import { hasUpgrade } from "../../core/helpers/upgradeHelpers.js";
-import { getActiveChallenge, getActiveChallengeRestrictionText } from "../../core/helpers/challengeHelpers.js";
+import { getActiveChallenge, getActiveChallengeRestrictionText, isCarpalTunnelChallengeActive } from "../../core/helpers/challengeHelpers.js";
+import { isPieFactoryUnlocked } from "../../core/helpers/pieFactoryHelpers.js";
 
 const ROLL_RECAST_POINT_REQUIREMENT = fromNumber(1e21);
 let rollStatusHost = null;
 let rollChallengeStatusHost = null;
 let rollCurrentRollHost = null;
 let rollMatchListHost = null;
+let rollButtonHost = null;
+let lastAutoRollPopKey = null;
 
 export function renderRollTab(state, setState) {
   const container = document.createDocumentFragment();
@@ -25,6 +28,11 @@ export function renderRollTab(state, setState) {
   const actions = createElement("div", { className: "roll-actions" });
 
   const rollButton = createElement("button", { text: "Roll" });
+  rollButtonHost = rollButton;
+  if (isCarpalTunnelChallengeActive(state)) {
+    rollButton.disabled = true;
+    rollButton.textContent = "Roll (Disabled by Carpal Tunnel)";
+  }
 
   rollButton.addEventListener("click", (event) => {
     let rollResult = null;
@@ -33,7 +41,7 @@ export function renderRollTab(state, setState) {
       rollResult = performRoll(draft, { source: "manual" });
     }, { topbar: true, content: false, sidebar: false });
 
-    if (rollResult) {
+    if (rollResult && state.settings?.manualRollPopAnimationEnabled !== false) {
       spawnRollPopEffect(event, rollButton, rollResult.raw);
     }
 
@@ -104,6 +112,13 @@ export function renderRollTab(state, setState) {
 }
 
 export function refreshRollTabLiveContent(state) {
+  if (state.ui.activeTab !== "roll") {
+    rollButtonHost = null;
+    return;
+  }
+
+  maybeSpawnAutoRollPopEffect(state);
+
   if (rollStatusHost) {
     rollStatusHost.textContent = buildAutomationStatusText(state, getAutomationConfig(state));
   }
@@ -205,12 +220,16 @@ function renderCurrentRollInto(host, state) {
   host.append(rollText);
 
   const summary = createElement("div", { className: "roll-summary" });
+  const showPieMultiplier = isPieFactoryUnlocked(state);
 
   summary.append(
     summaryPill(`Value: ${formatNumber(displayedRoll.modifiedBaseValue)}`),
     summaryPill(`Pattern Multiplier: ${formatMultiplier(displayedRoll.patternMultiplier)}`),
     summaryPill(`Global Multiplier: ${formatMultiplier(displayedRoll.globalMultiplier)}`)
   );
+  if (showPieMultiplier) {
+    summary.append(summaryPill(`Pie Multiplier: ${formatMultiplier(displayedRoll.piePointMultiplier ?? 1)}`));
+  }
   if (state.progression.castingUnlocked) {
     summary.append(
       summaryPill(`Casting Multiplier: ${formatMultiplier(state.currentRoll.castingMultiplier ?? 1)}`)
@@ -244,10 +263,16 @@ function renderMatchesInto(host, state) {
   }
 }
 
-function spawnRollPopEffect(event, button, text) {
+function spawnRollPopEffect(event, button, text, color = null, glowColor = null) {
   const pop = document.createElement("div");
   pop.className = "roll-pop-text";
   pop.textContent = text;
+  if (color) {
+    pop.style.color = color;
+  }
+  if (glowColor) {
+    pop.style.textShadow = `0 0 16px ${glowColor}`;
+  }
 
   const buttonRect = button.getBoundingClientRect();
   const fallbackX = buttonRect.left + buttonRect.width / 2;
@@ -300,4 +325,34 @@ function spawnRollPopEffect(event, button, text) {
   }
 
   requestAnimationFrame(tick);
+}
+
+// Spawns a red pop effect for new auto rolls from the Roll button center
+function maybeSpawnAutoRollPopEffect(state) {
+  if (state.ui.activeTab !== "roll") return;
+  if (state.settings?.autoRollPopAnimationEnabled === false) return;
+
+  const latestRoll = state.latestRoll;
+  if (!latestRoll) return;
+  if (latestRoll.source !== "auto") return;
+  if (!rollButtonHost) return;
+
+  const key = `${state.stats.totalRolls}|${latestRoll.raw}|${latestRoll.value}`;
+  if (key === lastAutoRollPopKey) return;
+  lastAutoRollPopKey = key;
+
+  const buttonRect = rollButtonHost.getBoundingClientRect();
+  if (buttonRect.width <= 0 || buttonRect.height <= 0) return;
+  const syntheticEvent = {
+    clientX: buttonRect.left + buttonRect.width / 2,
+    clientY: buttonRect.top + buttonRect.height / 2
+  };
+
+  spawnRollPopEffect(
+    syntheticEvent,
+    rollButtonHost,
+    latestRoll.raw,
+    "var(--bad, #ff7b72)",
+    "rgba(255, 123, 114, 0.65)"
+  );
 }

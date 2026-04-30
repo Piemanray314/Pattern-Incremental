@@ -1,5 +1,6 @@
 import { UPGRADES_MAIN } from "../../data/mainupgrades/upgradesMain.js";
 import { compareBigNum, subtractBigNum, toBigNum, addBigNum, multiplyBigNumByNumber, oneBigNum, zeroBigNum, roundMultiplierBigNum, safeLog10BigNum, powerBigNum, multiplyBigNum } from "../../utils/bigNum.js";
+import { CHAL00103Multiplier } from "./challengeUpgradeHelpers.js";
 
 // Current state keys are "upgrades" and "automationUpgrades"
 
@@ -50,6 +51,7 @@ export function getGlobalMultiplier(state) {
   if (hasUpgrade(state, "MULT050100")) {
     multiplier = multiplyBigNum(multiplier, MULT050100Multiplier(state));
   }
+  multiplier = multiplyBigNum(multiplier, getD9GlobalMultiplierReward(state));
 
   return roundMultiplierBigNum(multiplier);
 }
@@ -268,4 +270,9 @@ export function MULT050002Multiplier(state) {
 
 export function MULT050100Multiplier(state) {
   return toBigNum(multiplyBigNum(safeLog10BigNum(state.currencies.patterns), powerBigNum(state.currencies.patterns, 1/3)));
+}
+
+function getD9GlobalMultiplierReward(state) {
+  const completions = state.challenges?.completions?.["CHAL00103"] ?? 0;
+  return CHAL00103Multiplier(completions);
 }

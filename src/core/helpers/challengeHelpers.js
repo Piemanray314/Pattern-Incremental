@@ -1,6 +1,8 @@
 import { CHALLENGES_MAIN } from "../../data/challenges/challengesMain.js";
+import { CHAL00102Multiplier, CHAL00103Multiplier, CHAL00104Multiplier, CHAL00105Multiplier } from "./challengeUpgradeHelpers.js";
 import { performCast } from "./castingHelpers.js";
 import { toBigNum } from "../../utils/bigNum.js";
+import { formatNumber } from "../../utils/format.js";
 
 const CHALLENGE_PHASE_IDLE = "idle";
 const CHALLENGE_PHASE_RUNNING = "running";
@@ -48,21 +50,26 @@ export function getChallengeGoalPoints(state, challenge) {
 export function getActiveChallengeRestrictionText(state) {
   const challenge = getActiveChallenge(state);
   if (!challenge) return "";
+  const goalPointsText = `${formatNumber(getChallengeGoalPoints(state, challenge))} points needed`;
 
   if (challenge.id === "CHAL00100") {
     const maxRolls = challenge.maxRolls ?? 10;
     const rolls = state.challenges.manualRollClicksThisRun ?? 0;
-    return `Currently in the Little Giants Challenge | Rolls: ${rolls}/${maxRolls}`;
+    return `Currently in the Little Giants Challenge | Rolls: ${rolls}/${maxRolls} | ${goalPointsText}`;
   }
 
   if (challenge.id === "CHAL00101") {
     const completionCount = state.challenges?.completions?.[challenge.id] ?? 0;
     const limitSeconds = getValueByCompletion(challenge.timeLimitSecondsByCompletion, completionCount) ?? 60;
     const elapsedSeconds = Math.floor((state.challenges?.challengeElapsedMs ?? 0) / 1000);
-    return `Currently in the Speedrun Challenge | Time: ${elapsedSeconds}s/${limitSeconds}s`;
+    return `Currently in the Speedrun Challenge | Time: ${elapsedSeconds}s/${limitSeconds}s | ${goalPointsText}`;
   }
 
-  return `Currently in the ${challenge.title} Challenge.`;
+  if (challenge.id === "CHAL00104") {
+    return `Currently in the Carpal Tunnel Challenge | Manual rolls disabled | ${goalPointsText}`;
+  }
+
+  return `Currently in the ${challenge.title} Challenge | ${goalPointsText}`;
 }
 
 // Returns true if auto-roll should be blocked by the active challenge
@@ -77,14 +84,43 @@ export function isNakedChallengeActive(state) {
   return state.challenges?.activeChallengeId === "CHAL00102";
 }
 
+// Returns true while D9 challenge restrictions should apply
+export function isD9ChallengeActive(state) {
+  return state.challenges?.activeChallengeId === "CHAL00103";
+}
+
+// Returns true while Carpal Tunnel challenge restrictions should apply
+export function isCarpalTunnelChallengeActive(state) {
+  return state.challenges?.activeChallengeId === "CHAL00104";
+}
+
+// Returns true while Amnesia challenge restrictions should apply
+export function isAmnesiaChallengeActive(state) {
+  return state.challenges?.activeChallengeId === "CHAL00105";
+}
+
 // Returns non-stacking Naked reward multiplier from completions
 export function getNakedPatternCurrencyMultiplier(state) {
   const completions = state.challenges?.completions?.["CHAL00102"] ?? 0;
-  if (completions <= 0) return 1;
+  return CHAL00102Multiplier(completions);
+}
 
-  const values = [2, 5, 25, 250, 7500];
-  const index = Math.max(0, Math.min(completions - 1, values.length - 1));
-  return values[index];
+// Returns non-stacking D9 global multiplier reward from completions
+export function getD9GlobalMultiplierReward(state) {
+  const completions = state.challenges?.completions?.["CHAL00103"] ?? 0;
+  return CHAL00103Multiplier(completions);
+}
+
+// Returns Carpal Tunnel automation pattern currency reward from completions
+export function getCarpalTunnelAutomationPatternCurrencyMultiplier(state) {
+  const completions = state.challenges?.completions?.["CHAL00104"] ?? 0;
+  return CHAL00104Multiplier(completions);
+}
+
+// Returns Amnesia cast reward multiplier from completions
+export function getAmnesiaCastMultiplier(state) {
+  const completions = state.challenges?.completions?.["CHAL00105"] ?? 0;
+  return CHAL00105Multiplier(completions);
 }
 
 // Starts a challenge run by recasting and entering challenge restrictions

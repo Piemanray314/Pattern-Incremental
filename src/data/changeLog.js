@@ -16,7 +16,16 @@
 
 export const changeLog = [
   {
-    version: "0.81",
+    version: "0.9",
+    title: "The PIE update Part 1",
+    entries: [
+      "Added pies (unlocked toward the end of casting), a whole new mechanic to the game heavily inspired by Antimatter Dimensions!",
+      "Added 3 new challenges and balanced a few more early levels",
+      "Many small rendering changes and QoL fixes to hopefully make the game more responsive (e.g. automation roll text + toggle options in settings)",
+    ]
+  },
+  {
+    version: "0.81 ~ 0.83",
     title: "Small hotfix",
     entries: [
       "Fixed offline calculation bugs, auto-recast bugs, and a few general bugs",

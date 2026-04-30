@@ -31,5 +31,16 @@ export const UPGRADES_MAIN_6 = [
         grantPreviousTierUpgrades(state, "Only a singular level for you plebians who can't afford the higher level muahaha");
       }
     }
-  }
+  },
+
+  makeUpgradeDefinition("UNL", 6, 1, 1, {
+    title: "6 digit will be implemented once things get balanced",
+    description: "You shall not pass!",
+    cost: { points: { mantissa: 1, exponent: 750000 } },
+    maxLevel: 1,
+    parents: ["DIG06"],
+    visibleWhen: (state) => true,
+    canBuyWhen: (state) => hasUpgrade(state, "DIG06"),
+    onBuy() {}
+  }),
 ];

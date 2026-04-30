@@ -425,7 +425,7 @@ export const UPGRADES_MAIN_5 = [
   makeUpgradeDefinition("UNL", 5, 99, 99, {
     title: "Tier Up",
     description: "Unlocks the Linearithmic Tier",
-    cost: { points: { mantissa: 1, exponent: 100 } },
+    cost: { points: { mantissa: 1, exponent: 120 } },
     maxLevel: 1,
     x: 10,
     y: 0,

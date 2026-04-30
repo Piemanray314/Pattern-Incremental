@@ -5,8 +5,11 @@ import { getShardMitosisPerSecond, grantPreviousTierUpgrades } from "./helpers/c
 import { addBigNum, multiplyBigNumByNumber } from "../utils/bigNum.js";
 import { performCast, shouldTriggerAutomaticRecast } from "./helpers/castingHelpers.js";
 import { isAutoRollBlockedByChallenge, updateChallengeRuntime } from "./helpers/challengeHelpers.js";
+import { PIE_FACTORY_FPS, updatePieFactoryRuntime } from "./helpers/pieFactoryHelpers.js";
 
 const AUTO_RECAST_MIN_INTERVAL_MS = 200;
+const AUTO_RECAST_TREE_REFRESH_MIN_INTERVAL_MS = 1000;
+const PIE_FACTORY_LIVE_INTERVAL_MS = 1000 / PIE_FACTORY_FPS;
 
 // Main game loop
 export function updateGame(state, deltaMs) {
@@ -22,15 +25,22 @@ export function updateGame(state, deltaMs) {
   state.timers.uiRefreshAccumulatorMs += deltaMs;
   state.timers.effectTextRefreshAccumulatorMs += deltaMs;
   state.timers.topbarLiveRefreshAccumulatorMs += deltaMs;
+  state.timers.pieFactoryLiveRefreshAccumulatorMs =
+    (state.timers.pieFactoryLiveRefreshAccumulatorMs ?? 0) + deltaMs;
   state.stats.castElapsedMs = Math.max(0, (state.stats.castElapsedMs ?? 0) + deltaMs);
   state.timers.autoRecastCooldownMs = Math.max(
     0,
     (state.timers.autoRecastCooldownMs ?? 0) - deltaMs
   );
+  state.timers.autoRecastTreeRefreshCooldownMs = Math.max(
+    0,
+    (state.timers.autoRecastTreeRefreshCooldownMs ?? 0) - deltaMs
+  );
 
   const automationConfig = getAutomationConfig(state);
   updateChallengeRuntime(state, deltaMs);
   runSpeedrunAutoRollBurst(state, deltaMs, instructions);
+  updatePieFactoryRuntime(state, deltaMs);
 
   if (automationConfig.unlocked && state.automation.enabled && !isAutoRollBlockedByChallenge(state)) {
     state.automation.accumulatorMs += deltaMs;
@@ -43,7 +53,11 @@ export function updateGame(state, deltaMs) {
 
       instructions.topbarLive = true;
 
-      if (state.ui.activeTab === "stats" || state.ui.activeTab === "bestRolls") {
+      if (state.ui.activeTab === "stats") {
+        instructions.content = true;
+      }
+
+      if (state.ui.activeTab === "bestRolls" && rollResult?.enteredBestRolls) {
         instructions.content = true;
       }
     }
@@ -61,7 +75,7 @@ export function updateGame(state, deltaMs) {
     performCast(state, { switchToCastingTab: false });
     state.timers.autoRecastCooldownMs = AUTO_RECAST_MIN_INTERVAL_MS;
     instructions.topbar = true;
-    instructions.content = state.ui.activeTab === "casting";
+    instructions.content = shouldRefreshContentAfterAutoRecast(state);
     instructions.sidebar = false;
     instructions.topbarLive = true;
   }
@@ -82,7 +96,40 @@ export function updateGame(state, deltaMs) {
     instructions.topbarLive = true;
   }
 
+  // Keep Pie Factory overview numbers feeling responsive while active
+  const pieFactorySubtab = state.ui.pieFactorySubtab ?? "overview";
+  if (
+    state.ui.activeTab === "pieFactory" &&
+    pieFactorySubtab === "overview" &&
+    state.timers.pieFactoryLiveRefreshAccumulatorMs >= PIE_FACTORY_LIVE_INTERVAL_MS
+  ) {
+    state.timers.pieFactoryLiveRefreshAccumulatorMs = 0;
+    instructions.topbarLive = true;
+  }
+
   return instructions;
+}
+
+// Returns true if the current tab should fully refresh after auto recast
+function shouldRefreshContentAfterAutoRecast(state) {
+  const activeTab = state.ui.activeTab;
+
+  // Avoid full tree rebuilds during fast auto recasts to prevent visual flicker
+  // Tree data will still be correct in state and refresh on normal tab rerender events
+  if (
+    activeTab === "upgrades" ||
+    activeTab === "automation" ||
+    activeTab === "casting" ||
+    activeTab === "challenges"
+  ) {
+    return false;
+  }
+
+  if (activeTab === "patterns") return false;
+
+  return (
+    false
+  );
 }
 
 // Runs Speedrun reward auto-roll burst at cast start
@@ -98,10 +145,14 @@ function runSpeedrunAutoRollBurst(state, deltaMs, instructions) {
 
   while (state.timers.speedrunAutoRollBurstAccumulatorMs >= intervalMs) {
     state.timers.speedrunAutoRollBurstAccumulatorMs -= intervalMs;
-    performRoll(state, { source: "auto" });
+    const rollResult = performRoll(state, { source: "auto" });
     instructions.topbarLive = true;
 
-    if (state.ui.activeTab === "stats" || state.ui.activeTab === "bestRolls") {
+    if (state.ui.activeTab === "stats") {
+      instructions.content = true;
+    }
+
+    if (state.ui.activeTab === "bestRolls" && rollResult?.enteredBestRolls) {
       instructions.content = true;
     }
   }
