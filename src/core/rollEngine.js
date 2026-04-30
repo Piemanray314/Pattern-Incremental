@@ -104,8 +104,7 @@ export function evaluateRollString(
   const baseRollValue = toBigNum(value);
   const upgradeConfig = getUpgradeConfig(state);
 
-  // Piemanray314
-  // Duplicate pattern check
+  // Piemanray314 [Duplicate Pattern Check]
   const seen = new Set();
 
   for (const pattern of PATTERNS) {
@@ -234,7 +233,6 @@ export function evaluateRollString(
     addBigNum(multipliedGain, postMultiplierFlatBonus),
     piePointMultiplier
   );
-  // const totalGain = makeBigNum(3.26, 1533453348); // Piemanray314
 
   const nakedRewardMultiplier = getNakedPatternCurrencyMultiplier(state);
   const totalPatternCurrencyGain = includePatternCurrency

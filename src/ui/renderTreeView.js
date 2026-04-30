@@ -206,7 +206,7 @@ function renderTreeCard({
 
   const top = createElement("div");
   // Piemanray314, Card information
-  const devView = true;
+  const devView = false;
   if (devView) {
     top.append(
       createElement("div", { className: "upgrade-title", text: `${item.title}, ${item.id}` }),

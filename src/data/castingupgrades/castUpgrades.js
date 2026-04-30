@@ -203,7 +203,7 @@ export const PRESTIGE_CAST = [
   makePrestigeUpgradeDefinition("PRES", 0, 2, 4, {
     title: "9th Dimension",
     description: "Unlock the power of the pies",
-    cost: { casts: { mantissa: 5, exponent: 7 } },
+    cost: { casts: { mantissa: 1, exponent: 7 } },
     maxLevel: 1,
     parents: ["PRES00203"],
     visibleWhen: (state) => hasUpgrade(state, "PRES00203", "castingUpgrades"),
