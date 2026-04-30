@@ -68,13 +68,7 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   const preCastStartTime = state.stats.castStartTime ?? Date.now();
   const preCastElapsedMs = state.stats.castElapsedMs ?? 0;
   const previousCastsHistory = [...(state.stats.previousCasts ?? [])];
-  const keptOfflineProgress = state.ui?.offlineProgress
-    ? {
-      ...state.ui.offlineProgress,
-      before: state.ui.offlineProgress.before ? { ...state.ui.offlineProgress.before } : null,
-      after: state.ui.offlineProgress.after ? { ...state.ui.offlineProgress.after } : null
-    }
-    : null;
+  const keptOfflineProgress = state.ui?.offlineProgress ?? null;
 
   // Save casting-layer progress before reset
   const keptCastingCurrencies = {
