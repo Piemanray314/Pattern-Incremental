@@ -67,8 +67,8 @@ export const CHALLENGES_MAIN = [
       return (state.challenges?.manualRollClicksThisRun ?? 0) > (this.maxRolls ?? 10);
     },
     effectText(state, completions) {
-      const radius = completions <= 0 ? 0 : Math.min(2, completions);
-      return `Adjacent roll range: +/-${radius}`;
+      const radius = completions <= 0 ? 0 : completions;
+      return `Adjacent roll range: ±${radius}`;
     }
   }),
 

@@ -55,7 +55,7 @@ export const GUIDE_SECTIONS = [
   {
     id: "linear",
     label: "Linear Tier",
-    visibleWhen: (state) => hasUpgrade(state, "UNL049999")
+    visibleWhen: (state) => hasUpgrade(state, "UNL049999") || hasUpgrade(state, "PRES00203", "castingUpgrades")
   },
   {
     id: "challenges",

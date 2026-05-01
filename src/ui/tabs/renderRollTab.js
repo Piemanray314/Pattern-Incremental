@@ -64,11 +64,18 @@ export function renderRollTab(state, setState) {
           return;
         }
 
+        const showConfirmationPrompt = state.automation?.recastSettings?.showConfirmationPrompt !== false;
+        if (showConfirmationPrompt) {
+          const confirmed = window.confirm("Perform a recast? This will reset most base progress.");
+          if (!confirmed) return;
+        }
+
         setState((draft) => {
           performCast(draft, { switchToCastingTab: false });
         }, { topbar: true, content: true, sidebar: true });
       }
     });
+    recastButton.style.marginLeft = "40px";
     actions.append(recastButton);
   }
 

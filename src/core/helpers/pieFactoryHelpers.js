@@ -1,5 +1,5 @@
 import { addBigNum, compareBigNum, divideBigNumByNumber, multiplyBigNum, multiplyBigNumByNumber, oneBigNum, powerBigNum, roundSmallToWholeMantissa, safeLog10BigNum, subtractBigNum, toBigNum, zeroBigNum } from "../../utils/bigNum.js";
-import { hasUpgrade } from "./upgradeHelpers.js";
+import { getUpgradeLevel, hasUpgrade } from "./upgradeHelpers.js";
 
 export const PIE_TIER_ORDER = [
   "piemen",
@@ -38,6 +38,12 @@ const PIE_TIER_COST_GROWTH = {
 };
 
 const PIE_UNLOCK_UPGRADE_ID = "PRES00204";
+const PASTRY_REVOLUTION_UPGRADE_ID = "PIES00000";
+const INDUSTRIAL_OVEN_UPGRADE_ID = "PIES00200";
+const ETERNAL_PIES_UPGRADE_ID = "PIES00201";
+const ANCIENT_HARNESTING_UPGRADE_ID = "PIES00202";
+const PASTRY_REVOLUTION_LEVEL_THRESHOLDS = [0, 40, 30, 20, 10];
+const INDUSTRIAL_OVEN_LOG_POWERS = [2, 3, 4, 5, 6, 6];
 export const PIE_FACTORY_FPS = 30;
 const PIE_RUNTIME_STEP_MS = 1000 / PIE_FACTORY_FPS;
 const REBAKE_DEFAULT_AFFECTED_TIERS = 1;
@@ -139,13 +145,17 @@ export function updatePieFactoryRuntime(state, deltaMs) {
     for (const tierId of PIE_TIER_ORDER) {
       const tier = tiers[tierId];
       const rebakeMultiplier = getRebakeTierMultiplierForTier(state, tierId);
+      const revolutionMultiplier = getPastryRevolutionTierMultiplier(state, tierId);
       const baseRate = multiplyBigNum(
         getTierEffectiveCount(state, tierId),
         toBigNum(Math.max(0, tier.level))
       );
 
       outputs[tierId] = multiplyBigNumByNumber(
-        multiplyBigNum(multiplyBigNum(baseRate, globalMultiplier), rebakeMultiplier),
+        multiplyBigNum(
+          multiplyBigNum(multiplyBigNum(baseRate, globalMultiplier), rebakeMultiplier),
+          revolutionMultiplier
+        ),
         deltaSeconds
       );
     }
@@ -282,9 +292,10 @@ export function investCastedPies(state) {
 
   state.pieFactory.castedPies = zeroBigNum();
 
-  const investedPlusOne = addBigNum(state.pieFactory.investedCastedPiesLifetime, oneBigNum());
-  const multiplier = Math.max(1, safeLog10BigNum(investedPlusOne) + 1);
-  state.pieFactory.globalProductionMultiplier = toBigNum(multiplier);
+  state.pieFactory.globalProductionMultiplier = getTierBoostMultiplierFromInvested(
+    state,
+    state.pieFactory.investedCastedPiesLifetime
+  );
   state.pieFactory.accumulatedPiesThisTierBoost = zeroBigNum();
   state.pieFactory.rebakeTierMultiplier = oneBigNum();
 
@@ -296,9 +307,11 @@ export function rebakePies(state) {
   ensurePieFactoryState(state);
 
   const accumulated = toBigNum(state.pieFactory.accumulatedPiesThisTierBoost ?? zeroBigNum());
-  const projectedMultiplier = getRebakeTierMultiplierFromAccumulatedPies(accumulated);
-
-  state.currencies.pies = zeroBigNum();
+  const projectedMultiplier = getRebakeTierMultiplier(state, accumulated);
+  const keepPies = hasUpgrade(state, ETERNAL_PIES_UPGRADE_ID, "pieUpgrades");
+  if (!keepPies) {
+    state.currencies.pies = zeroBigNum();
+  }
 
   for (const tierId of PIE_TIER_ORDER) {
     const tier = state.pieFactory.tiers[tierId];
@@ -325,7 +338,7 @@ export function getRebakeEffectData(state) {
 
   const accumulated = toBigNum(state.pieFactory.accumulatedPiesThisTierBoost ?? zeroBigNum());
   const currentMultiplier = toBigNum(state.pieFactory.rebakeTierMultiplier ?? oneBigNum());
-  const projectedMultiplier = getRebakeTierMultiplierFromAccumulatedPies(accumulated);
+  const projectedMultiplier = getRebakeTierMultiplier(state, accumulated);
 
   return {
     accumulatedPiesThisTierBoost: roundSmallToWholeMantissa(accumulated),
@@ -382,7 +395,10 @@ export function getTierProductionMultiplier(state, tierId) {
       toBigNum(Math.max(0, tier.level)),
       toBigNum(state.pieFactory.globalProductionMultiplier ?? oneBigNum())
     ),
-    getRebakeTierMultiplierForTier(state, tierId)
+    multiplyBigNum(
+      getRebakeTierMultiplierForTier(state, tierId),
+      getPastryRevolutionTierMultiplier(state, tierId)
+    )
   );
 }
 
@@ -395,12 +411,13 @@ export function getTierOutgoingPerSecond(state, tierId) {
 
   const globalMultiplier = toBigNum(state.pieFactory.globalProductionMultiplier ?? oneBigNum());
   const rebakeMultiplier = getRebakeTierMultiplierForTier(state, tierId);
+  const revolutionMultiplier = getPastryRevolutionTierMultiplier(state, tierId);
   return multiplyBigNum(
     multiplyBigNum(
       multiplyBigNum(getTierEffectiveCount(state, tierId), toBigNum(Math.max(0, tier.level))),
       globalMultiplier
     ),
-    rebakeMultiplier
+    multiplyBigNum(rebakeMultiplier, revolutionMultiplier)
   );
 }
 
@@ -460,9 +477,7 @@ export function getInvestmentEffectData(state) {
   const casted = toBigNum(state.pieFactory.castedPies ?? zeroBigNum());
   const currentMultiplier = toBigNum(state.pieFactory.globalProductionMultiplier ?? oneBigNum());
   const projectedInvested = addBigNum(state.pieFactory.investedCastedPiesLifetime, casted);
-  const projectedMultiplier = toBigNum(
-    Math.max(1, safeLog10BigNum(addBigNum(projectedInvested, oneBigNum())) + 1)
-  );
+  const projectedMultiplier = getTierBoostMultiplierFromInvested(state, projectedInvested);
 
   return {
     currentMultiplier,
@@ -541,11 +556,13 @@ function isTierUnlockedForRebake(tier) {
   return compareBigNum(tier.count ?? zeroBigNum(), zeroBigNum()) > 0;
 }
 
-function getRebakeTierMultiplierFromAccumulatedPies(accumulatedPies) {
+function getRebakeTierMultiplier(state, accumulatedPies) {
   const accumulatedPlusOne = addBigNum(toBigNum(accumulatedPies), oneBigNum());
   const logTerm = safeLog10BigNum(accumulatedPlusOne);
-  const squaredLog = logTerm * logTerm;
-  return toBigNum(Math.max(1, squaredLog));
+  const industrialOvenLevel = getUpgradeLevel(state, INDUSTRIAL_OVEN_UPGRADE_ID, "pieUpgrades");
+  const logPower = getIndustrialOvenLogPower(industrialOvenLevel);
+  const logPowered = Math.pow(Math.max(0, logTerm), logPower);
+  return toBigNum(Math.max(1, logPowered));
 }
 
 function getRebakeTierMultiplierForTier(state, tierId) {
@@ -559,6 +576,53 @@ function getRebakeTierMultiplierForTier(state, tierId) {
 
   if (tierIndex >= affectedTierCount) return oneBigNum();
   return toBigNum(state.pieFactory?.rebakeTierMultiplier ?? oneBigNum());
+}
+
+function getPastryRevolutionTierMultiplier(state, tierId) {
+  const tier = getTierState(state, tierId);
+  if (!tier) return oneBigNum();
+
+  const upgradeLevel = getUpgradeLevel(state, PASTRY_REVOLUTION_UPGRADE_ID, "pieUpgrades");
+  const threshold = getPastryRevolutionLevelsPerUpgrade(upgradeLevel);
+
+  if (!threshold || threshold <= 0) return oneBigNum();
+
+  const tierLevel = Math.max(0, Math.floor(Number(tier.level ?? 0)));
+  const upgrades = Math.floor(tierLevel / threshold);
+  if (upgrades <= 0) return oneBigNum();
+
+  return powerBigNum(toBigNum(10), upgrades);
+}
+
+function getTierBoostMultiplierFromInvested(state, investedCastedPiesLifetime) {
+  const investedPlusOne = addBigNum(toBigNum(investedCastedPiesLifetime), oneBigNum());
+  const baseMultiplier = Math.max(1, safeLog10BigNum(investedPlusOne) + 1);
+  return multiplyBigNum(
+    toBigNum(baseMultiplier),
+    getAncientHarnestingTierBoostMultiplier(state)
+  );
+}
+
+function getAncientHarnestingTierBoostMultiplier(state) {
+  const level = Math.max(0, getUpgradeLevel(state, ANCIENT_HARNESTING_UPGRADE_ID, "pieUpgrades"));
+  return getAncientHarnestingTierBoostMultiplierFromLevel(level);
+}
+
+export function getPastryRevolutionLevelsPerUpgrade(level) {
+  const safeLevel = Math.max(0, Math.floor(Number(level ?? 0)));
+  const clamped = Math.min(safeLevel, PASTRY_REVOLUTION_LEVEL_THRESHOLDS.length - 1);
+  return PASTRY_REVOLUTION_LEVEL_THRESHOLDS[clamped] ?? 0;
+}
+
+export function getIndustrialOvenLogPower(level) {
+  const safeLevel = Math.max(0, Math.floor(Number(level ?? 0)));
+  const clamped = Math.min(safeLevel, INDUSTRIAL_OVEN_LOG_POWERS.length - 1);
+  return INDUSTRIAL_OVEN_LOG_POWERS[clamped] ?? 2;
+}
+
+export function getAncientHarnestingTierBoostMultiplierFromLevel(level) {
+  const safeLevel = Math.max(0, Math.floor(Number(level ?? 0)));
+  return toBigNum(Math.pow(1.2, safeLevel));
 }
 
 function applyTierLevelPurchase(tier) {

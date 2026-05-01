@@ -69,13 +69,16 @@ export function createInitialState() {
       recastSettings: {
         enabled: false,
         condition: "shards",
-        targetValue: ""
+        targetValue: "",
+        showConfirmationPrompt: true
       }
     },
 
     automationUpgrades: {},
     
     castingUpgrades: {},
+
+    pieUpgrades: {},
 
     challenges: {
       activeChallengeId: null,
@@ -152,6 +155,7 @@ export function createInitialState() {
       automationTreeView: loadTreeViewPosition("automationTreeView") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
       castingTreeView_casts: loadTreeViewPosition("castingTreeView_casts") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
       castingTreeView_shards: loadTreeViewPosition("castingTreeView_shards") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
+      pieUpgradeTreeView: loadTreeViewPosition("pieUpgradeTreeView") ?? { scrollLeft: 0, scrollTop: 0, zoom : 1 },
 
       showChangeLogModal: false,
       offlineProgress: {
@@ -174,7 +178,7 @@ export function createInitialState() {
     },
 
     meta: {
-      saveVersion: 0.9,
+      saveVersion: 0.91,
       lastSavedAt: Date.now()
     }
   };

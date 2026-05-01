@@ -150,6 +150,18 @@ function renderAutomaticRecastSettingsPanel(state, setState) {
   });
   conditionToggleButton.disabled = !automaticRecastsUnlocked;
 
+  const confirmationPromptButton = createElement("button", {
+    text: recastSettings.showConfirmationPrompt === false
+      ? "Show Confirmation Prompt: OFF"
+      : "Show Confirmation Prompt: ON",
+    onClick: () => {
+      setState((draft) => {
+        draft.automation.recastSettings.showConfirmationPrompt =
+          draft.automation.recastSettings.showConfirmationPrompt === false;
+      }, { topbar: false, content: true, sidebar: false });
+    }
+  });
+
   const targetInput = document.createElement("input");
   targetInput.type = "text";
   targetInput.placeholder = "Enter target value";
@@ -167,7 +179,7 @@ function renderAutomaticRecastSettingsPanel(state, setState) {
   });
   confirmTargetButton.disabled = !automaticRecastsUnlocked;
 
-  controls.append(activeToggleButton, conditionToggleButton, targetInput, confirmTargetButton);
+  controls.append(activeToggleButton, conditionToggleButton, confirmationPromptButton, targetInput, confirmTargetButton);
   panel.append(createElement("div", { className: "section-spacer" }));
   panel.append(controls);
   panel.append(createElement("div", { className: "section-spacer" }));
@@ -179,7 +191,8 @@ function renderAutomaticRecastSettingsPanel(state, setState) {
       text:
         `Current recast setting: ${recastSettings.enabled ? "ON" : "OFF"} | ` +
         `Condition: ${activeCondition.label} | ` +
-        `Target: ${currentTarget.length > 0 ? currentTarget : "(empty)"}`
+        `Target: ${currentTarget.length > 0 ? currentTarget : "(empty)"} | ` +
+        `Confirmation Prompt: ${recastSettings.showConfirmationPrompt === false ? "OFF" : "ON"}`
     })
   );
 

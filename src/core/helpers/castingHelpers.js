@@ -96,6 +96,7 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
   const keepBestShardsPerCast = state.stats.bestShardsPerCast ?? zeroBigNum();
   const keepBestShardsPerCastPerSecond = state.stats.bestShardsPerCastPerSecond ?? zeroBigNum();
   const keptCastingUpgrades = { ...(state.castingUpgrades ?? {}) };
+  const keptPieUpgrades = { ...(state.pieUpgrades ?? {}) };
   const keptChallengeCompletions = { ...(state.challenges?.completions ?? {}) };
   const keptChallengeAutoExitOnComplete = Boolean(state.challenges?.autoExitOnComplete);
 
@@ -106,7 +107,8 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
     recastSettings: {
       enabled: state.automation.recastSettings?.enabled ?? false,
       condition: state.automation.recastSettings?.condition ?? "shards",
-      targetValue: state.automation.recastSettings?.targetValue ?? ""
+      targetValue: state.automation.recastSettings?.targetValue ?? "",
+      showConfirmationPrompt: state.automation.recastSettings?.showConfirmationPrompt ?? true
     }
   };
 
@@ -144,6 +146,7 @@ export function performCast(state, { switchToCastingTab = true } = {}) {
 
   state.automationUpgrades = keptAutomationUpgrades;
   state.castingUpgrades = keptCastingUpgrades;
+  state.pieUpgrades = keptPieUpgrades;
 
   state.automation.enabled = keptAutomationDisplay.enabled;
   state.automation.intervalMs = keptAutomationDisplay.intervalMs;

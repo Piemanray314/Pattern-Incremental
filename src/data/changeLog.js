@@ -16,6 +16,15 @@
 
 export const changeLog = [
   {
+    version: "0.91",
+    title: "Balancing",
+    entries: [
+      "Added the first few pie upgrades",
+      "Balanced challenges a tad bit more",
+      "Confirmation toggle for casting is now an option in settings",
+    ]
+  },
+  {
     version: "0.9",
     title: "The PIE update Part 1",
     entries: [

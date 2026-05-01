@@ -3,6 +3,8 @@ import { saveSubtab } from "../../state/uiState.js";
 import { PIE_TIER_NAMES, PIE_TIER_ORDER, buyPieTierMax, buyPieTierOne, ensurePieFactoryState, getInvestmentEffectData, getPieTierDisplayData, getRebakeEffectData, getSacrificeEffectData, investCastedPies, rebakePies, sacrificePies } from "../../core/helpers/pieFactoryHelpers.js";
 import { formatMultiplier, formatNumber } from "../../utils/format.js";
 import { compareBigNum, roundSmallToWholeMantissa, zeroBigNum } from "../../utils/bigNum.js";
+import { renderTreeView } from "../renderTreeView.js";
+import { PIE_UPGRADES } from "../../data/pieupgrades/pieUpgradesMain.js";
 
 let pieFactorySetState = null;
 let pieFactoryOverviewRefs = null;
@@ -49,7 +51,16 @@ export function renderPieFactoryTab(state, setState) {
 
   if (activeSubtab === "upgrades") {
     pieFactoryOverviewRefs = null;
-    fragment.append(renderPieFactoryUpgradesPlaceholder());
+    fragment.append(
+      renderTreeView({
+        state,
+        setState,
+        title: "Pie Upgrades",
+        definitions: PIE_UPGRADES,
+        stateKey: "pieUpgrades",
+        viewStateKey: "pieUpgradeTreeView"
+      })
+    );
     return fragment;
   }
 
@@ -270,16 +281,6 @@ function renderPieFactoryOverview(state) {
   };
 
   return container;
-}
-
-function renderPieFactoryUpgradesPlaceholder() {
-  const panel = createElement("section", { className: "panel" });
-  panel.append(
-    createElement("h2", { className: "panel-title", text: "Pie Upgrades" }),
-    createElement("div", { className: "muted", text: "Pie upgrades coming soon" })
-  );
-
-  return panel;
 }
 
 function formatPercent(value) {

@@ -383,7 +383,7 @@ function getLittleGiantsAdjacencyRadius(state) {
 
   const completions = state.challenges?.completions?.["CHAL00100"] ?? 0;
   if (completions <= 0) return 0;
-  return Math.min(2, completions);
+  return completions;
 }
 
 // Returns true when Little Giants is currently active

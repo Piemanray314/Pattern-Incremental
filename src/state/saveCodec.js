@@ -2,9 +2,10 @@ import { createInitialState } from "./initialState.js";
 import { UPGRADE_TREE_GROUPS } from "../data/mainupgrades/upgradeTreeGroups.js";
 import { AUTOMATION_TREE_GROUPS } from "../data/automationupgrades/automationTreeGroups.js";
 import { PATTERNS } from "../data/patterns/patterns.js";
+import { PIE_UPGRADES } from "../data/pieupgrades/pieUpgradesMain.js";
 import { isBigNum, serializeBigNum, deserializeBigNum, zeroBigNum, roundSmallToWholeMantissa, multiplyBigNum, oneBigNum } from "../utils/bigNum.js";
 
-let CURRENT_SAVE_VERSION = "0.9"; // Main version control
+let CURRENT_SAVE_VERSION = "0.91"; // Main version control
 
 // Converts state into a JSON stirng. Ran from renderSettingsTab: renderImportExportPanel
 export function serializeSave(state) {
@@ -61,6 +62,7 @@ function buildCompactState(state) {
     upgrades: state.upgrades,
     automationUpgrades: state.automationUpgrades,
     castingUpgrades: state.castingUpgrades,
+    pieUpgrades: state.pieUpgrades,
     challenges: {
       activeChallengeId: state.challenges?.activeChallengeId ?? null,
       claimableChallengeId: state.challenges?.claimableChallengeId ?? null,
@@ -127,7 +129,8 @@ function buildCompactState(state) {
       recastSettings: {
         enabled: state.automation.recastSettings?.enabled ?? false,
         condition: state.automation.recastSettings?.condition ?? "shards",
-        targetValue: state.automation.recastSettings?.targetValue ?? ""
+        targetValue: state.automation.recastSettings?.targetValue ?? "",
+        showConfirmationPrompt: state.automation.recastSettings?.showConfirmationPrompt ?? true
       }
     },
 
@@ -245,6 +248,11 @@ function hydrateAgainstInitialState(loadedState) {
       ...loadedState.castingUpgrades
     },
 
+    pieUpgrades: {
+      ...fresh.pieUpgrades,
+      ...loadedState.pieUpgrades
+    },
+
     challenges: {
       ...fresh.challenges,
       ...loadedState.challenges
@@ -257,7 +265,11 @@ function hydrateAgainstInitialState(loadedState) {
 
     automation: {
       ...fresh.automation,
-      ...loadedState.automation
+      ...loadedState.automation,
+      recastSettings: {
+        ...fresh.automation.recastSettings,
+        ...(loadedState.automation?.recastSettings ?? {})
+      }
     },
 
     ui: {
@@ -303,6 +315,9 @@ function filterInvalidUpgradeIds(state) {
   const validAutomationUpgradeIds = new Set(
     AUTOMATION_TREE_GROUPS.flatMap((group) => group.definitions).map((u) => u.id)
   );
+  const validPieUpgradeIds = new Set(
+    PIE_UPGRADES.map((u) => u.id)
+  );
 
   state.upgrades = Object.fromEntries(
     Object.entries(state.upgrades ?? {}).filter(([id]) => validUpgradeIds.has(id))
@@ -310,6 +325,10 @@ function filterInvalidUpgradeIds(state) {
 
   state.automationUpgrades = Object.fromEntries(
     Object.entries(state.automationUpgrades ?? {}).filter(([id]) => validAutomationUpgradeIds.has(id))
+  );
+
+  state.pieUpgrades = Object.fromEntries(
+    Object.entries(state.pieUpgrades ?? {}).filter(([id]) => validPieUpgradeIds.has(id))
   );
 
   return state;
@@ -366,6 +385,10 @@ function normalizeBigNumFields(state) {
   state.stats.bestShardsPerCastPerSecond = deserializeBigNum(state.stats.bestShardsPerCastPerSecond ?? zeroBigNum());
 
   state.stats.previousCasts = (state.stats.previousCasts ?? []).map(normalizeCompactCastSnapshot);
+  state.automation ??= {};
+  state.automation.recastSettings ??= {};
+  state.automation.recastSettings.showConfirmationPrompt =
+    state.automation.recastSettings.showConfirmationPrompt ?? true;
 
   if (state.currentRoll) normalizeCompactRoll(state.currentRoll ?? []);
   if (state.latestRoll) normalizeCompactRoll(state.latestRoll ?? []);
@@ -585,6 +608,7 @@ const SAVE_KEY_MAP = {
   upgrades: "u",
   automationUpgrades: "au",
   castingUpgrades: "cu2",
+  pieUpgrades: "pu",
   challenges: "ch",
   pieFactory: "pfc",
   activeChallengeId: "acid",
@@ -641,6 +665,7 @@ const SAVE_KEY_MAP = {
   recastSettings: "rs",
   condition: "co",
   targetValue: "tv",
+  showConfirmationPrompt: "scp",
 
   settings: "se",
   numberFormatMode: "nfm",

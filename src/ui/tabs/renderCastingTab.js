@@ -105,8 +105,11 @@ function renderRecastPage(state, setState) {
         return;
       }
 
-      const confirmed = window.confirm("Perform a recast? This will reset most base progress.");
-      if (!confirmed) return;
+      const showConfirmationPrompt = state.automation?.recastSettings?.showConfirmationPrompt !== false;
+      if (showConfirmationPrompt) {
+        const confirmed = window.confirm("Perform a recast? This will reset most base progress.");
+        if (!confirmed) return;
+      }
 
       setState((draft) => {
         performCast(draft);
